@@ -1,0 +1,46 @@
+#include <iostream>
+using namespace std;
+
+long p[101] = { 0, };
+long calc(long index) 
+{
+	if (p[index] == 0)
+		p[index] = calc(index - 1) + calc(index - 5);
+
+	return p[index];
+}
+
+// 문제를 살펴보면 한변의 길이가 12인 정삼각형을 f(n)이라 하면  f(n-1)인 삼각형과 f(n-5)의 삼각형이 만나 이루어진걸 볼 수 있음
+// 점화식 => f(n) = f(n - 1) + f(n - 5);
+
+int main()
+{
+	// 초기화
+	p[1] = 1;
+	p[2] = 1;
+	p[3] = 1;
+	p[4] = 2;
+	p[5] = 2;
+	p[6] = 3;
+
+	int count;
+	cin >> count;
+	int input;
+
+	
+	for(int index = 0; index < count; index++)
+	{
+		cin >> input;
+		if (p[input] != 0) 
+		{
+			cout << p[input] << endl;
+		}
+		else 
+		{
+			cout << calc(input) << endl;
+		}
+	}
+
+
+	return 0;
+}

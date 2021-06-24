@@ -1,0 +1,69 @@
+#include <iostream>
+#include <stack>
+#include <vector>
+#include <algorithm>
+#include<string.h>
+//1012
+using namespace std;
+
+int dx[] = { -1, 1, 0, 0 };	// 왼쪽, 오른쪽, 위, 아래를 탐색하기위한 증분
+int dy[] = { 0, 0, 1, -1 }; // 왼쪽, 오른쪽, 위, 아래를 탐색하기위한 증분
+int a[51][51] = { 0, };	// 입력 데이터 저장
+bool visited[51][51];	// 방문여부 저장
+int m, n, k;
+
+// dfs 탐색 알고리즘
+void dfs(int x, int y) {
+	visited[y][x] = true;	// 좌표 (x,y)를 방문하였으므로 체크
+
+	// (x,y)를 기준으로 왼쪽, 오른쪽, 위, 아래의 데이터가 1이고
+	// 방문하지 않은 지역이면 다시 탐색을 시작함
+	for (int i = 0; i < 4; i++) {
+		int nx = x + dx[i];
+		int ny = y + dy[i];
+
+		// 배열 범위를 초과하면 continue
+		if (nx < 0 || nx >= m || ny < 0 || ny >= n)
+			continue;
+
+		if (a[ny][nx] == 1)	// 해당 지역에 데이터가 존재하고
+			if (visited[ny][nx] == false)	// 방문하지 않은 지역이면
+				dfs(nx, ny);	// 탐색 시작
+	}
+}
+
+int main()
+{
+	int t;
+	cin >> t;
+	while (t-- > 0) {
+		// 사용자 입력 받음
+		cin >> m >> n >> k;
+		int cnt = 0;
+		for (int i = 0; i < k; i++) {
+			int x, y;
+			cin >> x >> y; // x 가로좌표 y 세로좌표
+			a[y][x] = 1;
+		}
+
+		// 입력받은 데이터 a 배열을 (0,0)부터 (m,n)까지 탐색하면서 a == 1 이고
+		// 방문하지 않은 지역을 탐색한다
+		for (int y = 0; y < n; y++) {
+			for (int x = 0; x < m; x++) {
+				if (a[y][x] == 1) {
+					if (visited[y][x] == false) {
+						cnt++;
+						dfs(x, y);
+					}
+				}
+			}
+		}
+
+		cout << cnt << '\n';
+		memset(visited, false, sizeof(visited));
+		memset(a, 0, sizeof(a));
+	}
+
+
+	return 0;
+}

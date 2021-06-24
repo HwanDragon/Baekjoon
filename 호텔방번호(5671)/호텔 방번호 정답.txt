@@ -1,0 +1,42 @@
+#include <iostream>
+#include <algorithm>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+int main()
+{
+    // 사용자로부터 입력받음
+    int n, m;
+    while (cin >> n >> m)
+    {
+        int ans = 0;
+        // n부터 m까지 중복되는 숫자를 찾음
+        for (int i = n; i <= m; i++)
+        {
+            string s = to_string(i);    // 문자여롤 변환
+            vector<int> count(10);  // 중복되는 숫자 개수 count
+            bool check = false;
+            for (int j = 0; j < s.size(); j++)
+            {
+                // j번째 문자를 가져와서 아스키코드값을 빼 준뒤 숫자로 바꾼뒤 해당 위치의 개수를 증가시킴
+                count[s[j] - '0']++;
+
+                // 만약 해당 위치의 개수가 2개 이상이라면 중복되는 숫자가 존재함
+                if (count[s[j] - '0'] > 1)
+                {
+                    check = true;
+                    break;
+                }
+            }
+            if (check)
+                continue;
+
+            ans++;
+        }
+        cout << ans << endl;
+    }
+
+    return 0;
+}

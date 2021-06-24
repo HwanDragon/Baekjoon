@@ -1,0 +1,76 @@
+#include <iostream>
+#include <queue>
+#include <stack>
+#include <vector>
+#include <string>
+#include <sstream>
+
+using namespace std;
+
+int values[501][501] = { 0, };
+
+// 트리 형태의 구조에서 아래로 최대값만을 더하면서 가면 값을 구할 수 있음
+//7
+//3   8
+//8   1   0
+//2   7   4   4
+//4   5   2   6   5
+//가 입력으로 주어졌을 떄
+
+//2번째 행은 첫번째 7을 둘다 더해줌
+//10  15
+//8   1   0
+//2   7   4   4
+//4   5   2   6   5
+
+//3번째 행 8은 더할 수 있는게 10밖에 없음 
+//3번째 행 1은 10, 15를 더할 수 있는데 15가 더 크므로 15를 더함
+// 0은 15밖에 더할 수 없음
+//18  16  15
+//2   7   4   4
+//4   5   2   6   5
+
+//4번째 행 2는 18을 더할수 밖에 없음
+//4번째 행 7은 18과 16중 18이 더 크므로 18을 더함
+//... 남은 수들도 마찬가지로 큰수를 더해가면서 누적합을 계산하면 더할 수 있음
+//20  25  20   19
+//4   5   2   6   5
+
+int main()
+{
+	// 사용자 입력 받음
+	int n;
+	cin >> n;
+	for (int i = 1; i <= n; i++) {
+		for (int j = 1; j <= i; j++) {
+			cin >> values[i][j];
+		}
+	}
+
+	// 이전 배열 참조를 위해 i = 2부터 시작
+	for (int i = 2; i <= n; i++) {
+		for (int j = 1; j <= i; j++) {
+			if (j == 1)	// 처음 숫자는 이전 배열의 처음 숫자밖에 더할 수 없음
+			{
+				values[i][j] = values[i - 1][j] + values[i][j];
+			}
+			else if (j == i)	// 마지막 숫자는 이전 배열의 마지막 숫자밖에 더할 수 없음
+			{
+				values[i][j] = values[i - 1][j - 1] + values[i][j];
+			}
+			else
+			{
+				// 중간 숫자는 이전배열의 j - 1, j번째 값 중 큰값을 선택하면됨
+				values[i][j] = max(values[i - 1][j - 1], values[i - 1][j]) + values[i][j];
+			}
+		}
+	}
+
+	int result = 0;
+	for (int i = 1; i <= n; i++)
+	{
+		result = max(result, values[n][i]);
+	}
+	cout << result;
+	return 0;
+}

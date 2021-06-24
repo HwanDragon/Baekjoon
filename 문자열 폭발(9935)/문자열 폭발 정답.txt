@@ -1,0 +1,51 @@
+#include<iostream>
+#include<algorithm>
+#include<cmath>
+#include<stack>
+using namespace std;
+
+
+int main()
+{
+	string s, bomb;
+	cin >> s >> bomb;
+	string result = "";
+
+	int index = bomb.length() - 1;	// 폭탄 문자열 길이에서부터 시작
+	for (int i = 0; i < s.length(); i++) {
+		result += s[i];
+
+		if (result[result.length() - 1] == bomb[index])	// result의 마지막 문자가 bomb[i] 와 같으면
+		{
+			int cnt = 1;
+
+			// 폭탄 문자열의 마지막 문자와 입력 문자열의 i번째 문자가 같음
+			// 폭탄 문자열의 길이만큼 앞으로 가면서 문자가 같은지 확인
+			for (int j = index - 1; j >= 0; j--) {
+				if (result[result.length() - (index - j) - 1] == bomb[j])
+				{
+					cnt++;
+				}
+			}
+
+			// 폭탄 문자열의 길이만큼 같다면 
+			if (bomb.length() == cnt) {
+				// 폭탄문자열과 같다는 의미이므로 폭탄 문자 제거
+				for (int k = 0; k < bomb.length(); k++) {
+					result.pop_back();	// 문자열의 맨 뒤에있는 문자 하나를 없애는 함수
+				}
+			}
+		}
+	}
+
+	if (result.length() == 0)
+	{
+		cout << "FRULA";
+	}
+	else {
+		cout << result;
+	}
+	
+
+	return 0;
+}

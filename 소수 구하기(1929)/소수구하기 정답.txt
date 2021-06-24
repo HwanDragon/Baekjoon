@@ -1,0 +1,41 @@
+#include<iostream>
+#include<cmath>
+using namespace std;
+
+int primeNumbers[1000001] = { 0, };
+
+int main(void)
+{
+	int m, n;
+	cin >> m >> n;
+
+	// 배열 전체 초기화
+	for (int i = 2; i <= n; i++)
+	{
+		primeNumbers[i] = i;
+	}
+
+	// 제곱근 까지만 소수를 확인하면됨 (에라토스테네스의 체 확인)
+	// 어떤수가 소수인지 확인하는 방법은 제곱근까지 약수가 있는지 확인하면됨
+	int sqrtNum = (int)sqrt(n);	
+	for (int i = 2; i <= sqrtNum; i++) 
+	{
+		if (primeNumbers[i] == 0)
+			continue;
+
+		for (int j = i * 2; j <= n; j += i) {
+			primeNumbers[j] = 0;
+		}
+	}
+
+	// 결과 출력
+	for (int i = m; i <= n; i++) 
+	{
+		if (primeNumbers[i] != 0) 
+		{
+			cout << i << "\n";	// endl은 flush를 수행하기때문에 \n을 사용해야함
+		}
+	}
+
+	return 0;
+}

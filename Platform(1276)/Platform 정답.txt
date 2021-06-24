@@ -1,0 +1,98 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+// 사용자로부터 입력받은 데이터를 저장하기 위한 클래스
+class Platform {
+public:
+	int height;	// 높이
+	int x1;	// 다리 시작점
+	int x2;	// 다리 끝점
+};
+
+vector<Platform *> platforms;	// 사용자로부터 입력받은 값을 저장하기위한 vector
+vector<Platform*> tempPlatforms;	// 값을 계산하기위한 임시 vector
+int result = 0;
+
+// 높이순으로 정렬 하기 위한 비교함수
+bool sortPlatform(Platform *p1, Platform *p2) {
+	return p1->height < p2->height;
+}
+
+// 높이 순으로 데이터를 정렬한 다음 낮은 다리부터 계산함
+// 계산이 끝난 다리는 tempPlatforms vector에 데이터를 추가(마찬가지로 정렬되서 데이터가 들어감)
+// -------------------------------------------------------
+// 순서
+// 1. 사용자로부터 데이터를 입력 받아 platforms 에 저장
+// 2. 입력받은 데이터를 높이순으로 정렬
+// 3. 현재 계산하려는 다리보다 높이가 낮은 다리들의 정렬된 데이터가 필요함(tempPlatforms)
+// 4. 현재 계산하려는 다리보다 낮은 다리들을 반복문으로 탐색하면서 확인(다리의 시작점 x1, 다리의 끝점 x2 둘다 계산)
+// 5. 현재 다리를 p라고 하고, p 보다 높이가 낮은 다리를 temp 라고하면
+//    p의 시작점은 (temp->x1 <= p->x1 && p->x1 < temp->x2) 조건을 만족해야 p에서 기둥을 만들 때
+//    temp 위에 p의 기둥이 만들어짐
+// 6. 같은 방법으로 p의 끝점은 ((p->x2 > temp->x1) && (p->x2 <= temp->x2)) 해당 조건을 만족해야 
+//    temp 위에 p의 기둥이 만들어지는것을 알 수 있음.
+// 7. 위의 조건을 만족할 경우 result += p->height - temp->height; 만큼의 다리 개수가 만들어 지게됨
+// 8. 탐색이 끝난 p 다리는 계산이 완료되었으니 tempPlatforms에 추가함
+// 9. 5,6,7,8번 조건을 반복하면 다리 개수를 계산할 수 있음
+
+int main()
+{
+	int n;
+	cin >> n;
+
+	// 사용자 입력 받음
+	for (int i = 0; i < n; i++) {
+		Platform *p = new Platform();
+		cin >> p->height;	// 높이값 입력
+		cin >> p->x1;	// 다리 시작점 입력
+		cin >> p->x2;	// 다리 끝점 입력
+		platforms.push_back(p);	// 데이터 저장
+	}
+
+	// 데이터를 높이 순으로 정렬
+	sort(platforms.begin(), platforms.end(), sortPlatform);
+	
+	for (int i = 0; i < n; i++) {
+		Platform* p = platforms.at(i);
+		bool find = false;
+
+		// 왼쪽 다리 검사
+		for (int j = tempPlatforms.size() - 1; j >= 0 ; j--) {
+			Platform *temp = tempPlatforms.at(j);
+			if (temp->x1 <= p->x1 && p->x1 < temp->x2) {
+				result += p->height - temp->height;
+				find = true;
+				break;
+			}
+		}
+		if (find == false)
+			result += p->height;
+
+		find = false;
+		// 오른쪽 다리 검사
+		for (int j = tempPlatforms.size() - 1; j >= 0; j--) {
+			Platform* temp = tempPlatforms.at(j);
+			if ((p->x2 > temp->x1) && (p->x2 <= temp->x2)) {
+				result += p->height - temp->height;
+				find = true;
+				break;
+			}
+		}
+		if (find == false)
+			result += p->height;
+
+		tempPlatforms.push_back(p);
+	}
+
+	cout << result << endl;
+
+	// 메모리 해제
+	for (int i = 0; i < n; i++) {
+		Platform* p = platforms.at(i);
+		delete p;
+	}
+	return 0;
+}
+

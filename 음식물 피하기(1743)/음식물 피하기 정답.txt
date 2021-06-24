@@ -1,0 +1,78 @@
+#include <iostream>
+#include <stack>
+#include <queue>
+#include <vector>
+#include <algorithm>
+#include<string.h>
+#define TRASH true
+
+using namespace std;
+
+bool trashData[101][101] = { 0, };	// 음식물 쓰레기 데이터를 저장할 배열
+bool visited[101][101] = { 0, };	// 방문여부를 저장할 배열
+int dx[4] = {-1, 1, 0, 0};	// 왼쪽, 오른쪽, 위, 아래 탐색을 위한 배열
+int dy[4] = {0, 0, -1, 1};	// 왼쪽, 오른쪽, 위, 아래 탐색을 위한 배열
+
+int height, width;
+
+// 해당 지점을 기준으로 왼쪽, 오른쪽, 위, 아래 탐색
+void dfs(int x, int y, int *count) 
+{
+	++(*count);	 // 쓰레기 크기 1증가
+	visited[y][x] = true;	// 해당 지점 방문 표시
+	for (int i = 0; i < 4; i++) 
+	{
+		int nx = dx[i] + x;
+		int ny = dy[i] + y;
+		
+		// 범위를 벗어날 경우
+		if (nx < 1 || ny < 1 || nx > width || ny > height)
+			continue;
+
+		if (trashData[ny][nx] == TRASH)	// 쓰레기가 존재하고
+		{
+			if (visited[ny][nx] == false)	// 방문하지 않은 지역이라면
+			{
+				dfs(nx, ny, count);	// 탐색 시작
+			}
+		}
+	}
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin.tie(NULL);
+	ios_base::sync_with_stdio(false);
+	int trashCount;
+	cin >> height >> width >> trashCount;
+
+	for (int i = 0; i < trashCount; i++)
+	{
+		int r, c;
+		cin >> r >> c;
+		trashData[r][c] = TRASH;
+	}
+
+	// dfs 탐색 시작
+	int result = 0;
+	for (int row = 1; row <= height; row++)
+	{
+		for (int col = 1; col <= width; col++)
+		{
+			if (trashData[row][col] != TRASH)	// 쓰레기가 아니면 continue
+				continue;
+
+			// 쓰레기를 발견했고, 탐색했던 지역이 아니라면 탐색
+			if (visited[row][col] == false)
+			{
+				int r = 0;
+				dfs(col, row, &r);
+				result = max(r, result);
+			}
+		}
+	}
+
+	cout << result;
+	return 0;
+}

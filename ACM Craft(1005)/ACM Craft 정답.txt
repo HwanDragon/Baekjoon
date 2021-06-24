@@ -1,0 +1,94 @@
+#include <iostream>
+#include <stack>
+#include <queue>
+#include <vector>
+#include <algorithm>
+#include <string.h>
+
+using namespace std;
+
+vector<vector<int>> p;	// 엣지 정보
+vector<int> times;	// 각 노드별로 걸리는 건축시간
+vector<int> inDegree;	// 각 노드별로 계산해야하는 진입차수
+vector<int> dist;	// 총 건축시 걸리는 시간을 계산하기위해 저장할 배열
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(0);
+
+	int t = 0;
+	cin >> t;
+	while (t-- > 0) 
+	{
+		// 배열 초기화
+		dist.clear();
+		times.clear();
+		inDegree.clear();
+		p.clear();
+
+		int n, k;
+		cin >> n >> k;
+		//배열 크기 리사이즈
+		dist.resize(n + 1);
+		times.resize(n + 1);
+		inDegree.resize(n + 1);
+		p.resize(n + 1);
+
+		// 각 건물별로 걸리는 건축시간 입력 받음
+		for (int i = 1; i < n + 1; i++) {
+			cin >> times[i];
+		}
+
+		// 엣지 정보 입력받음 (엣지 정보를 입력 받으면서 동시에 진입차수 계산 가능)
+		// ex) 2 -> 1 로 방향성이 있는 엣지는 1 노드의 진입차수를 1 증가시키면됨
+		for (int i = 0; i < k; i++) {
+			int u, v;
+			cin >> u >> v;
+			p[u].push_back(v);
+			inDegree[v]++;
+		}
+
+		int w;
+		cin >> w;
+
+		//--------------- 위상정렬 시작--------------------
+		queue<int> qu;
+
+		// 진입 차수가 0인 항목들 큐에 추가
+		for (int i = 1; i <= n; i++) 
+		{
+			if (inDegree[i] == 0)
+			{
+				qu.push(i);
+				dist[i] = times[i];
+			}
+		}
+
+		while (qu.empty() == false) {
+			// 큐에서 원소를 하나 꺼냄
+			int current = qu.front();
+			qu.pop();
+
+			if (current == w)  break;	// 승리조건 만족
+
+			// current가 가리키고있는 인접노드들의 차수를 1감소시켜야함
+			for (int i = 0; i < p[current].size(); i++)
+			{
+				int num = p[current].at(i);
+	
+				if (--inDegree[num] == 0)	// 진입차수가 0인 노드 큐에 추가
+					qu.push(num);
+
+				// 현재와 그 전의 노드까지 더해서 합산해온 결과중 가장 큰 것을 취하면 됨
+				if (dist[num] < dist[current] + times[num]) {
+					dist[num] = dist[current] + times[num];
+				}
+			}
+		}
+
+		cout << dist[w] << '\n';
+	}
+
+	return 0;
+}

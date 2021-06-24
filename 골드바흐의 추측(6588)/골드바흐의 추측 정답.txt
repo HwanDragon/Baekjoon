@@ -1,0 +1,72 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <cmath>
+//6588 백준
+
+using namespace std;
+
+bool primeNumber[1000001] = { 0, };	// 소수 계산
+
+// 입력받은 값(value)을 2 < i < 1000000 까지 반복하면서
+// value 가 두 소수의 합으로 이루어지는 값을 찾아야함
+// i = 2부터 1000000까지 반복문으로 돌면서
+// value - i를 계산한 값과 , i가 소수이면 값을 찾음
+// i 값이나 value - i를 리턴하면됨
+int findPrimeNumber(int value) 
+{
+	int temp = -1;
+	for (int i = 2; i <= 1000000; i++)
+	{
+		if (primeNumber[i] == true)
+		{
+			temp = value - i;
+			if (primeNumber[temp] == true)
+				break;
+		}
+	}
+	return temp;
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 2; i <= 1000000; i++) {
+		primeNumber[i] = true;
+	}
+
+	vector<int> inputs;	// 입력값 저장
+	// 사용자 입력 받음
+	while (true) {
+		int input;
+		cin >> input;
+		if (input == 0)
+			break;
+
+		inputs.push_back(input);
+	}
+
+	int maxNum = *max_element(inputs.begin(), inputs.end());
+	int sqrtNum = sqrt(maxNum);
+	// 소수 계산은 에라토스테네스의 체 알고리즘 이용
+	for (int i = 2; i <= sqrtNum; i++)
+	{
+		for (int j = i*2; j <= maxNum; j += i)
+		{
+			primeNumber[j] = false;
+		}
+	}
+
+	// 결과출력
+	for (int i = 0; i < inputs.size(); i++)
+	{
+		int input = inputs.at(i);
+		int result = findPrimeNumber(input);
+		if (result != -1)
+			cout << input << " = " << min(result, input - result) << " + " << max(result, input - result) << "\n";
+		else
+			cout << "Goldbach's conjecture is wrong.\n";
+	}
+	return 0;
+}

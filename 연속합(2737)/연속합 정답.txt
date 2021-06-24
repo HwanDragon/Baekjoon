@@ -1,0 +1,71 @@
+#include <iostream>
+
+using namespace std;
+// 백준 2737
+// 6 = 1 + 2 + 3
+// 9 = 4 + 5 = 2 + 3 + 4
+// 10 = 1 + 2 + 3 + 4
+// 
+// 위의 내용을 보면, 해당 숫자 n을 연속합의 길이 length 로 나눈뒤 얻은 중간값 center를 기준으로 값들이 나열됨
+// 
+// 예를들어 6을 길이가 3인 연속합으로 분해해보면 center == 6 / 3 이고 center = 2 이다.
+// 길이가 3이므로 (center - 1, center, center + 1) 의 연속합으로 분해된다.
+// 즉, 길이가 홀수일 경우 연속 합의 시작값은 center - length / 2 이다.   
+// 마지막 끝값은 (시작값 + length - 1) 이다.
+// 
+// 9를 길이가 2인 연속합으로 분해해보면 center == 9 / 2 == 4.5 가 되고, 9 = 4 + 5이다.
+// 값을 찾기 위해서는 무조건 center 값을 버림하여야 한다 (올림할 경우 중간값을 초과하여 num을 초과하게됨)
+// 길이가 짝수일 때 시작값은 center - length / 2 + 1;
+// 마지막 끝값은 (시작값 + length - 1) 이다.
+
+
+int testCase;	// 테스트 케이스
+int num;	// 입력
+int main()
+{
+	ios_base::sync_with_stdio(0);
+	cin.tie(0);
+
+	cin >> testCase;
+	for (int caseIndex = 0; caseIndex < testCase; caseIndex++)
+	{
+		cin >> num;
+		int result = 0;
+		int length = 2;
+		int start;
+		int center;
+		long long  sum;
+		while (true)
+		{
+			start = 0;
+			center = (num / length);
+			if (length % 2 == 0)	// 길이가 짝수
+				start = center - length / 2 + 1;
+			else
+				start = center - length / 2;	// 홀수의 경우 중간값이 나눠 떨어지고 그 값을 기준으로 대칭
+
+			// n부터 m까지의 합을 구함   
+			// for (int i = start; i < start + length; i++) sum +=i   -->> 시간 초과
+			// 1부터 n까지의 합을 구하는 등차수열의 합 공식을 이용하여 풀이
+			// 
+			// 만약 n 부터 m 까지의 합을 구하고 싶을 경우 (0 <= n <= m)
+			// sum = (1부터 n - 1까지의 합) - (1부터 m까지의 합)
+
+			long long n = start - 1;
+			long long m = start + length - 1;
+			sum = ((m * (m + 1)) / 2) - ((n * (n + 1)) / 2);
+			
+			if (sum == num)
+				result++;
+
+			if (start <= 1)
+				break;
+
+			length++;
+		}
+
+		cout << result <<"\n";
+	}
+
+	return 0;
+}

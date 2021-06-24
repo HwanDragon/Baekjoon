@@ -1,0 +1,77 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <cmath>
+//1241 백준
+using namespace std;
+class Student
+{
+public:
+	int index;
+	int number;
+};
+
+vector<Student*> students;
+int numberCounts[1000001] = { 0, };	// 입력받은 숫자가 몇번나왔는지 기록
+int results[1000001] = { 0, };	// 계산결과 기록
+
+int main()
+{
+	int n;
+	cin >> n;
+	for (int i = 0; i < n; i++)
+	{
+		Student* s = new Student();
+		cin >> s->number;
+		s->index = i;
+
+		numberCounts[s->number]++;	// 해당 숫자가 몇번 나왔는지 기록한다
+		students.push_back(s);
+	}
+
+	for (int i = 0; i < n; i++)
+	{
+		Student* s = students.at(i);
+		if (results[s->number] != 0)
+		{
+			cout << results[s->number] << "\n";	// 이미 계산되어있으면 출력
+			continue;
+		}
+
+		// 없으면 계산
+		// 어떤수의 약수는 sqrt 까지만 계산하면됨
+		vector<int> divisor;	// 약수 리스트 저장
+		int tempSqrt = sqrt(s->number);
+		for (int j = 1; j <= tempSqrt; j++)
+		{
+			if (s->number % j == 0)
+				divisor.push_back(j);
+		}
+
+		// sqrt 보다 큰 약수도 찾음
+		int size = divisor.size();
+		for (int temp = 0; temp < size; temp++)
+		{
+			int t = divisor.at(temp);
+			if (t * t == s->number)	// 제곱수는 같은수이므로 중복되선 안됨
+				continue;
+
+			divisor.push_back(s->number / t);
+		}
+
+		int result = 0;
+		size = divisor.size();
+		for (int diviIndex = 0; diviIndex < size; diviIndex++)
+		{
+			int t = divisor.at(diviIndex);
+			result += numberCounts[t];
+		}
+
+		result--;	// 자기 자신 제외
+		results[s->number] = result;
+		cout << result << "\n";
+	}
+
+	return 0;
+}

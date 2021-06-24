@@ -1,0 +1,63 @@
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+int nodeCount;
+vector<int> adj[51];
+int rootNodeIndex = 0;
+int deleteNodeIndex = -1;
+int result = 0;
+
+void dfs(int nodeIndex)
+{
+	if (adj[nodeIndex].size() == 0)
+	{
+		result++;
+	}
+	else 
+	{
+		for (int i = 0; i < adj[nodeIndex].size(); i++)
+		{
+			int index = adj[nodeIndex][i];
+			if (index == deleteNodeIndex)
+			{
+				// 자식이 하나밖에 없는데 지울경우 부모가 리프노드가됨
+				// 예시 입력
+				// 4
+				// -1 0 1 2
+				// 2
+				if (adj[nodeIndex].size() == 1)	
+					result++;	
+				continue;
+			}
+				
+			dfs(adj[nodeIndex][i]);
+		}
+	}
+}
+
+int main()
+{
+	cin >> nodeCount;
+	int parent; 
+	for (int i = 0; i < nodeCount; i++)
+	{
+		cin >> parent;
+		if (parent == -1)
+		{
+			rootNodeIndex = i;
+			continue;
+		}
+			
+		adj[parent].push_back(i);
+	}
+
+	cin >> deleteNodeIndex;
+
+	if (deleteNodeIndex != rootNodeIndex)
+		dfs(rootNodeIndex);
+
+	cout << result;
+	return 0;
+}
