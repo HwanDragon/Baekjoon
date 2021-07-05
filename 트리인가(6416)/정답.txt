@@ -1,0 +1,70 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <unordered_set>
+
+using namespace std;
+
+int u, v;
+
+vector<pair<int, int>> edges;
+unordered_set<int> nodes;
+
+int main()
+{
+	int pNum = 1;
+	bool isTree = true;
+	while (true)
+	{
+		cin >> u >> v;
+
+		if ((u != 0) && (v != 0))
+		{
+			if (u == v)	// 자기자신 사이클 생성
+				isTree = false;
+
+			nodes.insert(u);
+			nodes.insert(v);
+
+			for (auto edge : edges)
+			{
+				int fir = edge.first;
+				int sec = edge.second;
+
+				if (v == sec) // 다른 노드가 이미 참조중임
+				{
+					isTree = false;	// 트리가 아님
+					break;
+				}
+
+				if (u == sec && v == fir)	// 자식과 부모간의 사이클 생성 확인
+				{
+					isTree = false;
+					break;
+				}
+			}
+			edges.push_back(make_pair(u, v));
+		}
+		
+
+		if (u == 0 && v == 0)
+		{
+			if (edges.size() != 0 && (edges.size() + 1 != nodes.size()))	// 노드 개수 = 엣지개수 + 1
+				isTree = false;
+
+			if (isTree)
+				cout << "Case " << pNum << " is a tree.\n";
+			else
+				cout << "Case " << pNum << " is not a tree.\n";
+			pNum++;
+			isTree = true;
+			edges.clear();
+			nodes.clear();
+		}
+
+		if (u == -1 && v == -1)
+			break;
+	}
+
+	return 0;
+}

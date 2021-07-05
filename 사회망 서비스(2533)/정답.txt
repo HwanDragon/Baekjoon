@@ -1,0 +1,58 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+int n;
+int u, v;
+vector<int> nodes[1000001];
+bool visited[1000001] = { 0, };
+int dp[1000001][2] = { 0, };	//dp[n][0] -> 얼리어댑터가 아님, dp[n][1] -> 얼리어댑터
+
+void dfs(int nodeIndex)
+{
+	// 부모가 얼리어댑터가 아니면 자식은 모두 얼리어댑터여야함 dp[child][1] 무조건 선택
+	// 부모가 얼리어댑터라면 자식은 모두 얼리어댑터여도 되고, 아니어도됨 (즉, 자식 dp값중 작은값 선택)
+	// 
+	// dp[nodeIndex][0] += dp[child][1]; 
+	// dp[nodeIndex][1] += min(dp[child][0], dp[child][1]);
+	dp[nodeIndex][1] = 1;
+
+	int size = nodes[nodeIndex].size();
+	if (size == 0)
+	{
+		// 더이상 자식이 없는 리프노드에 해당함
+		dp[nodeIndex][0] = 0;
+		dp[nodeIndex][1] = 1;
+		visited[nodeIndex] = true;
+		return;
+	}
+
+	visited[nodeIndex] = true;
+	for (int i = 0; i < size; i++)
+	{
+		int child = nodes[nodeIndex].at(i);
+		if (visited[child] == false)
+		{
+			dfs(child);
+			dp[nodeIndex][0] += dp[child][1];
+			dp[nodeIndex][1] += min(dp[child][0], dp[child][1]);
+		}
+	}
+}
+
+int main()
+{
+	cin >> n;
+	for (int i = 0; i < n - 1; i++)
+	{
+		cin >> u >> v;
+		nodes[u].push_back(v);
+		nodes[v].push_back(u);
+	}
+
+	dfs(1);
+	cout << min(dp[1][0], dp[1][1]);
+	return 0;
+}
