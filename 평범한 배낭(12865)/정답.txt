@@ -1,0 +1,46 @@
+#include <iostream>
+#include <algorithm>
+
+using namespace std;
+
+int n, k;
+int value[100] = { 0 , };
+int weight[100] = { 0, };
+int dp[101][100001] = { 0, };
+/*
+	ns(n, w) = max(
+					ns(n - 1, w),	// n번째 물건을 포함하지 않을 경우
+					ns(n - 1, w + w[n]) + v[n]	// n번째 물건을 포함할 경우 (w + w[n] < k)
+				  )
+*/
+
+int go(int index, int w)
+{
+	if (index == n) return 0;
+
+	if (dp[index][w] != 0) return dp[index][w];
+
+	int n1 = 0;
+	int n2 = 0;
+
+	if (w + weight[index] <= k)
+		n1 = go(index + 1, w + weight[index]) + value[index];
+
+
+	n2 = go(index + 1, w);
+
+	return dp[index][w] = max(n1, n2);
+}
+
+int main()
+{
+	cin >> n >> k;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> weight[i] >> value[i];
+	}
+
+	cout << go(0, 0);
+	
+	return 0;
+}
