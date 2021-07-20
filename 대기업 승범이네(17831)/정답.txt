@@ -1,0 +1,88 @@
+#include <iostream>
+#include <algorithm>
+#include <vector>
+
+using namespace std;
+
+int n;
+int dp[200001][2] = { 0, };	// dp[n][0] -> 선택되지 않음, dp[n][1] -> 멘토로 선택
+int abilities[200001];
+vector<int> nodes[200001];
+
+
+void dfs(int nodeIndex)
+{
+	int childSize = nodes[nodeIndex].size();
+	if (childSize == 0)	// 리프노드
+	{
+		dp[nodeIndex][0] = 0;
+		dp[nodeIndex][1] = 0;
+		return;
+	}
+	
+	// 자식노드까지 내려감
+	for (int i = 0; i < childSize; i++)
+	{
+		int child = nodes[nodeIndex].at(i);
+		if (dp[child][0] == -1 || dp[child][1] == -1)
+			dfs(child);
+	}
+
+	// 해당 노드가 선택되지 않았을 경우 최대값 계산
+	// 자식 노드들 중 멘토일경우, 멘티일경우중 최대값을 모두 더해줌
+	int noSelect = 0;
+	for (int i = 0; i < childSize; i++)
+	{
+		int child = nodes[nodeIndex].at(i);
+		noSelect = noSelect + max(dp[child][0], dp[child][1]);
+	}
+	dp[nodeIndex][0] = noSelect;
+
+	// 해당 노드가 멘토일 경우
+	// 
+	int diff = 0;
+	dp[nodeIndex][1] = noSelect;
+	for (int i = 0; i < childSize; i++)
+	{
+		int child = nodes[nodeIndex][i];
+
+		// n번째 자식을 선택한 경우 해당 자식은 무조건 멘티 여야 하므로, 
+		// 자식을 선택했을 때 이득값을 계산해줌
+		// 1~n번째 자식을 반복적으로 선택하면서 이득값중 가장 큰 값을 선택
+		// 이득값 -> (nodeIndex 판매실력 * 자식 판매실력) + 자식이 멘티일경우 - 자식이 멘토일경우
+		// (직접 그림을 그려보면서 하면 좀더 알기 쉬움)
+		int t = (abilities[nodeIndex] * abilities[child]) + dp[child][0] - dp[child][1];
+		if (diff < t)
+		{
+			diff = t;
+			dp[nodeIndex][1] = noSelect + t;
+		}
+	}
+}
+
+int main()
+{
+	for (int i = 0; i <= 200000; i++)
+	{
+		for (int j = 0; j < 2; j++)
+		{
+			dp[i][j] = -1;
+		}
+	}
+
+	cin >> n;
+	int temp;
+	for (int i = 2; i <= n ; i++)
+	{
+		cin >> temp;
+		nodes[temp].push_back(i);
+	}
+	for (int i = 1; i <= n; i++)
+	{
+		cin >> abilities[i];
+	}
+
+	dfs(1);
+	cout << max(dp[1][0], dp[1][1]);
+	return 0;
+}
