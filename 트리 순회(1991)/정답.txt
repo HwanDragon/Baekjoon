@@ -1,0 +1,87 @@
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+pair<int, int> edges[26];	// 알파벳 개수 26개
+
+void preOrder(int startNodeIndex)
+{
+	int left = edges[startNodeIndex].first;
+	int right = edges[startNodeIndex].second;
+
+	cout << (char)('A' + startNodeIndex);
+	if (left != -1)
+		preOrder(left);
+
+	if (right != -1)
+		preOrder(right);
+}
+
+void inOrder(int startNodeIndex)
+{
+	int left = edges[startNodeIndex].first;
+	int right = edges[startNodeIndex].second;
+
+	if (left != -1)
+		inOrder(left);
+
+	cout << (char)('A' + startNodeIndex);
+
+	if (right != -1)
+		inOrder(right);
+}
+
+void postOrder(int startNodeIndex)
+{
+	int left = edges[startNodeIndex].first;
+	int right = edges[startNodeIndex].second;
+
+	if (left != -1)
+		postOrder(left);
+
+	if (right != -1)
+		postOrder(right);
+
+	cout << (char)('A' + startNodeIndex);
+}
+
+int main(void)
+{
+	ios::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+	
+	int n;
+	cin >> n;
+	char parent, left, right;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> parent >> left >> right;
+		int l, r;
+		// 자식이 없는 경우 -1로 지정
+		// 'A' ~ 'Z' 의 문자를 0~25 까지 숫자로 변경 ('A' - 'A') ~ ('Z' - 'A') -> 아스키 코드 이용
+		if (left == '.')
+			l = -1;	
+		else
+			l = left - 'A';
+
+		if (right == '.')
+			r = -1;
+		else
+			r = right - 'A';
+
+		edges[parent - 'A'].first = l;
+		edges[parent - 'A'].second = r;
+	}
+
+	preOrder(0);
+	cout << endl;
+
+	inOrder(0);
+	cout << endl;
+
+	postOrder(0);
+
+	return 0;
+}
