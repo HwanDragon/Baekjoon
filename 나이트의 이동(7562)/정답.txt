@@ -1,0 +1,78 @@
+#include <iostream>
+#include <queue>
+
+using namespace std;
+
+int boardSize;
+int startX, startY;
+int destX, destY;
+int dp[301][301] = { 0, };
+
+void bfs(int sx, int sy)
+{
+	queue<pair<int, int>> q;
+	q.push(make_pair(sx, sy));
+	dp[sy][sx] = 0;
+
+	while (q.empty() == false)
+	{
+		int currentX = q.front().first;
+		int currentY = q.front().second;
+		q.pop();
+
+		int dx[] = {-2, -2, 2, 2, 1,-1, 1,-1};	// 나이트가 갈 수 있는곳
+		int dy[] = { 1, -1, 1,-1, 2, 2,-2,-2};
+
+		for (int i = 0; i < 8; i++)
+		{
+			int tempX = dx[i] + currentX;
+			int tempY = dy[i] + currentY;
+
+			// 체스판 범위 벗어나는지 확인
+			if (tempX < 0 || tempY < 0 || tempX >= boardSize || tempY >= boardSize)
+				continue;
+
+			if (dp[tempY][tempX] != -1)	// 이미 방문한 지역(굳이 다시 방문할 필요없음)
+				continue;
+
+			q.push(make_pair(tempX, tempY));	// 후보지에 추가
+			dp[tempY][tempX] = dp[currentY][currentX] + 1;	// dp배열 업데이트
+
+			if (tempX == destX && tempY == destY)	// 목적지 도착
+				return;
+		}
+
+	}
+
+}
+
+// DP 배열 초기화
+void initDp()
+{
+	for (int i = 0; i < 301; i++)
+		for (int j = 0; j < 301; j++)
+			dp[i][j] = -1;
+}
+
+int main(void)
+{
+	ios::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	int testCase;
+	cin >> testCase;
+	for (int i = 0; i < testCase; i++)
+	{
+		// 사용자 입력 받음
+		cin >> boardSize;
+		cin >> startX >> startY;
+		cin >> destX >> destY;
+
+		initDp();	// dp 배열 초기화
+		bfs(startX, startY);
+		cout << dp[destY][destX] << "\n";
+	}
+
+	return 0;
+}
