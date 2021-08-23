@@ -1,0 +1,70 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+int n;
+char map[25][25] = { 0, };
+bool visited[25][25] = { 0, };
+int result;
+vector<int> results;
+
+void dfs(int x, int y)
+{
+	result++;
+	int dx[] = {-1, 1, 0, 0};
+	int dy[] = { 0, 0, -1, 1};
+	visited[y][x] = true;
+
+	for (int i = 0; i < 4; i++)
+	{
+		int tempX = x + dx[i];
+		int tempY = y + dy[i];
+
+		if (tempX < 0 || tempY < 0 || tempX >= n || tempY >= n)	// 배열 범위 초과
+			continue;
+
+		if (map[tempY][tempX] == '0')	// 집이 없는곳
+			continue;
+
+		if (visited[tempY][tempX] == true)	// 이미 방문한곳
+			continue;
+
+		dfs(tempX, tempY);
+	}
+}
+
+int main(void)
+{
+	ios::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+	
+	cin >> n;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> map[i];
+	}
+
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < n; j++)
+		{
+			if (map[i][j] == '1' && visited[i][j] == false)
+			{
+				result = 0;
+				dfs(j, i);
+				results.push_back(result);
+			}
+		}
+	}
+	
+	sort(results.begin(), results.end());
+
+	cout << results.size() << "\n";
+	for (int i = 0; i < results.size(); i++)
+		cout << results.at(i) << "\n";
+	
+	return 0;
+}
