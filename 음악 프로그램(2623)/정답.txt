@@ -1,0 +1,90 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+using namespace std;
+
+
+int n, m;
+
+vector<pair<int, int>> edges;
+
+int main() 
+{
+	cin >> n >> m;
+
+	// 차수 계산을 위한 degree 배열 생성
+	int* degree = (int*)malloc(sizeof(int) * (n + 1));
+	for (int i = 0; i <= n; i++)
+	{
+		degree[i] = 0;
+	}
+
+	// 사용자 입력 받음
+	for (int i = 0; i < m; i++)
+	{
+		int num , first, second;
+		cin >> num;
+		if (num > 0)
+		{
+			cin >> first;
+			for (int j = 0; j < num - 1; j++)
+			{
+				cin >> second;
+				edges.push_back(make_pair(first, second));
+				degree[second]++;
+				first = second;
+			}
+		}
+	}
+
+	queue<int> q;	// 위상 정렬을 위한 큐 생성
+	queue<int> result;	// 결과 저장
+
+	// 입력 차수 초기화
+	for (int i = 1; i <= n; i++)
+	{
+		if (degree[i] == 0)
+		{
+			q.push(i);
+		}
+	}
+
+	// 위상 정렬
+	bool cycle = false;	// 사이클 존재 여부
+	// 위상정렬은 모든 원소의 개수 만큼 실행되야함(n번)
+	for (int index = 0; index < n; index++)
+	{
+		// 모든 원소의 정렬이 끝나지 않았는데 큐가 빈다면 사이클 존재
+		if (q.empty() == true)
+		{
+			cycle = true;
+			break;
+		}
+		int node = q.front(); q.pop();
+		result.push(node);
+
+		// 모든 엣지를 순회하며 차수를 감소시킴
+		for (int i = 0; i < edges.size(); i++)
+		{
+			pair<int, int> pair = edges.at(i);
+			if (node == pair.first)
+			{
+				degree[pair.second]--;	// 입력차수 감소
+				if (degree[pair.second] == 0)	// 차수가 0이면
+					q.push(pair.second);		// 큐에 추가
+			}
+		}
+	}
+
+	if (cycle == true)
+		cout << "0";
+	else {
+		while (result.empty() != true)
+		{
+			cout << result.front() << endl;
+			result.pop();
+		}
+	}
+
+	return 0;
+}
