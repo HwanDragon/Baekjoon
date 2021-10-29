@@ -1,0 +1,104 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <algorithm>
+
+using namespace std;
+
+int n, m;
+
+int dp[1001] = { 0, };	// 해당 노드까지 가는데 얻을 수 있는 최대 점수
+int degree[1001] = { 0, };	// 입력차수 계산
+
+vector<pair<int, int>> edges[1001];
+vector<pair<int, int>> reverseEdges[1001];
+
+vector<int> result;
+
+int cost = 0;
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int s, e, sc;
+	for (int i = 1; i <= m; i++)
+	{
+		cin >> s >> e >> sc;
+		degree[e]++;
+		edges[s].push_back(make_pair(e, sc));
+
+		// 역순으로 그래프를 저장하여 경로를 탐색함
+		reverseEdges[e].push_back(make_pair(s, sc));
+	}
+
+	// 차수가 0인 항목 큐에 추가
+	queue<int> q;
+	q.push(1);	// 1번부터 시작
+
+	// 위상정렬 시작
+	int last = 0;
+	while (q.empty() == false)
+	{
+		int current = q.front();
+		q.pop();
+
+		for (int i = 0; i < edges[current].size(); i++)
+		{
+			int end = edges[current].at(i).first;
+			int score = edges[current].at(i).second;
+
+			degree[end]--;
+			if (degree[end] == 0)
+				q.push(end);
+
+			if (end == 1)
+			{
+				// 마지막 도착
+				if (last < dp[current] + score)
+					last = dp[current] + score;
+			}
+			else
+			{
+				if (dp[end] < dp[current] + score)
+					dp[end] = dp[current] + score;
+			}
+		}
+	}
+	cost = last;	// 최대 점수 저장
+
+	// 거꾸로 탐색하여 순서를 찾아냄
+	queue<int> temp;
+	result.push_back(1);
+	temp.push(1);
+	bool arrive = false;
+	while (temp.empty() == false)
+	{
+		int current = temp.front();	temp.pop();
+
+		for (int i = 0; (i < reverseEdges[current].size()) && (arrive == false); i++)
+		{
+			int end = reverseEdges[current].at(i).first;
+			int score = reverseEdges[current].at(i).second;
+			if (dp[end] == last - score)
+			{
+				last -= score;
+
+				temp.push(end);
+				if (end == 1)
+					arrive = true;
+
+				result.push_back(end);
+				break;
+			}
+		}
+
+		if (arrive == true)
+			break;
+	}
+
+	reverse(result.begin(), result.end());
+
+	cout << cost << "\n";
+	for (int i = 0; i < result.size(); i++)
+		cout << result.at(i) << " ";
+}

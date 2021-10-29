@@ -1,0 +1,117 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+using namespace std;
+
+/*
+입력 예제
+5
+7
+1 2 1
+1 3 3
+2 3 2
+2 4 1
+2 5 3
+3 5 1
+4 5 1
+1 5
+
+출력 결과
+4
+5
+*/
+
+int n, m, startCity, endCity;
+
+vector<pair<int, int>> edges[10001];
+vector<pair<int, int>> reverseEdges[10001];	// 도로 수를 찾기 위한 역방향 그래프
+int degree[10001] = { 0, };	// 진입차수 계산
+int maxCost = 0;	// 시작 도시부터 도착 도시까지 가장 오래 걸리는 비용
+int cost[10001] = { 0, };	// 시작 도시부터 도착 도시까지 비용 계산
+int roadCount = 0;	// 1분도 쉬지 않고 달려야하는 도로의 수 
+int visited[10001] = { 0, };	// BFS 방문 여부(visited 없으면 중복 체크됨)
+
+// 역방향 노드부터 BFS 탐색을 시작함
+void bfs(int startNodeIndex)
+{
+	queue<int> q;
+	q.push(startNodeIndex);
+	visited[startNodeIndex] = true;	// 방문 체크
+
+	while (q.empty() == false)
+	{
+		int current = q.front();
+		q.pop();
+
+		for (int i = 0; i < reverseEdges[current].size(); i++)
+		{
+			int end = reverseEdges[current].at(i).first;
+			int time = reverseEdges[current].at(i).second;
+
+			if (cost[current] - time != cost[end])
+				continue;
+			
+			roadCount++;
+
+			// 이미 방문한 지역은 다시 방문할 필요없음 (중복도로는 1개로 체크)
+			if (visited[end] == false)
+			{
+				visited[end] = true;
+				q.push(end);
+			}
+		}
+	}
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int s, e, t;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> s >> e >> t;
+		degree[e]++;
+		edges[s].push_back(make_pair(e, t));
+
+		// 도로 수를 계산하기위해 역방향 그래프를 생성함
+		reverseEdges[e].push_back(make_pair(s, t));	
+	}
+	cin >> startCity >> endCity;
+
+	queue<int> q;
+	// 입력 차수가 0 인 항목들 큐에 추가
+	for (int i = 1; i < n; i++)
+	{
+		if (degree[i] == 0)
+			q.push(i);
+	}
+
+	// 위상 정렬 시작
+	while (q.empty() == false)
+	{
+		int current = q.front();	// 현재 도시
+		q.pop();
+
+		for (int i = 0; i < edges[current].size(); i++)
+		{
+			int end = edges[current].at(i).first;
+			int time = edges[current].at(i).second;
+
+			if (cost[end] < cost[current] + time)
+				cost[end] = cost[current] + time;
+
+			degree[end]--;
+			if (degree[end] == 0)
+				q.push(end);
+		}
+	}
+
+	maxCost = cost[endCity] - cost[startCity];
+	bfs(endCity);
+	cout << maxCost << "\n";
+	cout << roadCount;
+
+	return 0;
+}
