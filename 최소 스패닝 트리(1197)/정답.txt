@@ -1,0 +1,84 @@
+#include <iostream>
+#include <algorithm>
+#include <vector>
+
+using namespace std;
+
+int v, e;
+
+class Edge {
+public :
+	int first;
+	int second;
+	int weight;
+};
+
+vector<Edge*> edges;
+
+// 부모의 값을 가져옴
+int getParent(int nodeIndex, int parent[])
+{
+	if (nodeIndex == parent[nodeIndex])
+		return nodeIndex;
+
+	return parent[nodeIndex] = getParent(parent[nodeIndex], parent);
+}
+
+// 두 노드의 부모를 합침
+void unionParent(int first, int second, int parent[])
+{
+	int firstParent = getParent(first, parent);
+	int secondParent = getParent(second, parent);
+	if (firstParent < secondParent)
+		parent[secondParent] = firstParent;
+	else
+		parent[firstParent] = secondParent;
+}
+
+// 두 노드의 부모가 같은지 확인
+bool findParent(int first, int second, int parent[])
+{
+	if (getParent(first, parent) == getParent(second, parent))
+		return true;
+
+	return false;
+}
+
+// 가중치 순으로 정렬하기 위한 비교 함수
+int compare(Edge *first, Edge *second)
+{
+	return first->weight < second->weight;
+}
+
+int main()
+{
+	int parent[10050] = { 0, };
+	for (int i = 0; i < 10050; i++)
+		parent[i] = i;
+
+	int maxWeight = 0;
+	// 사용자 입력 받음
+	cin >> v >> e;
+	for (int i = 0; i < e; i++)
+	{
+		Edge* edge = new Edge();
+		cin >> edge->first >> edge->second >> edge->weight;
+		edges.push_back(edge);
+	}
+
+	sort(edges.begin(), edges.end(), compare);	// 정렬
+
+	// 엣지를 순회하며 연결이 안되어있으면 가중치가 적은순으로 꺼내서 연결함
+	for (int i = 0; i < edges.size(); i++)
+	{
+		Edge* edge = edges.at(i);
+		if (findParent(edge->first, edge->second, parent) == false)
+		{
+			maxWeight += edge->weight;
+			unionParent(edge->first, edge->second, parent);
+		}
+
+	}
+	cout << maxWeight;
+	return 0;
+}
