@@ -1,0 +1,65 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <cmath>
+#include <sstream>
+//1422 백준
+using namespace std;
+
+vector<string> numbers;
+
+bool sortNum(string a, string b) 
+{
+	if (a.length() == b.length())
+	{
+		return a > b;
+	}
+	else 
+	{
+		return a.length() > b.length();
+	}
+}
+
+bool sortNum2(string a, string b)
+{
+	return  a + b > b + a;
+}
+
+int main() 
+{
+	// k개의 숫자 중 n개를 뽑아야 함
+	int k, n;
+	cin >> k >> n;
+
+	for (int i = 0; i < k; i++)
+	{
+		string num;
+		cin >> num;
+		numbers.push_back(num);
+	}
+
+	sort(numbers.begin(), numbers.end(), sortNum);
+
+	string s;
+	for (int i = 0; i < k; i++)
+	{
+		s = s + numbers.at(i);
+	}
+
+	string first = numbers.at(0);
+	string temp;
+	for (int i = k; i < n; i++) 
+	{
+		numbers.push_back(first);
+	}
+
+	sort(numbers.begin(), numbers.end(), sortNum2);
+
+	for (int i = 0; i < numbers.size(); i++)
+	{
+		cout << numbers.at(i);
+	}
+
+	return 0;
+}
