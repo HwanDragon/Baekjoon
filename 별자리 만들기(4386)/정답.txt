@@ -1,0 +1,106 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <cmath>
+
+using namespace std;
+
+// UnionFind 알고리즘
+
+int gerParent(int nodeIndex, int parent[])
+{
+	if (nodeIndex == parent[nodeIndex]) return nodeIndex;
+
+	return parent[nodeIndex] = gerParent(parent[nodeIndex], parent);
+}
+
+void unionParent(int first, int second, int parent[])
+{
+	int firstParent = gerParent(first, parent);
+	int secondParent = gerParent(second, parent);
+
+	if (firstParent < secondParent)
+		parent[secondParent] = firstParent;
+	else
+		parent[firstParent] = secondParent;
+}
+
+bool findParent(int first, int second, int parent[])
+{
+	if (gerParent(first, parent) == gerParent(second, parent))
+		return true;
+
+	return false;
+}
+
+// UnionFind 알고리즘
+
+int n;
+
+// 사용자 입력받을 x, y 좌표
+vector<pair<double, double>> points;
+
+// 사용자로부터 입력받은 좌표로 좌표 순서별 거리를 계산하여 저장할 간선 클래스
+class Edge {
+public :
+	int firstIndex;
+	int secondIndex;
+	double dist;
+};
+
+// 간선을 거리순으로 정렬하기위한 비교함수
+int compare(Edge* first, Edge* second)
+{
+	return first->dist < second->dist;
+}
+
+// 간선정보
+vector<Edge*> edges;
+
+int main()
+{
+	int parent[101] = { 0, };
+	for (int i = 0; i < 101; i++)	parent[i] = i;
+
+	// 사용자 입력 받음
+	cin >> n;
+	double first, second;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> first >> second;
+		points.push_back(make_pair(first, second));
+	}
+
+	// 입력으로 받은 정보로 위치별 거리 정보를 전부 계산
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = i + 1; j < n; j++)
+		{
+			Edge* edge = new Edge();
+			edge->firstIndex = i;
+			edge->secondIndex = j;
+			pair<int, int> f = points.at(i);
+			pair<int, int> s = points.at(j);
+
+			edge->dist = sqrt(((f.first - s.first) * (f.first - s.first) + (f.second - s.second) * (f.second - s.second)));
+
+			edges.push_back(edge);
+		}
+	}
+
+	// 거리순 정렬
+	sort(edges.begin(), edges.end(), compare);
+	double result = 0;
+	// 크루스칼 알고리즘 실행
+	for (int i = 0; i < edges.size(); i++)
+	{
+		Edge* edge = edges.at(i);
+		if (findParent(edge->firstIndex, edge->secondIndex, parent) == false)
+		{
+			unionParent(edge->firstIndex, edge->secondIndex, parent);
+			result += edge->dist;
+		}
+	}
+	cout.precision(2);
+	cout << result;
+}
