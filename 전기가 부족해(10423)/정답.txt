@@ -1,0 +1,105 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+// ----- Union Find 알고리즘 -----
+int getParent(int node, int parent[])
+{
+	if (node == parent[node]) return node;
+
+	return parent[node] = getParent(parent[node], parent);
+}
+
+void unionParent(int first, int second, int parent[])
+{
+	int firstParent = getParent(first, parent);
+	int secondParent = getParent(second, parent);
+
+	if (firstParent < secondParent)
+		parent[secondParent] = firstParent;
+	else
+		parent[firstParent] = secondParent;
+}
+
+bool findParent(int first, int second, int parent[])
+{
+	if (getParent(first, parent) == getParent(second, parent))
+		return true;
+
+	return false;
+}
+/// ----- Union Find 알고리즘 -----
+
+// 간선정보를 저장할 클래스 선언
+class Edge {
+public :
+	int start;
+	int end;
+	int weight;
+};
+
+vector<Edge*> edges;
+
+// 간선정보 정렬을 위한 비교함수
+int compare(Edge *first, Edge *second)
+{
+	return first->weight < second->weight;
+}
+
+int n, m, k;
+
+int main()
+{
+	// Union Find 알고리즘을 위한 parent 배열 선언
+	int parent[1001] = { 0, };
+	for (int i = 0; i <= 1000; i++)	parent[i] = i;
+	
+	// 사용자 입력 받음
+	cin >> n >> m >> k;
+	vector<int> plants;	// 발전소 번호
+	for (int i = 0; i < k; i++)
+	{
+		int num;
+		cin >> num;
+		plants.push_back(num);
+	}
+
+	// 발전소가 설치된 곳은 미리 연결해줌
+	for (int i = 0; i < plants.size() - 1; i++)
+	{
+		int first = plants.at(i);
+		int second = plants.at(i + 1);
+		unionParent(first, second, parent);
+	}
+
+	// 간선정보를 저장할 클래스 생성
+	for (int i = 0; i < m; i++)
+	{
+		Edge* edge = new Edge();
+		cin >> edge->start >> edge->end >> edge->weight;
+		//if (findParent(edge->start, edge->end, parent) == true)  edge->weight = 0;
+
+		edges.push_back(edge);
+	}
+
+	// 가중치 값으로 정렬
+	sort(edges.begin(), edges.end(), compare);
+
+	// 크루스칼 알고리즘
+	int result = 0;
+	for (int i = 0; i < edges.size(); i++)
+	{
+		Edge* edge = edges.at(i);
+		if (findParent(edge->start, edge->end, parent) == true)
+			continue;
+
+		unionParent(edge->start, edge->end, parent);
+		result += edge->weight;
+	}
+
+	cout << result;
+
+	return 0;
+}
