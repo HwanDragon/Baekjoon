@@ -1,0 +1,97 @@
+#include <iostream>
+
+#define MAX_SIZE 1501*1501
+
+using namespace std;
+
+int heap[MAX_SIZE] = { 0, };
+int cnt = 0;	// 힙에 추가한 데이터 개수
+
+// 힙 자료구조에 데이터 추가
+void push(int node)
+{
+	heap[cnt] = node;	// 마지막에 데이터 추가
+	
+	// 추가한 노드를 기점으로 부모가 값이 더 작으면 위치를 바꿔줌
+	int current = cnt;
+	int root = (cnt - 1) / 2;
+	int temp;
+	while (current != 0)
+	{
+		if (heap[current] > heap[root])
+		{
+			temp = heap[current];
+			heap[current] = heap[root];
+			heap[root] = temp;
+		}
+		else 
+		{
+			// 조건을 만족하지 않으면 힙구조가 완성된 상태임
+			break;
+		}
+		current = root;
+		root = (current - 1) / 2;
+	}
+
+	cnt++;	// 개수 증가
+}
+
+// 힙 자료구조에서 데이터 꺼내기
+int pop()
+{
+	// 가장 우선순위가 높은 데이터 반환
+	int result = heap[0];
+	heap[0] = heap[cnt - 1];	// 가장 마지막에 있는 데이터를 root로 올림
+
+	int current = 0;
+	int child = (current * 2) + 1;	// 왼쪽 자식 선택
+	int temp;
+	while (child < cnt)
+	{
+		// 배열 범위 벗어나는지 확인, 왼쪽 자식보다 오른쪽 자식이 더 크면, 더 큰 자식을 선택함
+		if (((child + 1) < cnt) &&(heap[child] < heap[child + 1]))
+			child += 1;
+
+		if (heap[current] < heap[child])
+		{
+			temp = heap[current];
+			heap[current] = heap[child];
+			heap[child] = temp;
+		}
+		else
+		{
+			break;
+		}
+		current = child;
+		child = (current * 2) + 1;
+	}
+
+	cnt--;
+	return result;
+}
+
+int main()
+{
+	std::ios::sync_with_stdio(false);
+	std::cin.tie(nullptr);
+
+	int n, input;
+	cin >> n;
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < n; j++)
+		{
+			cin >> input;
+			push(input);
+		}
+	}
+
+	int result = 0;
+	for (int i = 0; i < n; i++)
+	{
+		result = pop();
+	}
+	cout << result;
+
+	return 0;
+}
