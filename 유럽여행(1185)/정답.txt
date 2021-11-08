@@ -1,0 +1,107 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+int getParent(int node, int parent[])
+{
+	if (node == parent[node]) return node;
+
+	return parent[node] = getParent(parent[node], parent);
+}
+
+void unionParent(int first, int second, int parent[])
+{
+	int firstParent = getParent(first, parent);
+	int secondParent = getParent(second, parent);
+
+	if (firstParent < secondParent)
+		parent[secondParent] = firstParent;
+	else
+		parent[firstParent] = secondParent;
+}
+
+bool findParent(int first, int second, int parent[])
+{
+	if (getParent(first, parent) == getParent(second, parent))
+		return true;
+
+	return false;
+}
+
+class Edge {
+public:
+	int start;
+	int end;
+	int weight;
+};
+
+int weights[10001] = { 0, };
+vector<Edge*> edges;
+
+int compare(Edge *first, Edge *second)
+{
+	return first->weight < second->weight;
+}
+
+int main()
+{
+	int parent[10001] = { 0, };
+	for (int i = 0; i < 10001; i++) parent[i] = i;
+
+	int n, p;
+	cin >> n >> p;
+	for (int i = 1; i <= n; i++)
+	{
+		cin >> weights[i];
+	}
+
+	for (int i = 0; i < p; i++)
+	{
+		Edge* edge = new Edge();
+		cin >> edge->start >> edge->end >> edge->weight;
+		edges.push_back(edge);
+	}
+
+	// 도시 방문비용과 엣지 정보를 이용하여 새로운 엣지 생성
+	// 시작도시에서 출발하여 모든도시를 한번씩 방문하고 다시 출발도시로 돌아오는것은
+	// 트리의 둘레를 한번씩 방문하는 것과 같음
+	// A - B 가중치 => A방문비용 + B방문비용 + AB 이동 비용
+
+	vector <Edge*> newEdges;
+	for (int i = 0; i < edges.size(); i++)
+	{
+		Edge* newEdge = new Edge();
+		Edge* edge = edges.at(i);
+		newEdge->start = edge->start;
+		newEdge->end = edge->end;
+		newEdge->weight = weights[edge->start] + weights[edge->end] + (edge->weight * 2);
+		newEdges.push_back(newEdge);
+	}
+
+	sort(newEdges.begin(), newEdges.end(), compare);
+
+	int result = 0;
+	for (int i = 0; i < newEdges.size(); i++)
+	{
+		Edge* edge = newEdges.at(i);
+		if (findParent(edge->start, edge->end, parent) == false)
+		{
+			unionParent(edge->start, edge->end, parent);
+			result += edge->weight;
+		}
+	}
+
+	// 트리 둘레를 순회하는데
+	// 시작도시는 출발점으로 한번 더 거친다.
+	// 시작도시는 비용이 가장 적은 도시를 택하여 더해줌
+	int minValue = 1000000000;
+	for (int i = 1; i <= n; i++) 
+	{
+		minValue = min(weights[i], minValue);
+	}
+
+	cout << result + minValue;
+	return 0;
+}
