@@ -1,0 +1,42 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+using namespace std;
+
+
+int main()
+{
+	priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int,int>>> q;
+	vector<int> rooms;
+	int n, start, end;
+
+	cin >> n;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> start >> end;
+		q.push({start, end});
+	}
+
+	while (q.empty() == false) {
+		pair<int, int> p = q.top();
+		q.pop();
+
+		bool find = false;
+		for (int i = 0; i < rooms.size(); i++) {
+			int time = rooms.at(i);
+			if (time <= p.first) {
+				rooms[i] = p.second;
+				find = true;
+				break;
+			}
+		}
+
+		if (find == false)
+			rooms.push_back(p.second);
+	}
+
+	cout << rooms.size();
+
+	return 0;
+}
