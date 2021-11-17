@@ -1,0 +1,39 @@
+#include <iostream>
+#include <queue>
+#include <vector>
+
+using namespace std;
+
+int main()
+{
+	int n;
+	priority_queue<int, vector<int>, greater<int>> q;
+	int num;
+	int result = 0;;
+
+	cin >> n;
+	if (n == 1)
+	{
+		cout << 0;
+		return 0;
+	}
+
+	for (int i = 0; i < n; i++) {
+		cin >> num;
+		q.push(num);
+	}
+
+	while (q.empty() == false)
+	{
+		int a = q.top(); q.pop();
+		int b = q.top(); q.pop();
+		result += (a + b);
+		if (q.empty() == true)
+			break;
+
+		q.push(a + b);
+	}
+
+	cout << result;
+	return 0;
+}
