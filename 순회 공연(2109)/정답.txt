@@ -1,0 +1,79 @@
+#include <iostream>
+#include <queue>
+#include <vector>
+
+using namespace std;
+
+struct cmp1 {
+	bool operator() (pair<int, int> f, pair<int, int> s) {
+		if (f.second != s.second)
+		{
+			return f.second > s.second;
+		}
+		return f.first < s.first;
+	}
+};
+
+/*
+10 1
+20 2
+30 2
+50 3
+40 3
+40 3
+
+-- 180이 나와야함 (앞에 들어간 60은 제거됨)
+*/
+
+int main()
+{
+	/*
+	사용자로부터 입력을 받아 pq 우선순위큐에 저장한다.
+	pq는 날짜순으로 오름차순 정렬하고, 날짜가 같을경우는 비용이 큰 순으로 내림차순으로 정렬한다.
+
+	비용 결과값을 저장할 우선순위 큐 values 를 하나 생성한 뒤 해당 우선순위큐는 오름차순으로 정렬한다.
+	pq에서 데이터를 하나 꺼내서, 날짜가 values 크기보다 작으면 날짜 여유가 있으므로 그냥 추가하고,
+	만약 날짜가 values의 크기와 같으면 중복 날짜가 존재하는 것이므로 values의 top과 비교하여 
+	values의 top값이 더 적으면 데이터를 교체해준다.
+
+
+	*/
+	priority_queue<pair<int, int>, vector<pair<int, int>>, cmp1>  pq;
+
+	priority_queue<int, vector<int>, greater<int>> values;	// 비용값을 저장할 우선순위 큐
+
+	int n, p, d;
+	cin >> n;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> p >> d;
+		pq.push(make_pair(p, d));
+	}
+
+	int result = 0;
+	while (pq.empty() == false) 
+	{
+		pair<int, int> tempPair = pq.top();
+		pq.pop();
+
+		if (values.size() < tempPair.second)
+		{
+			values.push(tempPair.first);
+			continue;
+		}
+
+		if ((values.top() < tempPair.first) && (values.size() == tempPair.second))
+		{
+			values.push(tempPair.first);
+			values.pop();
+			continue;
+		}
+	}
+
+	while (values.empty() == false) {
+		result += values.top();
+		values.pop();
+	}
+
+	cout << result;
+}
