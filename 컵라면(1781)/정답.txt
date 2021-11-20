@@ -1,0 +1,109 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+using namespace std;
+
+
+/*
+반례
+3
+1 1
+2 50
+2 100
+정답 - 150
+
+
+반례2
+9
+5 5
+4 6
+4 12
+3 8
+4 18
+2 10
+2 5
+1 7
+1 14
+답 : 59
+*/
+
+struct cmp1
+{
+	bool operator() (pair<int, int> &f, pair<int, int> &s) {
+		if (f.first != s.first)
+		{
+			return f.first > s.first;
+		}
+		return f.second < s.second;
+	}
+};
+
+struct cmp2 
+{
+	bool operator() (pair<int, int>& f, pair<int, int>& s) {
+		return f.second > s.second;
+	}
+};
+
+int main()
+{
+	ios::sync_with_stdio(0);
+	cin.tie(0);
+	cout.tie(0);
+	/*
+	데드라인 순으로 오름차순 정렬하고, 데드라인 값이 같을경우
+	컵라면을 많이주는 순으로 내림차순 정렬하는 우선순위 큐를 생성함
+	*/
+	priority_queue<pair<int, int>, vector<pair<int, int>>, cmp1> pq;
+	priority_queue<pair<int, int>, vector<pair<int, int>>, cmp2> resultQueue;
+	int n, f, s;
+	cin >> n;
+	for (int i = 0; i < n; i++) {
+		cin >> f >> s;
+		pq.push({f, s});
+	}
+	
+	resultQueue.push(pq.top());
+	pq.pop();
+
+	while (pq.empty() == false) 
+	{
+		pair<int, int> tempPair = pq.top();
+
+		// 데드라인이 더 많이 남아있을경우
+		if (resultQueue.size() < tempPair.first)
+		{
+			resultQueue.push(tempPair);
+			pq.pop();
+			continue;
+		}
+
+		// 데드라인만큼 풀 문제수를 이미 정함
+		if (resultQueue.size() == tempPair.first)
+		{
+			// 기존의 문제중 가장 컵라면을 적게받는 문제보다 더 많이 받을 수 있다면
+			if (resultQueue.top().second < tempPair.second)
+			{
+				// 기존의 문제 제거 후 새로운 문제 추가
+				resultQueue.pop();
+				resultQueue.push(tempPair);
+			}
+			pq.pop();
+			continue;
+		}
+		
+		// 있을 수 없는 경우
+		if (resultQueue.size() > tempPair.first)
+			pq.pop();
+	}
+
+	int result = 0;
+	while (resultQueue.empty() == false)
+	{
+		result += resultQueue.top().second;
+		resultQueue.pop();
+	}
+	cout << result;
+	return 0;
+}
