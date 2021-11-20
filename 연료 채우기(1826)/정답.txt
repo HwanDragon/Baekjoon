@@ -1,0 +1,93 @@
+#include <queue>
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+// distance 기준으로 오름차순(작은값이 앞으로)
+struct cmp1 {
+	bool operator() (pair<int, int> &f, pair<int, int> &s) {
+		return f.first > s.first;
+	}
+};
+
+// fuel 기준으로 내림차순(fuel 큰값이 앞으로)
+struct cmp2 {
+	bool operator() (pair<int, int> &f, pair<int, int> &s) {
+		return f.second < s.second;
+	}
+};
+
+/*
+반례1
+0
+5 5
+답 -> 0
+
+반례 2
+1
+1 5
+5 0
+답 -> -1
+*/
+
+int main()
+{
+	int n, d, f, distance, fuel;
+	cin >> n;
+
+	priority_queue<pair<int, int>, vector<pair<int, int>>, cmp1> pq1;	// distance 기준으로 오름차순
+	priority_queue<pair<int, int>, vector<pair<int, int>>, cmp2> pq2;	// fuel 기준으로 내림차순
+
+	for (int i = 0; i < n; i++)
+	{
+		cin >> d >> f;
+		pq1.push({d, f});
+	}
+	cin >> distance >> fuel;
+
+	if (fuel == 0)
+	{
+		cout << -1;
+		return 0;
+	}
+	
+	if (distance == fuel)	// 거리만큼의 연료가 있으면 주유소를 안들려도 됨
+	{
+		cout << 0;
+		return 0;
+	}
+
+
+	int count = 0;
+	while (true) {
+		if (pq2.empty() == false) {
+			pair<int, int> tempPair2 = pq2.top();  pq2.pop();
+			fuel += tempPair2.second;
+			count++;
+			if (fuel >= distance) {
+				break;
+			}
+		}
+
+		while (pq1.empty() == false) {
+			pair<int, int> tempPair1 = pq1.top();
+
+			if (tempPair1.first <= fuel)
+			{
+				pq1.pop();
+				pq2.push(tempPair1);
+				continue;
+			}
+			break;
+		}
+
+		if (pq2.empty() == true) {
+			count = -1;
+			break;
+		}
+	}
+	
+	cout << count;
+	return 0;
+}
