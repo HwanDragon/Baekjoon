@@ -1,0 +1,50 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <algorithm>
+
+using namespace std;
+/*
+i번째 돌을 하나씩 추가하고
+총 사용할 수 있는 비용(T)에서 
+i번째 돌 까지 움직인 비용을 뺀 값을 우리가 사용 할 수 있는 비용(cost)이라고 하면
+돌을 하나씩 우선순위큐에 추가하고, 사용할 수 있는 cost 보다 커졌을 때
+돌을 캐는데 비용이 많이 든 순서부터 제거하는 방식
+*/
+/*
+반례
+17 17 1
+9 9 9 9 9 9 9 9 9 9 1 1 1 1 1 1 1
+답 4
+*/
+int main()
+{
+	priority_queue<int> pq;
+	int n, t, p, k, count = 0, sum = 0, result = 0;
+	cin >> n >> t >> p;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> k;
+		sum += k;	// i번째 돌 추가
+		pq.push(k);
+		count++;	// 돌 캔 개수 1개 추가
+
+		// sum이 전체비용에서 해당 칸까지 움직인 비용보다 크다면
+		while ((sum > (t - (long long)i * p)) && (count > 0)) 
+		{
+			if ((t - (long long)i * p) < 0)
+			{
+				sum = 0;
+				count = 0;
+				break;
+			}
+			// 여태까지 캔 돌 중에서 가장 비용이 많이 든 돌 반환
+			sum -= pq.top();
+			pq.pop();
+			count--;	// 개수 감소
+		}
+		result = max(result, count);
+	}
+	cout << result;
+	return 0;
+}
