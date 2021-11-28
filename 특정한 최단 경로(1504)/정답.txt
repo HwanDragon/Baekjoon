@@ -1,0 +1,96 @@
+#include <iostream>
+#include <queue>
+#include <vector>
+
+#define INF 200000000
+
+using namespace std;
+
+/*
+노드1번에서 다익스트라를 수행,
+노드2번에서 다익스트라를 수행,
+
+
+1. 시작점 - 노드1 - 노드2 - 종점
+2. 시작점 - 노드2 - 노드1 - 종점
+1, 2번중 작은결과 출력
+*/
+
+int n, e;
+
+vector<pair<int, int>> edges[801];
+int dists[801] = { 0, };
+
+struct cmp {
+	bool operator()(pair<int, int> &f, pair<int, int> &s) {
+		return f.second > s.second;
+	}
+};
+
+void dijkstra(int startNode)
+{
+	priority_queue<pair<int, int>, vector<pair<int, int>>, cmp> pq;
+	dists[startNode] = 0;
+
+	pq.push({startNode, 0});
+	while (pq.empty() == false)
+	{
+		pair<int, int> p = pq.top();
+		int currentNode = p.first;
+		int currentDist = p.second;
+		pq.pop();
+
+		if (dists[currentNode] < currentDist) continue;	// 최단거리가 아님
+		
+		for (int i = 0; i < edges[currentNode].size(); i++) 
+		{
+			pair<int, int> np = edges[currentNode].at(i);
+			int nextNode = np.first;
+			int nextDist = np.second;
+
+			if (dists[nextNode] > nextDist + currentDist)
+			{
+				dists[nextNode] = nextDist + currentDist;
+				pq.push({nextNode, nextDist + currentDist });
+			}
+		}
+	}
+}
+
+int main()
+{
+	int first, second, weight;
+	cin >> n >> e;
+	for (int i = 0; i < e; i++)
+	{
+		cin >> first >> second >> weight;
+		edges[first].push_back({ second, weight });
+		edges[second].push_back({ first, weight });
+	}
+
+	int node1, node2, node1Dist[801], node2Dist[801];
+	cin >> node1 >> node2;
+	for (int i = 0; i < 801; i++) dists[i] = INF;
+	dijkstra(node1);
+	for (int i = 0; i < 801; i++) node1Dist[i] = dists[i];
+
+	for (int i = 0; i < 801; i++) dists[i] = INF;
+	dijkstra(node2);
+	for (int i = 0; i < 801; i++) node2Dist[i] = dists[i];
+
+	/*
+	1. 시작점 - 노드1 - 노드2 - 종점
+	2. 시작점 - 노드2 - 노드1 - 종점
+	결과 : min(1번 케이스, 2번 케이스)
+	*/
+
+	int dist1 = node1Dist[1] + node1Dist[node2] + node2Dist[n];
+	int dist2 = node2Dist[1] + node2Dist[node1] + node1Dist[n];
+
+	int result = min(dist1, dist2);
+	if (result >= INF)
+		result = -1;
+	
+	cout << result;
+	return 0;
+}
