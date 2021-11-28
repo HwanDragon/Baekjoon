@@ -16,6 +16,13 @@ using namespace std;
 1, 2번중 작은결과 출력
 */
 
+/*
+반례
+2 0 
+1 2
+정답 : -1
+*/
+
 int n, e;
 
 vector<pair<int, int>> edges[801];
