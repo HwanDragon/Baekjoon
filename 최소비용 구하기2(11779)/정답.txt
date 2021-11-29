@@ -1,0 +1,109 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <algorithm>
+
+#define INF 1000000000
+
+using namespace std;
+/*
+해당 문제는 방향성을 지닌 그래프임
+*/
+int n, m;
+vector<pair<int, int>> edges[1001];
+vector<pair<int, int>> reverseEdges[1001];	// 역추적을 위한 역방향 그래프
+int dists[1001] = { 0, };
+
+struct cmp {
+	bool operator()(pair<int, int> &f, pair<int, int> &s) {
+		return f.second > s.second;
+	}
+};
+
+// 다익스트라 알고리즘 수행
+void dijkstra(int startNode)
+{
+	priority_queue<pair<int, int>, vector<pair<int, int>>, cmp> pq;
+	dists[startNode] = 0;
+	pq.push({ startNode, 0});
+
+	while (pq.empty() == false)
+	{
+		pair<int, int> p = pq.top();
+		pq.pop();
+		int currentNode = p.first;
+		int currentToDist = p.second;
+
+		if (dists[currentNode] < currentToDist) continue;	// 최단거리가 아님
+		
+		for (int i = 0; i < edges[currentNode].size(); i++)
+		{
+			pair<int, int> np = edges[currentNode].at(i);
+			int nextNode = np.first;
+			int nextToDist = np.second;
+
+			if (dists[nextNode] > currentToDist + nextToDist)
+			{
+				dists[nextNode] = currentToDist + nextToDist;
+				pq.push({nextNode, currentToDist + nextToDist });
+			}
+		}
+	}
+}
+
+int main()
+{
+	cin >> n >> m;
+	int f, s, w;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> f >> s >> w;
+		edges[f].push_back({ s, w });
+		reverseEdges[s].push_back({ f, w });
+	}
+
+	int start, end;
+	cin >> start >> end;
+	for (int i = 1; i <= n; i++)	dists[i] = INF;
+	dijkstra(start);
+
+	
+	// 역추적 시작
+	vector<int> route;	// 노드 번호를 저장할 벡터
+	route.push_back(end);	// end 부터 역추적 시작
+	queue<int> q;	// 큐를 이용해 bfs시작
+	q.push(end);
+	bool find = false;	// 시작노드를 찾았는지 여부
+	while ((q.empty() == false) && (find == false))
+	{
+		int current = q.front();
+		q.pop();
+
+		for (int i = 0; i < reverseEdges[current].size(); i++)
+		{
+			pair<int, int> n = reverseEdges[current].at(i);
+			int prevNode = n.first;	// 이전 노드
+			int prevToDist = n.second;	// 이전노드까지 가는데 필요한 비용
+
+			// 해당 노드가 최단거리인지를 확인
+			// 이미 탐색한 다익스트라 값들과 비교하여 최단거리이면 큐에 노드 추가
+			if (dists[prevNode] + prevToDist == dists[current])
+			{
+				route.push_back(prevNode);
+				q.push(prevNode);
+				if (prevNode == start)
+					find = true;
+
+				break;
+			}
+		}
+	}
+
+	cout << dists[end] << "\n";
+	cout << route.size() << "\n";
+	reverse(route.begin(), route.end());
+	for (int i = 0; i < route.size(); i++)
+	{
+		cout << route.at(i) << " ";
+	}
+}
