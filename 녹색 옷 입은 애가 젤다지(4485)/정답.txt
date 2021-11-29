@@ -1,0 +1,91 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+#define INF 2000000000
+
+using namespace std;
+
+int n;
+
+class Edge {
+public :
+	int x;
+	int y;
+	int weight;
+	Edge(int x, int y, int weight) {
+		this->x = x;
+		this->y = y;
+		this->weight = weight;
+	}
+};
+
+vector<Edge*> edges;
+int map[125][125] = { 0, };
+int dists[125][125] = { 0, };
+
+struct cmp {
+	bool operator() (Edge *f, Edge *s) {
+		return f->weight > s->weight;
+	}
+};
+
+void dijkstra(int startX, int startY)
+{
+	priority_queue<Edge*, vector<Edge *>, cmp> pq;
+	dists[startY][startX] = map[startY][startX];	// 시작점을 기준으로 초기화
+
+	pq.push(new Edge(startX, startY, map[startY][startX]));	// 시작점 추가
+
+	int dx[4] = { 0, 0, 1, -1};
+	int dy[4] = { 1, -1, 0, 0};
+
+	while (pq.empty() == false) 
+	{
+		Edge* current = pq.top();
+		pq.pop();
+
+		if (current->weight > dists[current->y][current->x])	continue;	// 최단거리가 아님
+
+		for (int i = 0; i < 4; i++)
+		{
+			int nextX = current->x + dx[i];
+			int nextY = current->y + dy[i];
+			if (nextX < 0 || nextY < 0 || nextX >= n || nextY >= n)	continue;	// 배열 범위 초과
+
+			int nextDist = map[nextY][nextX];
+
+			if (dists[nextY][nextX] > current->weight + nextDist)
+			{
+				dists[nextY][nextX] = current->weight + nextDist;
+				pq.push(new Edge(nextX, nextY , current->weight + nextDist));
+			}
+		}
+	}
+}
+
+int main()
+{
+	int index = 1;
+	while (true)
+	{
+		// 사용자 입력 받음
+		cin >> n;
+		if (n == 0)
+			break;
+		for (int i = 0; i < n; i++)
+		{
+			for (int j = 0; j < n; j++)
+			{
+				cin >> map[i][j];
+				dists[i][j] = INF;
+			}
+		}
+
+		dijkstra(0, 0);	// 다익스트라 수행
+		cout << "Problem " << index << ": " << dists[n - 1][n - 1] << "\n";
+		index++;
+	}
+
+	return 0;
+}

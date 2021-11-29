@@ -1,0 +1,99 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+#define INF 1000000000
+
+using namespace std;
+
+int n, m, x;
+
+vector<pair<int, int>> edges[1001];
+
+int dists[1001] = { 0, };
+int distAllToX[1001] = { 0, };
+int distXtoAll[1001] = { 0, };
+
+struct cmp {
+	bool operator()(pair<int, int> &f, pair<int, int> &s) {
+		return f.second > s.second;
+	}
+};
+
+void dijkstra(int startNode)
+{
+	priority_queue<pair<int, int>, vector<pair<int, int>>, cmp> pq;
+	dists[startNode] = 0;	// 시작 노드 비용 0으로 초기화
+	pq.push({ startNode, 0});	// 자기자신 사이클이 없으므로 0으로 초기화
+
+	while (pq.empty() == false)
+	{
+		pair<int, int> p = pq.top();
+		pq.pop();
+		
+		int currentNode = p.first;
+		int currentToDist = p.second;
+
+		if (dists[currentNode] < currentToDist)	continue;	// 최단경로가 아님
+
+		for (int i = 0; i < edges[currentNode].size(); i++)
+		{
+			pair<int, int> np = edges[currentNode].at(i);
+			int nextNode = np.first;
+			int nextToDist = np.second;
+
+			if (dists[nextNode] > currentToDist + nextToDist)
+			{
+				dists[nextNode] = currentToDist + nextToDist;
+				pq.push({ nextNode, currentToDist + nextToDist });
+			}
+		}
+	}
+
+}
+
+int main()
+{
+	cin >> n >> m >> x;
+	int f, s, w;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> f >> s >> w;
+		edges[f].push_back({ s, w });
+	}
+
+	// 모든 마을에서 x 마을까지 거리를 계산하고, x마을에서 다익스트라를 수행하여 계산
+	for (int i = 1; i <= n; i++)
+	{
+		for (int j = 0; j <= n; j++)	dists[j] = INF;	// 거리 초기화
+
+		dijkstra(i);
+		if (i == x)
+		{
+			// x마을에서 모든 마을까지의 거리 계산
+			for (int j = 1; j <= n; j++)
+				distXtoAll[j] = dists[j];
+		}
+		else
+		{
+			distAllToX[i] = dists[x];	// i번 마을에서 x 마을까지 거리를 distToX 의 i번째에 저장
+		}
+	}
+
+	int maxValue = -INF;
+	int maxIndex = -INF;
+	for (int i = 1; i <= n; i++)
+	{
+		if (i == x)	continue;
+
+		if (distAllToX[i] + distXtoAll[i] > maxValue)
+		{
+			maxIndex = i;
+			maxValue = distAllToX[i] + distXtoAll[i];
+		}
+	}
+
+	cout << maxValue;
+
+	return 0;
+}
