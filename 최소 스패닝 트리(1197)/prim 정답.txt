@@ -1,15 +1,16 @@
+#include <queue>
 #include <iostream>
 #include <vector>
-#include <queue>
-#include <algorithm>
 
 using namespace std;
 
-bool visited[10001] = { 0, };	// 해당노드를 선택했는지 여부 검사
+int v, e;
+int first, second, weight;
 vector<pair<int, int>> edges[10001];
+bool visited[10001] = { 0, };
 
 struct cmp {
-	bool operator()(pair<int, int> &f, pair<int, int> &s) {
+	bool operator() (pair<int, int> &f, pair<int, int> &s) {
 		return f.second > s.second;
 	}
 };
@@ -17,32 +18,25 @@ struct cmp {
 int prim(int startNode)
 {
 	priority_queue<pair<int, int>, vector<pair<int, int>>, cmp> pq;
-	visited[startNode] = true;
+	pq.push({startNode, 0});
 	int result = 0;
-
-	// startNode와 연결된 간선을 큐에 담는다
-	for (int i = 0; i < edges[startNode].size(); i++)
-	{
-		pair<int, int> p = edges[startNode].at(i);
-		pq.push(p);
-	}
 
 	while (pq.empty() == false)
 	{
 		pair<int, int> p = pq.top();
 		pq.pop();
-		int node = p.first;
-		int weight = p.second;
 
-		if (visited[node] == false)	// 방문하지 않은 노드이면
+		int node = p.first;
+		int dist = p.second;
+
+		if (visited[node] == true)	continue;
+
+		visited[node] = true;
+		result += dist;
+		for (int i = 0; i < edges[node].size(); i++)
 		{
-			visited[node] = true;
-			result += weight;
-			for (int i = 0; i < edges[node].size(); i++)
-			{
-				pair<int, int> np = edges[node].at(i);
-				pq.push(np);
-			}
+			pair<int, int> np = edges[node].at(i);
+			pq.push(np);
 		}
 	}
 
@@ -51,16 +45,15 @@ int prim(int startNode)
 
 int main()
 {
-	int v, e;
-	int a, b, c;
 	cin >> v >> e;
 	for (int i = 0; i < e; i++)
 	{
-		cin >> a >> b >> c;
-		edges[a].push_back({ b, c });
-		edges[b].push_back({ a, c });
+		cin >> first >> second >> weight;
+		edges[first].push_back({ second, weight });
+		edges[second].push_back({ first, weight });
 	}
 
 	cout << prim(1);
 
+	return 0;
 }
