@@ -1,0 +1,153 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+#define INF 10000000000000LL
+
+using namespace std;
+
+/*
+해당 문제는 i번째 노드가 위험지역인지 아닌지를 알아야 가중치를 정할 수 있는 문제에 해당함.
+위험지역 판별을 위해서는 BFS탐색을 통해 i번째 노드가 위험지역인지를 판별한 뒤,
+1번 노드에서 다익스트라 알고리즘을 수행함.
+다익스트라 알고리즘 수행시 i번쨰 노드가 위험지역이면 비용을 q로, 아니라면 p로 두고 수행함.
+또한 조건에서 좀비에 점령당한 지역은 숙박이 불가능하므로 다익스트라 탐색시 해당 지역은 배제하면 됨.
+마지막 노드는 숙박을 하지 않으므로, 최종 다익스트라 결과에서 마지막 노드 비용을 뺴주면 됨
+*/
+
+/*
+좀비 비역으로부터 BFS를 시작하여 위험지역을 판별함.
+DFS로는 위험지역을 정확히 판단할 수 없음
+example
+2 3
+3 4
+2 4
+4 5
+위와 같은 예가 있을 때, 위험범위가 2이고,  2번이 좀비에 감염된 지역이면
+2, 3, 4, 5번 전부다 위험 지역에 해당하는데,
+DFS 탐색시 2 - 3번 간선을 선택, 3 - 4번 간선을 선택하면
+5번 노드는 위험지역이 아니게 된다.
+원래는 2 - 4, 4 - 5를 선택시 5번도 위험지역이 되어야함.
+위의 조건을 만족하려면 BFS로만 정확한 위험지역 판별이 가능함.
+*/
+
+vector<int> edges[100001];	// 간선정보
+long long dists[100001] = { 0, };	// 다익스트라 최단비용
+bool dangerAreas[100001] = { 0, };	// 위험지역 정보
+bool zombieAreas[100001] = { 0, };	// 좀비에게 점령당한 지역
+int n, m, k, dangerNum;	// n : 도시수, m : 길의 수, k : 좀비에게 점령당한 도시수, dangerNum : 위험도시범위
+int safetyPrice, dangerPrice;	// safetyPrice : 안전한 도시 숙박비, dangerPrice : 위험도시 숙박비
+int visited[100001] = { 0, };	// 위험지역 확인했는지 여부를 검사할 배열
+
+// 위험지역 확인을 위한 bfs
+void bfs()
+{
+	// 시작
+	queue<int> q;
+	for (int i = 1; i <= n; i++)
+	{
+		if (zombieAreas[i] == true)
+		{
+			q.push(i);
+		}
+	}
+
+	while (q.empty() == false)
+	{
+		int current = q.front();
+		q.pop();
+		dangerAreas[current] = true;	// 위험지역 표시
+
+		if (visited[current] >= dangerNum) continue;	// 최대 위험지역 이상은 탐색하지 않음
+
+		for (int i = 0; i < edges[current].size(); i++)
+		{
+			int nextNode = edges[current].at(i);	// i번째 노드 가져옴
+			if (visited[nextNode] != 0) continue;	// 이미 탐색중인 노드는 Pass
+
+			visited[nextNode] = visited[current] + 1;	// 다음 노드값을 현재 노드값 + 1 시켜가며 위험도시 판별
+			q.push(nextNode);
+		}
+	}
+}
+
+struct cmp {
+	bool operator()(pair<int, long long> &f, pair<int, long long> &s) {
+		return f.second > s.second;
+	}
+};
+
+void dijkstra(int startNode)
+{
+	priority_queue<pair<int, long long>, vector<pair<int, long long>>, cmp> pq;
+	pq.push({ startNode, 0 });
+	dists[startNode] = 0;
+
+	while (pq.empty() == false)
+	{
+		pair<int, long long> p = pq.top();
+		pq.pop();
+		int currentNode = p.first;
+		long long currentDist = p.second;
+
+		if (zombieAreas[currentNode] == true) continue;	// 이미 좀비에게 점령당한 지역(숙박 불가)
+		if (dists[currentNode] < currentDist) continue;	// 최단거리가 아님
+
+		for (int i = 0; i < edges[currentNode].size(); i++)
+		{
+			int nextNode = edges[currentNode].at(i);
+			int nextDist;
+			if (dangerAreas[nextNode] == true)	
+			{
+				nextDist = dangerPrice;	// 위험지역일 경우 
+			}
+			else 
+			{
+				nextDist = safetyPrice;	// 안전지역일 경우
+			}
+
+			if (dists[nextNode] > nextDist + currentDist)
+			{
+				dists[nextNode] = nextDist + currentDist;
+				pq.push({nextNode, nextDist + currentDist });
+			}
+		}
+	}
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m >> k >> dangerNum;
+	cin >> safetyPrice >> dangerPrice;
+	int zombie;
+	for (int i = 0; i < k; i++)
+	{
+		cin >> zombie;
+		zombieAreas[zombie] = true;
+	}
+
+	int first, second;
+	for (int i = 0;i < m; i++)
+	{
+		cin >> first >> second;
+		edges[first].push_back(second);
+		edges[second].push_back(first);
+	}
+
+	// 위험지역 체크
+	bfs();
+
+	for (int i = 0; i <= n; i++) dists[i] = INF;
+	dijkstra(1);
+
+	long long result = dists[n];
+	if (dangerAreas[n] == true)
+		result -= dangerPrice;
+	else
+		result -= safetyPrice;
+
+	cout << result << '\n';
+
+	return 0;
+}
