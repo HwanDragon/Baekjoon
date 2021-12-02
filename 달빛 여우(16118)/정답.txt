@@ -1,0 +1,148 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+#define INF 4000000000
+/*
+* // 늑대가 절반의 속도로 갈 때 가중치가 절반이되므로 소수점을 보존하기위해 가중치에 2를 곱해줌
+반례
+5 5
+1 2 1
+2 3 1
+1 3 1
+1 4 1
+4 5 10000
+
+답 : 0
+*/
+using namespace std;
+
+/*
+달빛여우는 기본 다익스트라 알고리즘을 실행하면되고,
+달빛늑대는 어떤 노드에 도착했을 때  달려서 도착했는지, 걸어서 도착했는지를 저장해야함
+즉, 다익스트라를 수행할 때 해당노드까지 걸어서 도착하는 최단경로, 달려서 도착하는 최단경로를 계산해야함
+달려서 왔을경우를 1 , 걸어서 왔을경우를 0 으로 두고 계산한 뒤,
+달빛여우와 달빛늑대의 최단거리를 비교하면됨
+*/
+long long foxDist[4001] = { 0, };
+// [i][0] : i번째 노드까지 절반의 속도로 왔을 떄의 최단경로(다음에는 두배의 속도로 가야함)
+// [i][1] : i번째 노드까지 두배의 속도로 왔을 때의 최단경로(다음에는 절반의 속도로 가야함)
+long long wolfDist[4001][2] = { 0, };
+
+int n, m;
+vector<pair<int, int>> edges[4001];
+
+struct cmp {
+	bool operator()(pair<int, long long> &f, pair<int, long long> &s) {
+		return f.second > s.second;
+	}
+};
+
+struct cmp2 {
+	bool operator()(pair<int, pair<long long, bool>>& f, pair<int, pair<long long, bool>>& s) {
+		return f.second.first > s.second.first;
+	}
+};
+
+void dijkstraFox(int startNode)
+{
+	priority_queue<pair<int, long long>, vector<pair<int, long long>>, cmp> pq;
+	pq.push({startNode, 0});
+	foxDist[startNode] = 0;
+	
+	while (pq.empty() == false)
+	{
+		pair<int, long long> p = pq.top();
+		pq.pop();
+		int currentNode = p.first;
+		long long currentDist = p.second;
+
+		if (foxDist[currentNode] < currentDist)	continue;	// 최단경로가 아님
+
+		for (int i = 0; i < edges[currentNode].size(); i++)
+		{
+			pair<int, long long> np = edges[currentNode].at(i);
+			int nextNode = np.first;
+			long long nextDist = np.second;
+
+			if (foxDist[nextNode] > currentDist + nextDist)
+			{
+				foxDist[nextNode] = currentDist + nextDist;
+				pq.push({nextNode, currentDist + nextDist });
+			}
+		}
+	}
+}
+
+void dijkstraWolf(int startNode)
+{
+	priority_queue<pair<int, pair<long long, bool>>, vector<pair<int, pair<long long, bool>>>, cmp2> pq;
+	pq.push({ startNode, {0, false} });
+	wolfDist[startNode][0] = 0;
+
+	while (pq.empty() == false)
+	{
+		pair<int, pair<long long, bool>> p = pq.top();
+		pq.pop();
+		int currentNode = p.first;
+		long long currentDist = p.second.first;
+		bool currentState = p.second.second;	// 0이면 현재 노드까지 절반속도로 온것, 1이면 두배의 속도로 온것
+
+		if (wolfDist[currentNode][currentState] < currentDist) continue;	// 최단거리가 아님
+
+		for (int i = 0; i < edges[currentNode].size(); i++)
+		{
+			pair<int, long long> np = edges[currentNode].at(i);
+			int nextNode = np.first;
+			long long nextDist = np.second;
+
+			if (currentState == 0) 
+				nextDist = nextDist / 2;
+			else 
+				nextDist = nextDist * 2;
+
+			bool nextState = !currentState;
+
+			if (wolfDist[nextNode][nextState] > nextDist + currentDist)
+			{
+				wolfDist[nextNode][nextState] = nextDist + currentDist;
+				pq.push({ nextNode, {nextDist + currentDist, nextState} });
+			}
+		}
+	}
+}
+
+int main()
+{
+	cin >> n >> m;
+	int first, second, weight;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second >> weight;
+		// 늑대가 절반의 속도로 갈 때 가중치가 절반이되므로 소수점을 보존하기위해 가중치에 2를 곱해줌
+		edges[first].push_back({ second, weight * 2 });	
+		edges[second].push_back({ first, weight * 2});
+	}
+
+	for (int i = 0; i <= n; i++) foxDist[i] = INF;
+	dijkstraFox(1);
+
+	for (int i = 0; i <= n; i++)
+	{
+		wolfDist[i][0] = INF;
+		wolfDist[i][1] = INF;
+	}
+	dijkstraWolf(1);
+
+	int c = 0;
+	for (int i = 2; i <= n;  i++)
+	{
+		long long wolf = min(wolfDist[i][0], wolfDist[i][1]);
+		long long fox = foxDist[i];
+
+		if (fox < wolf)
+			c++;
+	}
+
+	cout << c;
+}
