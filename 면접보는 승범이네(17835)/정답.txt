@@ -1,0 +1,108 @@
+#include <iostream>
+#include <queue>
+#include <vector>
+
+#define INF ((long long)100000*500000)
+
+/*
+해당 문제는 여러개의 면접장이 있고, 면접장으로부터 가장 멀리 떨어진 도시의 위치를 계산해야함.
+곰곰히 생각해보면 면접장으로 지정 된 곳으로부터의 거리를 계산해야 하므로,
+면접장으로 지정된 노드들은 하나의 노드로 두고 계산하면 면접장에서 다익스트라를 이용하여 거리를 계산할 수 있음
+하나의 노드로 두는것은 다익스트라 알고리즘 계산시 맨 처음에 면접장으로 지정된곳을
+시작노드로 모두 추가하고, 거리비용을 0으로 두고 우선순위큐에 추가하면됨.
+
+문제는 방향 그래프이기 때문에 특정 (i번쨰 노드 -> 면접장) 까지의 거리와 (면접장 -> i번째 노드)의 거리가
+다를 수 있으므로, 처음에 입력받을때부터 역순으로 입력받아 면접장에서부터 거리를 특정할 수 있도록 계산
+*/
+
+using namespace std;
+
+int n, m, k;
+vector<pair<int, long long>> edges[100001];
+vector<int> interviewNodes;
+long long dists[100001] = { 0, };
+
+struct cmp {
+	bool operator()(pair<int, long long> &f, pair<int, long long> &s) {
+		return f.second > s.second;
+	}
+};
+
+void dijkstra()
+{
+	priority_queue < pair<int, long long>, vector<pair<int, long long>>, cmp> pq;
+
+	// 면접장인 모든 노드를 distance 0으로 후보지에 모두 추가함
+	for (int i = 0; i < interviewNodes.size(); i++)
+	{
+		int startNode = interviewNodes.at(i);
+		dists[startNode] = 0;
+		pq.push({startNode, 0});
+	}
+
+	// 다익스트라 탐색
+	while (pq.empty() == false)
+	{
+		pair<int, long long> p = pq.top();
+		pq.pop();
+		int currentNode = p.first;
+		long long currentDist = p.second;
+
+		if (dists[currentNode] < currentDist) continue; // 최단거리가 아님
+
+		for (int i = 0; i < edges[currentNode].size(); i++)
+		{
+			pair<int, long long> np = edges[currentNode].at(i);
+			int nextNode = np.first;
+			long long nextDist = np.second;
+
+			if (dists[nextNode] > nextDist + currentDist)
+			{
+				dists[nextNode] = nextDist + currentDist;
+				pq.push({nextNode, nextDist + currentDist });
+			}
+		}
+	}
+}
+
+int main()
+{
+	cin >> n >> m >> k;
+	int first, second, weight;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second >> weight;
+		// 면접장에서부터 다익스트라 알고리즘을 수행하기 위해 입력을 거꾸로 받음
+		// second -> first 노드까지의 비용이 weight
+		edges[second].push_back({ first, weight });
+	}
+
+	int interviewNode;
+	for (int i = 0; i < k; i++)
+	{
+		cin >> interviewNode;	
+		// 면접장으로 지정된 노드들 추가
+		interviewNodes.push_back(interviewNode);
+	}
+
+	// 거리비용 초기화
+	for (int i = 1; i <= n; i++) dists[i] = INF;
+
+	dijkstra();	// 다익스트라 수행
+
+	// 가장 먼 도시 찾기
+	long long maxValue = -1;
+	int maxIndex = -1;
+	for (int i = 1; i <= n; i++)
+	{
+		if (dists[i] > maxValue)
+		{
+			maxValue = dists[i];
+			maxIndex = i;
+		}		
+	}
+	cout << maxIndex << "\n";
+	cout << maxValue;
+	
+	return 0;
+}

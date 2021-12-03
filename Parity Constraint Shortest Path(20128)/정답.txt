@@ -1,0 +1,94 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+#define INF 30000000000LL
+
+using namespace std;
+
+int n, m;	// n : 정점개수, m : 간선개수
+vector<pair<int, int>> edges[100001];	// 간선정보
+long long dists[100001][2] = { 0, };	//[i][0] : 짝수일 때 최소비용, [i][1] : 홀수일 때 최소비용
+
+struct cmp {
+	bool operator()(pair<int, long long> &f, pair<int, long long> &s) {
+		return f.second > s.second;
+	}
+};
+
+void dijkstra(int startNode)
+{
+	// i번 노드까지 최단거리를 계산하는데, 
+	// 경로비용이 홀수일때, 짝수일때를 따로 저장해야함
+	priority_queue<pair<int, long long>, vector<pair<int,long long>>, cmp> pq;
+	// 처음노드에서 다익스트라를 수행하는데, 시작노드에서 시작노드까지 최소비용은 0이다
+	// 즉, 짝수이므로 dists[startNode][0] = 0; 이 된다.
+
+	dists[startNode][0] = 0;	// 짝수일 떄의 최단거리
+	pq.push({ startNode, 0 });	// 우선순위큐에 데이터 추가
+	while (pq.empty() == false)
+	{
+		pair<int, long long> p = pq.top();
+		pq.pop();
+		int currentNode = p.first;	// 현재노드
+		long long currentDist = p.second;	// 현재노드까지의 거리
+		bool currentState = 1;	// 짝수인지 홀수인지 여부
+		if (currentDist % 2 == 0)	
+			currentState = 0;
+
+		if (dists[currentNode][currentState] < currentDist) continue;	// 최단거리가 아님
+
+		for (int i = 0; i < edges[currentNode].size(); i++)
+		{
+			pair<int, long long> np = edges[currentNode].at(i);
+			int nextNode = np.first;
+			long long nextDist = np.second;
+
+			// 홀수인지 짝수인지를 판별하여 계산
+			long long tempDist = nextDist + currentDist;
+			bool nextState = 1;
+			if (tempDist % 2 == 0)	nextState = 0;
+			
+			if (dists[nextNode][nextState] > tempDist)
+			{
+				dists[nextNode][nextState] = tempDist;
+				pq.push({nextNode, tempDist });
+			}
+		}
+	}
+}
+
+int main()
+{
+	cin >> n >> m;
+	int first, second, weight;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second >> weight;
+		edges[first].push_back({ second, weight });
+		edges[second].push_back({ first, weight });
+	}
+
+	for (int i = 1; i <= n; i++)
+	{
+		dists[i][0] = INF;
+		dists[i][1] = INF;
+	}
+
+	dijkstra(1);
+
+	for (int i = 1; i <= n; i++)
+	{
+		if (dists[i][1] == INF)	// 홀수
+			cout << -1 << " ";
+		else
+			cout << dists[i][1] << " ";
+
+		if (dists[i][0] == INF)	// 짝수
+			cout << -1 << "\n";
+		else
+			cout << dists[i][0] << "\n";
+	}
+
+	return 0;
+}
