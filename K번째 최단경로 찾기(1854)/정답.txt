@@ -1,0 +1,96 @@
+#include <iostream>
+#include <queue>
+#include <vector>
+
+#define INF 2000000000
+
+using namespace std;
+
+/*
+반례
+2 2 100
+1 2 1
+2 1 1
+답:
+198
+199
+*/
+
+/*
+풀이 : 
+시작점에서 모든거리까지의 k번쨰 최단경로를 구하려면 
+다익스트라 수행시 모든 에지를 확인해야한다.
+(계산속도를 빠르게 하기 위해 최단거리가 아니면 우선순위큐에 추가하지 않는등의 작업을 하면 안됨)
+확인해서 나온 결과값을 별도 우선순위큐(results)에 저장하여야 함.
+만약 사이클이 있을경우 무한대로 순환하게 되는데, 
+우리는 k번째까지의 최단경로만 필요한 것이므로 별도로 저장한 큐의 사이즈가 k보다 커지면 continue로 제외함
+*/
+
+int n, m, k;
+vector<pair<int, int>> edges[1001];
+priority_queue<int, vector<int>, greater<int>> results[1001];
+
+struct cmp {
+	bool operator()(pair<int, int> &f, pair<int, int> &s) {
+		return f.second > s.second;
+	}
+};
+
+void dijkstra(int startNode)
+{
+	priority_queue<pair<int, int>, vector<pair<int, int>>, cmp> pq;
+	pq.push({startNode, 0});
+
+	while (pq.empty() == false)
+	{
+		pair<int, int> p = pq.top();
+		pq.pop();
+		int currentNode = p.first;
+		int currentDist = p.second;
+
+		results[currentNode].push( currentDist );
+
+		if (results[currentNode].size() > k) continue;
+
+		for (int i = 0; i < edges[currentNode].size(); i++)
+		{
+			pair<int, int> np = edges[currentNode].at(i);
+			int nextNode = np.first;
+			int nextDist = np.second;
+
+			pq.push({ nextNode, nextDist + currentDist});
+		}
+	}
+}
+
+int main()
+{
+	cin >> n >> m >> k;
+	int first, second, weight;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second >> weight;
+		edges[first].push_back({ second, weight });
+	}
+
+	dijkstra(1);
+
+	for (int i = 1; i <= n; i++)
+	{
+		if (results[i].size() < k)
+		{
+			cout << -1 << "\n";
+			continue;
+		}
+
+		for (int j = 0; j < k - 1; j++)
+		{
+			results[i].pop();
+		}
+
+		cout << results[i].top() << "\n";
+	}
+
+
+	return 0;
+}
