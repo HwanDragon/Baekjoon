@@ -1,0 +1,97 @@
+#include <iostream>
+
+#define INF 100000000
+
+using namespace std;
+
+int n, m;
+
+int edges[101][101] = { 0, };
+int results[101][101] = { 0, };
+
+void floydWarshall()
+{
+	// 최단거리를 계산할 배열에 간선정보로 초기화
+	for (int i = 1; i <= n; i++)
+	{
+		for (int j = 1; j <= n; j++)
+		{
+			results[i][j] = edges[i][j];
+		}
+	}
+
+	// 자기자신으로 가는 비용 0으로 초기화
+	for (int i = 1; i <= n; i++) results[i][i] = 0;
+
+	// 플로이드 와샬 수행
+	for (int k = 1; k <= n; k++)
+	{
+		for (int i = 1; i <= n; i++)
+		{
+			for (int j = 1; j <= n; j++)
+			{
+				if (results[i][j] > results[i][k] + results[k][j])
+				{
+					results[i][j] = results[i][k] + results[k][j];
+				}
+			}
+		}
+	}
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i <= 100; i++)
+	{
+		for (int j = 0; j <= 100; j++)
+		{
+			edges[i][j] = INF;
+		}
+	}
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second;
+		// 왕복거리이므로 계산편의를 위해 1이 아닌 2를 추가함(왕복)
+		edges[first][second] = 2; 
+		edges[second][first] = 2;
+	}
+
+	// 플로이드 와샬 알고리즘 수행
+	floydWarshall();
+
+	// 호석이 치킨 매장을 i번쨰와 j번째 두개로 했을때 모든 정점에서 i,j로 가는비용중 짧은 것을 기준으로 하여
+	// 전역 탐색을 시행하여 가장 왕복시간이 짧은 결과를 출력
+	int minValue;
+	int f = 0, s = 0;
+	int temp;
+	int resultDist = INF;
+	// 호석이 치킨 매장이 i, j번째 위치
+	for (int i = 1; i < n; i++)
+	{
+		for (int j = i + 1; j <= n; j++)
+		{
+			// 치킨 매장이 i, j일 때 1~n까지 모든 매장을 탐색하며 왕복거리 계산
+			minValue = 0;
+			for (int k = 1; k <= n; k++)
+			{
+				minValue += min(results[i][k], results[j][k]);
+			}
+
+			// 최단거리를 resultDist에 저장하고, 그떄의 위치를 저장
+			if (resultDist > minValue)
+			{
+				resultDist = minValue;
+				f = i;
+				s = j;
+			}
+		}
+	}
+
+	cout << f << " " << s << " " << resultDist;
+	return 0;
+}
