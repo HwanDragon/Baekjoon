@@ -1,0 +1,80 @@
+#include <iostream>
+
+#define INF 200000000
+
+using namespace std;
+
+int dists[101][101] = { 0, };	// 인접행렬로 비용값 저장
+int n, m;
+int results[101][101] = { 0, };	// 결과값 저장할 배열
+
+void floydWarshall()
+{
+	// 결과값 배열 초기화
+	for (int i = 1; i <= n; i++)
+	{
+		for (int j = 1; j <= n; j++)
+		{
+			results[i][j] = dists[i][j];
+		}
+	}
+
+	// 자기자신에서 자기자신으로 가는 비용 0으로 초기화(문제 확인)
+	for (int i = 1; i <= n; i++) results[i][i] = 0;
+	
+	// 플로이드 와샬 알고리즘 수행
+	for (int k = 1; k <= n; k++)
+	{
+		for (int i = 1; i <= n; i++)
+		{
+			for (int j = 1; j <= n; j++)
+			{
+				if (results[i][j] > results[i][k] + results[k][j])
+				{
+					results[i][j] = results[i][k] + results[k][j];
+				}
+			}
+		}
+	}
+
+}
+
+int main()
+{
+	// 입력받을 배열 초기화
+	for (int i = 0; i < 101; i++)
+	{
+		for (int j = 0; j < 101; j++)
+		{
+			dists[i][j] = INF;
+		}
+	}
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int first, second, weight;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second >> weight;
+		if (dists[first][second] > weight)
+			dists[first][second] = weight;
+	}
+
+	// 플로이드 와샬 알고리즘 수행
+	floydWarshall();
+
+	// 결과값 출력
+	for (int i = 1; i <= n; i++)
+	{
+		for (int j = 1; j <= n; j++)
+		{
+			if (results[i][j] == INF)
+				cout << 0 << " ";
+			else
+				cout << results[i][j] << " ";
+		}
+		cout << "\n";
+	}
+
+	return 0;
+}

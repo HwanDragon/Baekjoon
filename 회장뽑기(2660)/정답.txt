@@ -1,0 +1,104 @@
+#include <iostream>
+#include <vector>
+#include<algorithm>
+
+#define INF 100000000
+/*
+친구들 사이의 비용이 1이라고 할 때
+친구들중 가장 멀리 떨어져 있는 친구까지 가는데 걸리는 비용이 회장 후보 점수이다.
+즉, 사람들을 노드로 보고, 친구 사이는 간선1의 그래프로 표현이 가능하다.
+사람들 사이의 모든 비용을 계산하고,
+각각 사람들 사이에서 가장 멀리 떨어져있는 친구 비용이 후보 점수가 된다.
+이 후보 점수중 가작 작은 값을 계산하여, 이 값과 같은 사람들을 출력하면 된다.
+*/
+using namespace std;
+
+int n;
+int dists[51][51] = { 0, };	// 간선정보
+int results[51][51] = { 0, };	// 최단거리 비용 정보
+
+void floydWarshall() 
+{
+	// 초기화
+	for (int i = 1; i <= n; i++)
+	{
+		for (int j = 1; j <= n; j++)
+		{
+			results[i][j] = dists[i][j];
+		}
+	}
+
+	// 자기자신으로 가는 비용 0으로 초기화
+	for (int i = 1; i <= n; i++) results[i][i] = 0;
+
+	// 플로이드 와샬 알고리즘 수행
+	for (int k = 1; k <= n; k++)
+	{
+		for (int i = 1; i <= n; i++)
+		{
+			for (int j = 1; j <= n; j++)
+			{
+				if (results[i][j] > results[i][k] + results[k][j])
+					results[i][j] = results[i][k] + results[k][j];
+			}
+		}
+	}
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i < 51; i++)
+		for (int j = 0; j < 51; j++)
+			dists[i][j] = INF;
+
+	// 사용자 입력 받음
+	cin >> n;
+	int first, second;
+	while (true)
+	{
+		cin >> first >> second;
+		if (first == -1 || second == -1)
+			break;
+
+		dists[first][second] = 1;
+		dists[second][first] = 1;
+	}
+
+	// 플로이드 와샬 알고리즘 수행
+	floydWarshall();
+
+	vector<int> result;
+	int minValue = INF;
+	int tempMaxValue = -INF;
+	for (int i = 1; i <= n; i++)
+	{
+		tempMaxValue = -INF;
+		for (int j = 1; j <= n; j++)
+		{
+			if (tempMaxValue < results[i][j])
+			{
+				tempMaxValue = results[i][j];
+			}
+		}
+
+		if (minValue > tempMaxValue)
+		{
+			minValue = tempMaxValue;
+			result.clear();
+			result.push_back(i);
+		}
+		else if (minValue == tempMaxValue)
+		{
+			result.push_back(i);
+		}
+	}
+
+	// 결과 출력
+	sort(result.begin(), result.end());
+	cout << minValue << " " << result.size() << "\n";
+	for (int i = 0; i < result.size(); i++)
+	{
+		cout << result.at(i) << " ";
+	}
+}
