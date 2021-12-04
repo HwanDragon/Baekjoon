@@ -1,0 +1,141 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+#define INF 1000000000
+/*
+4 9
+1 2 9
+2 3 9
+3 1 9
+1 4 1
+4 1 1
+2 4 1
+4 2 1
+3 4 1
+4 3 1
+2
+1
+4
+답: 1 4
+*/
+
+/*
+해당문제는 플로이드 와샬 알고리즘을 이용하여 모든 노드간의 거리를 계산한 뒤,
+친구들이 만나기위한 도시 i를 1~n번째 까지 바꿔가면서 i번째 노드까지 왕복하는 비용을 
+친구들이 있는 거리에서부터 계산해 나감.
+이때 왕복비용중 가장 큰 값을 i번째 도시를 약속장소로 정했을때 가지는 비용으로 하고, 
+이 비용들 중 가장 작은값을 가지는 도시를 약속장소로 정하면 됨
+*/
+
+using namespace std;
+
+int n, m;
+int edges[201][201] = { 0, };
+int results[201][201] = { 0, };
+
+void floydWahall()
+{
+	// 초기화
+	for (int i = 1; i <= n; i++)
+	{
+		for (int j = 0; j <= n; j++)
+		{
+			results[i][j] = edges[i][j];
+		}
+	}
+
+	// 자기자신에서 자기자신으로 가는비용 0으로 초기화
+	for (int i = 1; i <= n; i++) results[i][i] = 0;
+
+	// 플로이드 와샬 수행
+	for (int k = 1; k <= n; k++)
+	{
+		for (int i = 1; i <=n; i++)
+		{
+			for (int j = 1; j <= n; j++)
+			{
+				if (results[i][j] > results[i][k] + results[k][j])
+				{
+					results[i][j] = results[i][k] + results[k][j];
+				}
+			}
+		}
+	}
+}
+
+int main()
+{
+	// 간선정보 초기화
+	for (int i = 1; i <= 200; i++)
+	{
+		for (int j = 0; j <= 200; j++)
+		{
+			edges[i][j] = INF;
+		}
+	}
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int first, second, weight;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second >> weight;
+		edges[first][second] = weight;
+	}
+
+	// 플로이드 와샬 알고리즘 수행
+	floydWahall();
+
+	// 친구들이 있는 도시 정보 받음
+	int k, pos;
+	vector<int> positions;
+	cin >> k;
+	for (int i = 0; i < k; i++)
+	{
+		cin >> pos;
+		positions.push_back(pos);
+	}
+	
+
+	int result;
+	int maxValue = INF;
+	vector<int> seq;
+	// i번째 노드에서 친구들이 있는 위치를 왕복할 때 걸리는 비용 중 최대값들 중 최소값인 노드를 찾아야함
+	for (int i = 1; i <= n; i++)
+	{
+		// temp 변수를 이용하여 친구들과 만나는 거리중 최대비용인 노드를 찾음
+		int temp = -INF;
+		for (int j = 0; j < positions.size(); j++)
+		{
+			int pos = positions.at(j);
+			
+			if (pos == i) continue;
+
+			if (temp < results[i][pos] + results[pos][i])
+			{
+				temp = results[i][pos] + results[pos][i];
+			}
+		}
+
+		// 친구들이 만나는 최대비용인 temp와 maxValue를 비교
+		// maxValue에는 i개의 temp 변수중 가장 최소값을 저장
+		if (maxValue > temp)	// 기존값보다 더 작은값이 발견된다면
+		{
+			maxValue = temp;
+			seq.clear();
+			seq.push_back(i);
+		}
+		else if (temp == maxValue)	// 친구들이 만나는데 같은 비용을 가진 노드i가 있으면
+		{
+			seq.push_back(i);	// 벡터에 추가
+		}
+	}
+
+	sort(seq.begin(), seq.end());
+
+	for (int i = 0; i < seq.size(); i++)
+		cout << seq.at(i) << " ";
+
+	return 0;
+}
