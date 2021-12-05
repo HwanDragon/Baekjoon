@@ -1,0 +1,87 @@
+#include <iostream>
+
+#define INF 100000000
+
+using namespace std;
+/*
+	플로이드 와샬 알고리즘을 수행 후, 
+	a -> b로 갈수 없고, b -> a로도 갈 수 없는 경우를 찾으면 됨
+	즉, a가 먼저인지, b가 먼저인지 알 수 없는 경우임
+*/
+
+int dists[101][101] = { 0, };
+int results[101][101] = { 0, };
+int n, m;
+
+void floydWashall()
+{
+	// 초기화
+	for (int i = 1; i <= n; i++)
+	{
+		for (int j = 1; j <= n; j++)
+		{
+			results[i][j] = dists[i][j];
+		}
+	}
+
+	// 자기자신으로 비용 0으로 초기화
+	for (int i = 1; i <= n; i++) results[i][i] = 0;
+
+	// 플로이드 와샬 알고리즘 수행
+	for (int k = 1; k <= n; k++)
+	{
+		for (int i = 1; i <= n; i++)
+		{
+			for (int j = 1; j <= n; j++)
+			{
+				if (results[i][j] > results[i][k] + results[k][j])
+				{
+					results[i][j] = results[i][k] + results[k][j];
+				}
+			}
+		}
+	}
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i <= 100; i++)
+	{
+		for (int j = 0; j <= 100; j++)
+		{
+			dists[i][j] = INF;
+		}
+	}
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second;
+		dists[first][second] = 1;
+	}
+
+	// 플로이드 와샬 알고리즘 수행
+	floydWashall();
+
+	// a -> b 로 갈 수 없고, b -> a로 갈 수 없는 경우를 찾으면 됨
+	// results[a][b] == INF, results[b][a] == INF 에 해당함
+	int cnt;
+	for (int i = 1; i <= n; i++)
+	{
+		cnt = 0;
+		for (int j = 1; j <= n; j++)
+		{
+			if ((results[i][j] == INF) && (results[j][i] == INF))
+			{
+				cnt++;
+			}
+		}
+
+		cout << cnt << "\n";
+	}
+
+	return 0;
+}

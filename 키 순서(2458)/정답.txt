@@ -1,0 +1,91 @@
+#include <iostream>
+
+#define INF 100000000
+
+using namespace std;
+
+int n, m;
+
+int dists[501][501] = { 0, };
+int results[501][501] = { 0, };
+
+void floydWarshall()
+{
+	// 초기화
+	for (int i = 1; i <= n; i++)
+	{
+		for (int j = 1; j <= n; j++)
+		{
+			results[i][j] = dists[i][j];
+		}
+	}
+
+	// 자기자신에서 자기자신으로의 비용 0으로 초기화
+	for (int i = 1; i <= n; i++) results[i][i] = 0;
+	
+	// 플로이드 와샬 알고리즘 수행
+	for (int k = 1; k <= n; k++)
+	{
+		for (int i = 1; i <= n; i++)
+		{
+			for (int j = 1; j <= n; j++)
+			{
+				if (results[i][j] > results[i][k] + results[k][j])
+				{
+					results[i][j] = results[i][k] + results[k][j];
+				}
+			}
+		}
+	}
+	
+
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i <= 500; i++)
+	{
+		for (int j = 0; j <= 500; j++)
+		{
+			dists[i][j] = INF;
+		}
+	}
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second;
+		dists[first][second] = 1;
+	}
+
+	// 플로이드 와샬 알고리즘 수행
+	floydWarshall();
+
+	// a -> b로 갈 수 없고, b-> a로 갈 수 없다면, a와 b중 누가 더 큰지 알 수 없음
+	// 즉, results[a][b] == INF 이고, results[b][a] == INF 라면 둘중 누가 더 큰지 알 수 없음
+	// 하지만 둘중 하나만 INF 라면 누가 더 큰지 명확하게 정해진거고
+	// 둘다 INF가 아니라면 사이클이 생성된 경우로 있을 수 없는 경우임.
+	// (a가 b보가 크고, b가 a보다 큰 경우로 있을 수 없는 경우에 해당함)
+	int cnt = 0;
+	for (int y = 1; y <= n; y++)
+	{
+		bool noSolve = true;
+		for (int x = 1; x <= n; x++)
+		{
+			if ((results[y][x] == INF) && (results[x][y] == INF))
+			{
+				noSolve = false;
+			}
+		}
+
+		if (noSolve == true)
+			cnt++;
+	}
+
+	cout << cnt;
+
+	return 0;
+}
