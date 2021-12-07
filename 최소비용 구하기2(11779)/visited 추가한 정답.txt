@@ -1,0 +1,95 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <algorithm>
+
+#define INF 1000000000
+
+using namespace std;
+/*
+해당 문제는 방향성을 지닌 그래프임
+*/
+int n, m;
+vector<pair<int, int>> edges[1001];
+int dists[1001] = { 0, };
+bool visited[1001] = { 0, };
+int prevNodes[1001] = { 0, };	// 이전노드가 무슨노드였는지 저장
+
+struct cmp {
+	bool operator()(pair<int, int>& f, pair<int, int>& s) {
+		return f.second > s.second;
+	}
+};
+
+void dijkstra(int startNode)
+{
+	priority_queue<pair<int, int>, vector<pair<int, int>>, cmp> pq;
+	dists[startNode] = 0;
+	pq.push({ startNode, 0 });
+
+	while (pq.empty() == false)
+	{
+		pair<int, int> p = pq.top();
+		pq.pop();
+		int currentNode = p.first;
+		int currentToDist = p.second;
+
+		if (dists[currentNode] < currentToDist) continue;	// 최단거리가 아님
+		if (visited[currentNode] == true) continue;
+
+		visited[currentNode] = true;
+
+		for (int i = 0; i < edges[currentNode].size(); i++)
+		{
+			pair<int, int> np = edges[currentNode].at(i);
+			int nextNode = np.first;
+			int nextToDist = np.second;
+			if (visited[nextNode] == true) continue;
+
+			if (dists[nextNode] > currentToDist + nextToDist)
+			{
+				prevNodes[nextNode] = currentNode;
+				dists[nextNode] = currentToDist + nextToDist;
+				pq.push({ nextNode, currentToDist + nextToDist });
+			}
+		}
+	}
+}
+
+int main()
+{
+	cin >> n >> m;
+	int f, s, w;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> f >> s >> w;
+		edges[f].push_back({ s, w });
+	}
+
+	int start, end;
+	cin >> start >> end;
+	for (int i = 1; i <= n; i++)
+	{
+		dists[i] = INF;
+		prevNodes[i] = INF;
+	}
+	dijkstra(start);
+
+	vector<int> route;
+	cout << dists[end] << "\n";
+	int c = end;
+	route.push_back(end);
+	while (true)
+	{
+		c = prevNodes[c];
+		route.push_back(c);
+		if (c == start)	break;
+	}
+
+	cout << route.size() << " \n";
+	for (int i = route.size() - 1; i >= 0; i--)
+	{
+		cout << route.at(i) << " ";
+	}
+
+}

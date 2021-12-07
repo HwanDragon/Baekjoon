@@ -1,0 +1,137 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+#define INF 2000000000
+
+using namespace std;
+
+vector<pair<int, int>> edges[500];	// 간선정보
+vector<pair<int, int>> reverseEdges[500];	// 역방향 간선정보
+int dists[500] = { 0, };	// 최단거리비용 저장
+bool visited[500] = { 0, };
+int n, m;
+
+void initVisited()
+{
+	for (int i = 0; i < 500; i++) visited[i] = false;
+}
+
+void removeEdge(int start, int end)
+{
+	queue<int> q;
+	q.push(start);
+
+	while (q.empty() == false)
+	{
+		int current = q.front();
+		q.pop();
+
+		if (current == end) continue;
+
+		for (int i = 0; i < reverseEdges[current].size(); i++)
+		{
+			pair<int, int> p = reverseEdges[current].at(i);
+			int nextNode = p.first;
+			int nextDist = p.second;
+
+			if (dists[current] == dists[nextNode] + nextDist)
+			{
+				for (int index = 0; index < edges[nextNode].size(); index++)
+				{
+					pair<int, int> tempPair = edges[nextNode].at(index);
+					if (tempPair.first == current && nextDist == tempPair.second)
+					{
+						q.push(nextNode);
+						edges[nextNode].erase(edges[nextNode].begin() + index);
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+
+struct cmp {
+	bool operator()(pair<int, int>& f, pair<int, int>& s) {
+		return f.second > s.second;
+	}
+};
+
+void dijkstra(int startNode)
+{
+	priority_queue<pair<int, int>, vector<pair<int, int>>, cmp> pq;
+	dists[startNode] = 0;
+	pq.push({ startNode, 0 });
+
+	while (pq.empty() == false)
+	{
+		pair<int, int> p = pq.top();
+		pq.pop();
+		int currentNode = p.first;
+		int currentDist = p.second;
+		
+
+		if (dists[currentNode] < currentDist) continue;	// 최단거리가 아님
+		if (visited[currentNode] == true)	continue;
+
+		visited[currentNode] = true;
+		for (int i = 0; i < edges[currentNode].size(); i++)
+		{
+			pair<int, int> np = edges[currentNode].at(i);
+			int nextNode = np.first;
+			int nextDist = np.second;
+			if (visited[nextNode] == true)	continue;
+
+			if (dists[nextNode] > nextDist + currentDist)
+			{
+				dists[nextNode] = nextDist + currentDist;
+				pq.push({ nextNode, nextDist + currentDist });
+			}
+		}
+	}
+}
+
+int main()
+{
+	while (true)
+	{
+		cin >> n >> m;
+		if (n == 0 && m == 0) break;
+		int start, end;
+		cin >> start >> end;
+		int first, second, weight;
+		for (int i = 0; i < m; i++)
+		{
+			cin >> first >> second >> weight;
+			edges[first].push_back({ second, weight });
+			reverseEdges[second].push_back({ first, weight });
+		}
+
+		// 다익스트라 수행
+		for (int i = 0; i < n; i++) dists[i] = INF;
+		initVisited();
+		dijkstra(start);
+
+		// 최단거리 경로 삭제
+		removeEdge(end, start);
+
+		// 최단거리 경로 삭제 후 다익스트라 수행
+		for (int i = 0; i < n; i++) dists[i] = INF;
+		initVisited();
+		dijkstra(start);
+
+		if (dists[end] == INF)
+			cout << -1 << "\n";
+		else
+			cout << dists[end] << "\n";
+
+		// 초기화
+		for (int i = 0; i < n; i++)
+		{
+			edges[i].clear();
+			reverseEdges[i].clear();
+		}
+	}
+	return 0;
+}

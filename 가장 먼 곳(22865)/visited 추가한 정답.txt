@@ -1,0 +1,127 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+#define MAX_VALUE 5000000001
+
+using namespace std;
+/*
+세명(A, B, C)의 위치에서 각각 다익스트라 알고리즘을 수행하여 나온 결과 배열을 각각 따로 저장함
+저장된 세개의 다익스트라 결과 배열을 순차적으로 확인하여 가장 큰 값 출력
+*/
+int n, edgeCount;
+int nodeA, nodeB, nodeC;
+vector<pair<int, int>> edges[100001];
+long long dists[100001] = { 0, };
+long long nodeADist[100001], nodeBDist[100001], nodeCDist[100001];
+bool visited[100001] = { 0, };
+
+void initVisited()
+{
+	for (int i = 1; i <= n; i++) visited[i] = false;
+}
+
+struct cmp {
+	bool operator()(pair<int, long long>& f, pair<int, long long>& s) {
+		return f.second > s.second;
+	}
+};
+
+void dijkstra(int startNode)
+{
+	priority_queue<pair<int, long long>, vector<pair<int, long long>>, cmp> pq;
+	dists[startNode] = 0;
+	pq.push({ startNode, 0 });
+
+	while (pq.empty() == false)
+	{
+		pair<int, long long> p = pq.top();
+		int currentNode = p.first;
+		long long currentDist = p.second;
+		pq.pop();
+
+		if (dists[currentNode] < currentDist)	continue;	//최단거리가 아님
+		if (visited[currentNode] == true)	continue;
+
+		visited[currentNode] = true;
+
+		for (int i = 0; i < edges[currentNode].size(); i++)
+		{
+			pair<int, long long> np = edges[currentNode].at(i);
+			int nextNode = np.first;
+			long long nextDist = np.second;
+			if (visited[nextNode] == true)	continue;
+
+			if (dists[nextNode] > currentDist + nextDist)
+			{
+				dists[nextNode] = currentDist + nextDist;
+				pq.push({ nextNode, currentDist + nextDist });
+			}
+		}
+	}
+}
+
+int main()
+{
+	cin >> n;
+	cin >> nodeA >> nodeB >> nodeC;
+	cin >> edgeCount;
+
+	int f, s, w;
+	for (int i = 0; i < edgeCount; i++)
+	{
+		cin >> f >> s >> w;
+		edges[f].push_back({ s, w });
+		edges[s].push_back({ f, w });
+	}
+
+
+	// 세명에 대해 각각 다익스트라 알고리즘 수행
+	for (int i = 1; i <= n; i++) dists[i] = MAX_VALUE;
+	initVisited();
+	dijkstra(nodeA);
+	for (int i = 1; i <= n; i++) nodeADist[i] = dists[i];
+
+	for (int i = 1; i <= n; i++) dists[i] = MAX_VALUE;
+	initVisited();
+	dijkstra(nodeB);
+	for (int i = 1; i <= n; i++) nodeBDist[i] = dists[i];
+
+	for (int i = 1; i <= n; i++) dists[i] = MAX_VALUE;
+	initVisited();
+	dijkstra(nodeC);
+	for (int i = 1; i <= n; i++) nodeCDist[i] = dists[i];
+
+	// 가장 먼 곳 계산
+	int minNode = 100001;
+	long long minValue = MAX_VALUE;
+	int resultIndex = 0;
+	long long resultValue = 0;
+
+	// 수행된 세명의 위치에서부터 가장 먼 곳의 땅을 찾음
+	for (int i = n; i > 0; i--)
+	{
+		minValue = MAX_VALUE;
+		if (i == nodeA || i == nodeB || i == nodeC)
+			continue;
+
+		if (minValue > nodeADist[i])
+			minValue = nodeADist[i];
+
+		if (minValue > nodeBDist[i])
+			minValue = nodeBDist[i];
+
+		if (minValue > nodeCDist[i])
+			minValue = nodeCDist[i];
+
+		if (resultValue < minValue)
+		{
+			resultValue = minValue;
+			resultIndex = i;
+		}
+	}
+
+	cout << resultIndex;
+
+	return 0;
+}
