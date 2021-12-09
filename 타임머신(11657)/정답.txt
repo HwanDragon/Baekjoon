@@ -1,0 +1,74 @@
+#include <iostream>
+#include <vector>
+
+#define INF 1000000000
+
+using namespace std;
+
+class Edge {
+public:
+	int first;
+	int second;
+	int weight;
+};
+
+int n, m;
+vector<Edge*> edges;
+long long dists[501] = { 0, };	// 정수 overflow 위험 있음 (https://www.acmicpc.net/board/view/49800) 확인
+
+bool bellmanFord(int startNode)
+{
+	dists[startNode] = 0;
+	for (int index = 1; index <= n; index++)
+	{
+		for (int i = 0; i < edges.size(); i++)
+		{
+			Edge* edge = edges.at(i);
+			int first = edge->first;
+			int second = edge->second;
+			int weight = edge->weight;
+			if (dists[first] == INF)	continue;
+
+			if (dists[second] > dists[first] + weight)
+			{
+				dists[second] = dists[first] + weight;
+				if (index == n) return true;
+			}
+		}
+	}
+	
+	return false;
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(nullptr);
+	for (int i = 0; i <= 500; i++)
+	{
+		dists[i] = INF;
+	}
+
+	cin >> n >> m;
+	for (int i = 0; i < m; i++)
+	{
+		Edge* edge = new Edge();
+		cin >> edge->first >> edge->second >> edge->weight;
+		edges.push_back(edge);
+	}
+
+	bool cycle = bellmanFord(1);
+	if (cycle == true)
+		cout << -1;
+	else
+	{
+		for (int i = 2; i <= n; i++)
+		{
+			if (dists[i] == INF)
+				cout << -1 << "\n";
+			else
+				cout << dists[i] << "\n";
+		}
+	}
+	return 0;
+}
