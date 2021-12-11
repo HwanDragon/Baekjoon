@@ -1,0 +1,127 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#define INF 2000000000
+
+using namespace std;
+
+class Edge {
+public :
+	int first;
+	int second;
+	int weight;
+};
+
+int n, m;
+long long dists[101] = { 0, };	// 벨만포드 수행 결과 저장
+vector<Edge*> edges;	// 간선 정보 저장	
+queue<int> cycleNodes;	// 사이클이 존재하는 노드 저장
+bool visited[101] = { 0, };	// bfs 방문여부
+int prevNode[101] = { 0, };	// 이전 노드를 저장
+
+// 벨만포드 알고리즘 수행
+void bellmanFord(int startNode)
+{
+	// 초기화
+	for (int i = 0; i <= n; i++) dists[i] = INF;
+
+	dists[startNode] = 0;
+	prevNode[startNode] = startNode;
+	for (int index = 1; index <= n; index++)
+	{
+		for (int i = 0; i < edges.size(); i++)
+		{
+			Edge* edge = edges.at(i);
+			int first = edge->first;
+			int second = edge->second;
+			int weight = edge->weight;
+
+			if (dists[first] == INF)	continue;	
+
+			if (dists[second] > dists[first] + weight)
+			{
+				prevNode[second] = first;	// 이전 노드 저장
+				dists[second] = dists[first] + weight;
+				if (index == n)
+				{
+					cycleNodes.push(second);	// 사이클 노드 저장
+					visited[second] = true;
+				}
+			}
+		}
+	}
+}
+
+// 사이클 노드에서 도착노드까지 도달하는게 가능한지 확인
+bool bfs(int searchNode)
+{
+	while (cycleNodes.empty() == false)
+	{
+		int cycleNode = cycleNodes.front();
+		if (searchNode == cycleNode) return true;
+
+		cycleNodes.pop();
+
+		for (int i = 0; i < edges.size(); i++)
+		{
+			Edge* edge = edges.at(i);
+			if (edge->first == cycleNode)
+			{
+				if (visited[edge->second] == false)
+				{
+					cycleNodes.push(edge->second);
+					visited[edge->second] = true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+int main()
+{
+	cin >> n >> m;
+
+	for (int i = 0; i < m; i++)
+	{
+		Edge* edge = new Edge();
+		cin >> edge->first >> edge->second >> edge->weight;
+		edge->weight = (-1) * edge->weight;
+		edges.push_back(edge);
+	}
+
+	bellmanFord(1);
+	if (dists[n] == INF)
+	{
+		cout << -1;	// 시작점에서 도착노드 도달 불가능
+	}
+	else
+	{
+		if (bfs(n) == true)	
+		{
+			cout << -1;	// 사이클 노드에서 도착노드 도달 가능
+		}
+		else
+		{
+			// 사이클도 없고, 도달 가능할 때
+			vector<int> route;	
+			queue<int> r;
+			r.push(n);
+			// 경로 추적
+			while (true)
+			{
+				int current = r.front();
+				r.pop();
+				route.push_back(current);
+				if (current == 1) break;	// 시작노드 도달
+				r.push(prevNode[current]);
+			}
+
+			// 화면 출력
+			for (int i = route.size() - 1; i >= 0; i--)
+				cout << route.at(i) << " ";
+		}
+	}
+	return 0;
+}
