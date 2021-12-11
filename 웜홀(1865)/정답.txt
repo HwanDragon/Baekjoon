@@ -1,0 +1,99 @@
+#include <iostream>
+#include <vector>
+
+/*
+어느점에서 벨만포드 알고리즘을 수행하더라도 음수 사이클이 있는지 없는지 판단이 가능함.
+*/
+
+#define INF 2000000000
+
+using namespace std;
+
+class Edge {
+public:
+	int first;
+	int second;
+	int weight;
+	Edge(int f, int s, int w) {
+		this->first = f;
+		this->second = s;
+		this->weight = w;
+	}
+};
+
+int n, m, w;
+vector<Edge*> edges;
+
+// 벨만포드 알고리즘 for문 내에서 
+// index가 최대 500
+// edges.size 가 최대 2500
+// 줄어드는 시간 T가 최대 10000 이므로
+// 가능한 최대 음수가 int로 하면 overflow가 발생하므로 long long 으로 선언
+long long dists[501] = { 0, };
+
+bool bellmanFord(int startNode)
+{
+	dists[startNode] = 0;
+	for (int index = 1; index <= n; index++)
+	{
+		for (int i = 0; i < edges.size(); i++)
+		{
+			Edge* edge = edges.at(i);
+			int first = edge->first;
+			int second = edge->second;
+			int weight = edge->weight;
+			if (dists[first] == INF)	continue;
+
+			if (dists[second] > dists[first] + weight)
+			{
+				dists[second] = dists[first] + weight;
+				if (index == n) return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+int main()
+{
+	ios::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+	int testCase;
+	cin >> testCase;
+
+	for (int index = 0; index < testCase; index++)
+	{
+		edges.clear();
+
+		cin >> n >> m >> w;
+		int first, second, weight;
+		for (int i = 0; i < m; i++)
+		{
+			cin >> first >> second >> weight;
+			Edge* edge = new Edge(first, second, weight);
+			edges.push_back(edge);
+			Edge* edge2 = new Edge(second, first, weight);
+			edges.push_back(edge2);
+		}
+
+		for (int i = 0; i < w; i++)
+		{
+			cin >> first >> second >> weight;
+			Edge* edge = new Edge(first, second, (-1) * weight);
+			edges.push_back(edge);
+		}
+
+		bool cycle = bellmanFord(1);
+
+		if (cycle == true)
+			cout << "YES\n";
+		else
+			cout << "NO\n";
+	}
+
+
+
+	return 0;
+}

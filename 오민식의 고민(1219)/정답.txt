@@ -1,0 +1,153 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+#define INF 200000000
+/*
+반례1
+4 0 3 4
+0 1 0
+1 2 0
+2 1 0
+0 3 10
+10 10 10 10
+정답 : 10
+
+*/
+using namespace std;
+
+int n, startCity, endCity, m;
+
+class Edge {
+public:
+	int first = 0;
+	int second = 0;
+	int weight = 0;
+	Edge(int f, int s, int w) {
+		this->first = f;
+		this->second = s;
+		this->weight = w;
+	}
+	Edge() {
+
+	}
+};
+
+vector<Edge*> inputs;
+vector<Edge*> edges;
+vector<int> cityMoney;
+
+/*
+n과 m이 최대 50 이므로 
+벨만포드 알고리즘 내부의 for문이 50번,
+edges for문이 50,
+교통수단 가격이 1000000 이므로
+int로 선언하게 되면 오버플로우가 발생함
+*/
+long long dists[50] = { 0, };
+int visited[50] = { 0, };
+queue<int> cycleNodes;	// 사이클 노드들에서 시작노드로 접근이 가능한지 확인하기위한 노드들
+
+void bellmanFord(int startNode)
+{
+	for (int i = 0; i < n; i++) dists[i] = INF;
+
+	dists[startNode] = (-1) * cityMoney[startNode];
+
+	// 사이클이 있는 노드에서 시작 노드까지 접근이 가능한지 확인해야함.
+	// 즉 사이클이 있는 노드를 전부 큐에 추가해야함
+	for (int index = 1; index <= n; index++)
+	{
+		for (int i = 0; i < edges.size(); i++)
+		{
+			Edge* edge = edges.at(i);
+			int first = edge->first;
+			int second = edge->second;
+			int weight = edge->weight;
+
+			if (dists[first] == INF) continue;
+
+			if (dists[second] > dists[first] + weight)
+			{
+				dists[second] = dists[first] + weight;
+
+				if (index >= n) {
+					cycleNodes.push(second);
+					visited[second] = true;
+				}
+			}
+		}
+	}
+}
+
+// BFS를 통해 사이클 노드에서 시작노드로 접근이 가능한지 판단
+bool isArrivedCycleNodeTo(int startNode)
+{
+	while (cycleNodes.empty() == false)
+	{
+		int cycleNode = cycleNodes.front();
+		if (cycleNode == startNode) return true;
+		cycleNodes.pop();
+
+		for (int i = 0; i < edges.size(); i++)
+		{
+			Edge* edge = edges.at(i);
+
+			if (edge->first == cycleNode)
+			{
+				if (visited[edge->second] == false)
+				{
+					cycleNodes.push(edge->second);
+					visited[edge->second] = true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+int main()
+{
+	cin >> n >> startCity >> endCity >> m;
+	for (int i = 0; i < m; i++)
+	{
+		Edge* edge = new Edge();
+		cin >> edge->first >> edge->second >> edge->weight;
+		inputs.push_back(edge);
+	}
+
+	int money;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> money;
+		cityMoney.push_back(money);
+	}
+
+	// 실제 벨만포드 알고리즘을 수행할 간선정보 제작
+	// A도시에서 B 도시로 가는 간선은
+	// A -> B 도시로 가는데 소모되는 비용 + B도시에서 벌 수 있는 금액
+	// 으로하여 새로운 간선정보를 만들 수 있다.
+	for (int i = 0; i < inputs.size(); i++)
+	{
+		Edge* tempEdge = inputs.at(i);
+		int first = tempEdge->first;
+		int second = tempEdge->second;
+		int weight = tempEdge->weight + (-1) * cityMoney[second];
+		Edge* edge = new Edge(first, second, weight);
+		edges.push_back(edge);
+	}
+
+	bellmanFord(startCity);
+
+	if (dists[endCity] == INF)
+		cout << "gg";
+	else
+	{
+		if (isArrivedCycleNodeTo(endCity) == true)
+			cout << "Gee";
+		else
+			cout << (-1) * dists[endCity];
+	}
+
+	return 0;
+}
