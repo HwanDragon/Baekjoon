@@ -1,0 +1,106 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <stack>
+
+using namespace std;
+
+int n, m, v;
+vector<int> edges[1001];	// 간선정보를 저장할 vector
+bool visited[1001] = {0 , };	// 방문여부를 확인할 배열
+
+// DFS 구현
+void dfs(int startNode)
+{
+	stack<int> st;	// 스택을 이용해 구현
+	st.push(startNode);
+
+	while (st.empty() == false)
+	{
+		int node = st.top();
+		st.pop();
+		if (visited[node] == true)	continue;	// 이미 방문한 노드는 pass
+		visited[node] = true;	// 방문 체크
+		cout << node << " ";	// 출력
+		
+		// 인접 노드 추가	
+		for (int i = 0; i < edges[node].size(); i++)
+		{
+			int nextNode = edges[node].at(i);
+			if (visited[nextNode] == true)	continue;	// 이미 방문한 노드는 추가하지 않음
+
+			st.push(nextNode);	// 방문하지 않은 노드 스택에 추가
+		}
+	}
+}
+
+void bfs(int startNode)
+{
+	queue<int> q;	// 큐를 이용하여 BFS구현
+	q.push(startNode);
+	visited[startNode] = true;	// BFS는 큐에 추가할 때 방문여부 체크
+
+	while (q.empty() == false)
+	{
+		int node = q.front();
+		q.pop();
+		cout << node << " ";	// 화면 출력
+
+		// 인접 노드들 추가
+		for (int i = 0; i < edges[node].size(); i++)
+		{
+			int nextNode = edges[node].at(i);
+			if (visited[nextNode] == true)	continue;	// 이미 방문한 노드들은 추가하지않음
+
+			q.push(nextNode);	// 큐에 탐색할 노드 추가
+			visited[nextNode] = true;	// 방문 체크
+		}
+	}
+}
+
+// 내림차순으로 정렬
+bool cmp(int first, int second)
+{
+	return first > second;
+}
+
+int main()
+{
+	cin >> n >> m >> v;
+	int first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second;
+		edges[first].push_back(second);
+		edges[second].push_back(first);
+	}
+
+
+	/* 
+		DFS는 스택을 이용하여 구현하므로
+		오름차순으로 정렬 한 뒤, 탐색하여야 스택의 가장 아래부분에 가장 큰값이 들어가서 가장 
+		마지막에 출력됨
+	*/
+	for (int i = 0; i <= n; i++)
+	{
+		sort(edges[i].begin(), edges[i].end(), cmp);
+	}
+
+	dfs(v);	
+	cout << "\n";
+
+	/*
+		BFS는 큐를 이용하여 구현하므로
+		내림차순으로 정렬하여 가장 작은 값을 가지는 노드 큐에 추가하면,
+		선입선출 구조이기 때문에 가장 작은값부터 먼너 출력됨
+	*/
+	for (int i = 0; i <= n; i++)
+	{
+		visited[i] = false;
+		sort(edges[i].begin(), edges[i].end());
+	}
+	bfs(v);
+
+	return 0;
+}
