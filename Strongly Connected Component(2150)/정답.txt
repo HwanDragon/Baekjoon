@@ -1,0 +1,109 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <algorithm>
+
+#define NODE_COUNT 10001
+
+using namespace std;
+
+int v, e;
+int id = 0;	// 방문 순서 아이디
+int discover[NODE_COUNT + 1] = { 0, };	// 발견한 정점 순서
+bool finished[NODE_COUNT + 1] = { 0, };	// DFS가 수행중인지 여부 확인
+stack<int> st;	// SCC집합을 구분짓기위한 스택
+vector<vector<int>> SCC;	 // SCC를 저장할 배열
+vector<int> edges[NODE_COUNT + 1];	// 간선정보
+
+int dfs(int node)
+{
+	st.push(node);	// 스택에 노드를 추가함
+	discover[node] = ++id;	// 방문 순서를 순차적으로	기록함
+
+	// 인접 노드를 탐색하면서 사이클이 발생할 경우 사이클이 발생한 노드의 방문 순서 아이디를 가져오기 위함
+	int prevVisitNodeId = discover[node];
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int nextNode = edges[node].at(i);
+		if (discover[nextNode] == -1)
+		{
+			// 방문하지 않은 정점이면 방문 후 방문 순서 아이디가 더 작은 값으로 세팅
+			prevVisitNodeId = min(prevVisitNodeId, dfs(nextNode));
+		}
+		else if (finished[nextNode] == false)
+		{
+			// DFS를 수행중인 정점을 만날경우
+			// 해당 정점은 이미 dfs를 수행하여 방문 아이디가 세팅되어 있고,
+			// 해당 노드가 이미 스택에 추가되어 있으므로
+			// dfs를 수행하는것이 아니라, 방문 아이디를 비교하여 더 작은 값으로 세팅함
+			prevVisitNodeId = min(prevVisitNodeId, discover[nextNode]);
+		}
+	}
+
+	// SCC의 최초 방문한 노드일 경우
+	if (discover[node] == prevVisitNodeId)
+	{
+		// 스택에서 node가 나올때까지 꺼내서 scc 집합에 추가함
+		vector<int> scc;
+		while (true)
+		{
+			int n = st.top();	
+			st.pop();
+			finished[n] = true;
+			scc.push_back(n);
+			if (node == n) break;
+		}
+		SCC.push_back(scc);
+	}
+
+	discover[node] = prevVisitNodeId;	// 같은 그룹으로 세팅 (해도 되고 안해도 됨)
+
+	return prevVisitNodeId;
+}
+
+int cmp(vector<int> &f, vector<int> &s)
+{
+	return f[0] < s[0];
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i <= NODE_COUNT; i++) discover[i] = -1;
+
+	// 사용자 입력 받음
+	cin >> v >> e;
+	int first, second;
+	for (int i = 0; i < e; i++)
+	{
+		cin >> first >> second;
+		edges[first].push_back(second);
+	}
+
+	// 타잔 알고리즘 수행
+	for (int i = 1; i <= v; i++)
+	{
+		if (discover[i] == -1) dfs(i);
+	}
+
+	// 정렬 수행
+	for (int i = 0; i < SCC.size(); i++)
+	{
+		sort(SCC[i].begin(), SCC[i].end());
+	}
+	sort(SCC.begin(), SCC.end(), cmp);
+
+	// 화면 출력
+	cout << SCC.size() << "\n";
+	for (int i = 0; i < SCC.size(); i++)
+	{
+		vector<int> scc = SCC.at(i);
+		for (int j = 0; j < scc.size(); j++)
+		{
+			cout << scc.at(j) << " ";
+		}
+		cout << -1 << "\n";
+	}
+
+	return 0;
+}
