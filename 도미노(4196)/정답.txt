@@ -1,0 +1,128 @@
+#include <iostream>
+#include <stack>
+#include <vector>
+
+#define NODE_COUNT 100000
+
+using namespace std;
+
+int n, m, id = 0;	// 노드 수, 간선 수, 방문 순서 고유 아이디
+vector<int> edges[NODE_COUNT + 1];	// 간선 정보
+bool finished[NODE_COUNT + 1] = { 0, };	// DFS 수행중인지 여부
+int discover[NODE_COUNT + 1] = { 0, };	// 해당 노드 방문 여부를 기록
+stack<int> st;	// 타잔 알고리즘에 사용할 스택
+vector<vector<int>> SCC;	// 전체 SCC 요소
+int group[NODE_COUNT + 1] = { 0, };	// SCC별로 그룹핑
+int degree[NODE_COUNT + 1] = { 0, };	// 진입 차수 계산
+
+// 초기화
+void init()
+{
+	for (int i = 0; i <= NODE_COUNT; i++)
+	{
+		edges[i].clear();
+		finished[i] = false;
+		discover[i] = -1;
+		while (st.empty() == false) st.pop();
+		SCC.clear();
+		id = 0;
+		group[i] = -1;
+		degree[i] = 0;
+	}
+}
+
+// 타잔 알고리즘 수행
+int dfs(int node)
+{
+	st.push(node);	// 스택에 노드 추가
+	discover[node] = ++id;	// 방문순서 고유 아이디 할당
+	int nodeId = discover[node];
+
+	// 인접 간선을 확인하여 DFS 수행
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int nextNode = edges[node].at(i);
+		if (discover[nextNode] == -1)
+		{
+			nodeId = min(nodeId, dfs(nextNode));
+		}
+		else if (finished[nextNode] == false)
+		{
+			nodeId = min(nodeId, discover[nextNode]);
+		}
+	}
+
+	// 노드가 SCC의 시작 노드일 경우
+	if (nodeId == discover[node])
+	{
+		vector<int> scc;
+		while (true)
+		{
+			int n = st.top();
+			st.pop();
+			finished[n] = true;
+			scc.push_back(n);
+			group[n] = SCC.size() + 1;
+			if (n == node) break;
+		}
+		SCC.push_back(scc);
+	}
+
+	discover[node] = nodeId;
+	return discover[node];
+}
+
+int main()
+{
+	int testCase;
+	cin >> testCase;
+	while (testCase--)
+	{
+		// 초기화
+		init();
+
+		// 사용자 입력 받음
+		cin >> n >> m;
+		int first, second;
+		for (int i = 0; i < m; i++)
+		{
+			cin >> first >> second;
+			edges[first].push_back(second);
+		}
+
+		// 타잔 알고리즘 수행
+		for (int i = 1; i <= n; i++)
+		{
+			if (discover[i] == -1) dfs(i);
+		}
+
+		// 진입차수 계산
+		// i번 노드에서 next 노드로 가는 간선을 검사하여
+		// 두 노드의 SCC 그룹이 서로 다를경우 
+		// 진입 차수 증가
+		for (int i = 1; i <= n; i++)
+		{
+			for (int j = 0; j < edges[i].size(); j++)
+			{
+				int next = edges[i].at(j);
+				if (group[i] != group[next])	// 서로 다른 SCC에 속해 있음
+				{
+					degree[group[next]]++;
+				}
+			}
+		}
+
+		// 진입차수가 0인 항목들 검사
+		int result = 0;
+		for (int i = 1; i <= SCC.size(); i++)
+		{
+			if (degree[i] == 0)
+				result++;
+		}
+
+		cout << result << "\n";
+		
+	}
+
+	return 0;
+}
