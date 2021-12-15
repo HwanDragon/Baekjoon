@@ -1,0 +1,101 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <algorithm>
+
+#define NODE_COUNT 100000
+
+using namespace std;
+
+int n, m, id = 0, sccGroupId = 1;	// 노드수, 간선수, 방문순서 아이디, SCC 그룹별 고유 아이디
+vector<vector<int>> SCC;	// 전체 SCC 그룹
+bool finished[NODE_COUNT + 1] = { 0, };	// DFS 수행중인지 여부
+int discover[NODE_COUNT + 1] = { 0, };	// 노드 방문 순서를 저장할 배열
+stack<int> st;	// 타잔 알고리즘을 수행할 스택
+vector<int> edges[NODE_COUNT + 1];	// 간선 정보
+int degree[NODE_COUNT + 1] = { 0, };	// 진입차수를 저장할 공간
+int group[NODE_COUNT + 1] = { 0, };	// scc별로 아이디를 지정할 공간
+
+// 타잔 알고리즘 수행
+int dfs(int node)
+{
+	st.push(node);
+	discover[node] = ++id;
+	int nodeId = discover[node];
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (discover[next] == -1)
+		{
+			nodeId = min(nodeId, dfs(next));
+		}
+		else if (finished[next] == false)
+		{
+			nodeId = min(nodeId, discover[next]);
+		}
+	}
+
+	if (nodeId == discover[node])
+	{
+		vector<int> scc;
+		while (true)
+		{
+			int n = st.top();
+			st.pop();
+			scc.push_back(n);
+			finished[n] = true;
+			group[n] = sccGroupId;	// scc별로 그룹 아이디 지정
+			if (n == node) break;
+		}
+		sccGroupId++;
+		SCC.push_back(scc);
+	}
+
+	discover[node] = nodeId;
+	return nodeId;
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i <= NODE_COUNT; i++) discover[i] = -1;
+	
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second;
+		edges[first].push_back(second);
+	}
+
+	// 타잔 알고리즘 수행
+	for (int i = 1; i <= n; i++)
+	{
+		if (discover[i] == -1) dfs(i);
+	}
+
+	// 진입차수 계산
+	for (int i = 1; i <= n; i++)
+	{
+		for (int j = 0; j < edges[i].size(); j++)
+		{
+			int next = edges[i].at(j);
+			if (group[i] != group[next])
+			{
+				degree[group[next]]++;
+			}
+		}
+	}
+
+	// 진입차수가 0인 항목들 검토
+	int result = 0;
+	for (int i = 1; i < sccGroupId; i++)
+	{
+		if (degree[i] == 0)
+			result++;
+	}
+	cout << result;
+	return 0;
+}
