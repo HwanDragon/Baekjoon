@@ -1,0 +1,151 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <algorithm>
+
+#define NODE_COUNT 100000
+
+using namespace std;
+
+int n, m, visitId = 0, sccId = 0;	// 노드수, 간선수, 방문순서 고유 아이디, SCC별 그룹 아이디
+vector<int> edges[NODE_COUNT];		// 간선 정보
+bool finished[NODE_COUNT] = { 0, };	// DFS가 수행중인지 여부
+int discover[NODE_COUNT] = { 0, };	// 노드 방문 순서를 저장할 배열
+stack<int> st;	// 타잔 알고리즘을 수행할 스택	
+vector<vector<int>> SCC;	// 전체 SCC 그룹
+int degree[NODE_COUNT] = { 0, };	// 진입 차수 저장
+int group[NODE_COUNT] = { 0, };	// SCC 그룹별 아이디 저장
+
+// 타잔 알고리즘 수행
+int dfs(int node)
+{
+	discover[node] = ++visitId;
+	st.push(node);
+	int nodeId = discover[node];
+
+	// 모든 엣지 탐색
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (discover[next] == -1)
+		{
+			nodeId = min(nodeId, dfs(next));
+		}
+		else if (finished[next] == false)
+		{
+			nodeId = min(nodeId, discover[next]);
+		}
+	}
+
+	if (nodeId == discover[node])
+	{
+		vector<int> scc;
+		while (true)
+		{
+			int n = st.top();
+			st.pop();
+			scc.push_back(n);
+			finished[n] = true;
+			group[n] = sccId;
+			if (n == node) break;
+		}
+		sccId++;
+		SCC.push_back(scc);
+	}
+
+	discover[node] = nodeId;
+	return nodeId;
+}
+
+// 초기화
+void init()
+{
+	visitId = 0;
+	sccId = 0;
+	for (int i = 0; i < NODE_COUNT; i++)
+	{
+		edges[i].clear();
+		finished[i] = false;
+		discover[i] = -1;
+		degree[i] = 0;
+		group[i] = 0;
+	}
+	while (st.empty() == false) st.pop();
+	SCC.clear();
+}
+
+int main()
+{
+	int testCase;
+	cin >> testCase;
+	while (testCase--)
+	{
+		// 초기화
+		for (int i = 0; i < NODE_COUNT; i++) discover[i] = -1;
+
+		// 사용자 입력 받음
+		cin >> n >> m;
+		int first, second;
+		for (int i = 0; i < m; i++)
+		{
+			cin >> first >> second;
+			edges[first].push_back(second);
+		}
+		
+		// 타잔 알고리즘 수행
+		for (int i = 0; i < n; i++)
+		{
+			if (discover[i] == -1) dfs(i);
+		}
+
+		// 진입차수 계산
+		for (int node = 0; node < n; node++)
+		{
+			for (int i = 0; i < edges[node].size(); i++)
+			{
+				int next = edges[node].at(i);
+				if (group[node] != group[next])
+				{
+					degree[group[next]]++;
+				}
+			}
+		}
+
+		// 진입차수가 0인 SCC 노드가 몇개인지 확인하고, 그 위치 저장
+		int cnt = 0;
+		int pos = -1;
+		for (int i = 0; i < sccId; i++)
+		{
+			if (degree[i] == 0)
+			{
+				cnt++;
+				pos = i;
+			}
+		}
+
+		// 진입차수가 0인 항목이 없거나, 1개 초과하는 경우 
+		if (cnt != 1)
+			cout << "Confused\n";
+		else
+		{
+			// 진입차수가 0에 해당하는 노드들을 정렬하기 위해 vector에 추가
+			vector<int> t;
+			for (int i = 0; i < n; i++)
+			{
+				if (group[i] == pos)
+					t.push_back(i);
+			}
+			sort(t.begin(), t.end());	// 정렬
+
+			// 결과 출력
+			for (int i = 0; i < t.size(); i++)
+			{
+				cout << t[i] << "\n";
+			}
+		}
+		cout << "\n";
+		init();	// 초기화
+	}
+
+	return 0;
+}
