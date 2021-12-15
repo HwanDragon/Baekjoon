@@ -1,0 +1,106 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <algorithm>
+
+#define NODE_COUNT 100000
+
+using namespace std;
+
+int n, m, id = 0;	// 노드수, 간선수, 방문 순서 아이디
+bool finished[NODE_COUNT] = {0, };	// DFS 수행중인지 여부	
+vector<vector<int>> SCC;	// 전체 SCC 정보
+vector<int> edges[NODE_COUNT];	// 간선 정보
+int discover[NODE_COUNT] = { 0 , };	// n번 노드를 방문했는지 여부
+stack<int> st;	// 타잔알고리즘 수행을 위한 스택
+int group[NODE_COUNT] = { 0, };	// SCC 별로 그룹을 지정하기위한 배열
+int degree[NODE_COUNT] = { 0, }; // 지정된 SCC 그룹별로 진입차수 계산
+
+// 타잔알고리즘 수행
+int dfs(int node)
+{
+	st.push(node);	// 스택에 노드 추가
+	discover[node] = ++id;	// 방문 순서 아이디 발급
+	int nodeId = discover[node];	// DFS 수행하면서 사이클이 시작되는 노드의 방문 아이디 존재 확인
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int nextNode = edges[node].at(i);
+		if (discover[nextNode] == -1)	// 방문하지 않은 노드
+		{
+			nodeId = min(nodeId, dfs(nextNode));
+		}
+		else if (finished[nextNode] == false)	// DFS 수행중인 노드
+		{
+			nodeId = min(nodeId, discover[nextNode]);
+		}
+	}
+
+	// SCC의 사이클 시작 노드일 경우
+	// 스택에서 node 자신이 나올때까지 pop하여 SCC 그룹 생성
+	if (nodeId == discover[node])
+	{
+		vector<int> scc;
+		while (true) 
+		{
+			int n = st.top();
+			st.pop();
+			finished[n] = true;
+			scc.push_back(n);
+			group[n] = SCC.size();	// SCC별로 그룹 지정
+			if (n == node) break;
+		}
+		SCC.push_back(scc);
+	}
+
+	discover[node] = nodeId;
+	return nodeId;
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i < NODE_COUNT; i++)
+	{
+		discover[i] = -1; 
+		degree[i] = 0;
+	}
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second;
+		edges[first].push_back(second);
+	}
+
+	// 타잔 알고리즘 실행
+	for (int i = 0; i < n; i++)
+	{
+		if (discover[i] == -1) 
+			dfs(i);
+	}
+
+	// 그룹별로 지정된 SCC별로 진입차수 계산
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < edges[i].size(); j++)
+		{
+			int nextNode = edges[i].at(j);
+			if (group[i] != group[nextNode])
+				degree[group[nextNode]]++;
+		}
+	}
+
+	// 진입차수가 0인 항목들 검사
+	int result = 0;
+	for (int i = 0; i < SCC.size(); i++)
+	{
+		if (degree[i] == 0)
+			result++;
+	}
+
+	cout << result;
+	return 0;
+}
