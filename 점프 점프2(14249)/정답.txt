@@ -140,6 +140,8 @@ int main()
 		if (degree[i] == 0 && (group[startPos] != i))
 			q.push(i);
 	}
+	// 만약 시작노드가 두번 들어가게 되면 위상정렬시 다른 노드의 진입차수가 두번 감소되어 원하는 결과가
+	// 나오지 않을 수도 있음
 	q.push(group[startPos]);
 	accessFromStart[group[startPos]] = true;
 
