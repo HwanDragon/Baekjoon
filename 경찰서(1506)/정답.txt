@@ -1,0 +1,109 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+
+#define NODE_COUNT 100
+
+using namespace std;
+
+int n, visitId = 0;	// 노드수, 방문 순서 고유 아이디
+char e[NODE_COUNT][NODE_COUNT] = { 0, };	// 입력받을 간선 배열
+vector<int> edges[NODE_COUNT];	// 간선 배열을 이용해 생성한 간선 정보
+int discover[NODE_COUNT] = { 0, };	// 방문순서정보
+bool finished[NODE_COUNT] = { 0, };	// DFS 수행중인지 여부를 판단할 배열
+stack<int> st;	// 타잔 알고리즘에 사용할 스택	
+vector<vector<int>> SCC;	// 전체 SCC 그룹
+int cost[NODE_COUNT] = { 0, };	// 경찰서를 세우는 비용
+
+// 타잔 알고리즘 수행
+int dfs(int node)
+{
+	st.push(node);	// 스택에 노드 추가
+	discover[node] = ++visitId;	// 방문 순서 아이디 기록
+	int nodeId = discover[node];
+
+	// 인접 노드 탐색
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (discover[next] == -1)	// 방문 하지 않은 노드일 경우
+		{
+			nodeId = min(nodeId, dfs(next));
+		}
+		else if (finished[next] == false) // DFS를 수행중인 노드
+		{
+			nodeId = min(nodeId, discover[next]);
+		}
+	}
+
+	// SCC의 시작노드일 경우
+	// 스택에서 시작 노드가 나올때까지 노드들을 꺼내서 SCC 집합을 만듬
+	if (nodeId == discover[node])
+	{
+		vector<int> scc;
+		while (true) 
+		{
+			int n = st.top();
+			st.pop();
+			scc.push_back(n);
+			finished[n] = true;
+			if (n == node) break;
+		}
+		SCC.push_back(scc);
+	}
+
+	discover[node] = nodeId;
+	return nodeId;
+}
+
+// 입력받은 간선 배열 정보로 타잔알고리즘에 사용할 간선정보를 만듬
+void createGraph()
+{
+	for (int y = 0; y < n; y++)
+	{
+		for (int x = 0; x < n; x++)
+		{
+			if (e[y][x] == '1')
+				edges[y].push_back(x);
+		}
+	}
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i < 100; i++) discover[i] = -1;
+
+	// 사용자 입력 받음
+	cin >> n;
+	for (int i = 0; i < n; i++) cin >> cost[i];	// 경찰서를 세우는 비용
+	for (int i = 0; i < n; i++) cin >> e[i];	// 간선 배열
+	
+	// 간선배열을 이용하여 타잔알고리즘에 사용할 간선 정보 생성
+	createGraph();
+
+	// 타잔알고리즘 수행
+	for (int i = 0; i < n; i++)
+	{
+		if (discover[i] == -1) dfs(i);
+	}
+
+	// SCC 집합중 경찰서를 세우는데 가장 적은 비용이 드는 노드를 찾아서 결과값에 더해줌
+	int result = 0;
+	for (int i = 0; i < SCC.size(); i++)
+	{
+		vector<int> scc = SCC.at(i);
+		int minValue = 100000000;
+		for (int j = 0; j < scc.size(); j++)
+		{
+			int next = scc.at(j);
+			if (cost[next] < minValue)
+			{
+				minValue = cost[next];
+			}
+		}
+		result += minValue;
+	}
+	cout << result;
+	return 0;
+}

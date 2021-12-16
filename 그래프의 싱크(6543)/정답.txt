@@ -1,0 +1,137 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <algorithm>
+
+/*
+해당 문제는 어떤  SCC에서 바깥으로 나가는 출력 간선이 없는 SCC 그룹을 출력하는 문제
+즉, 진출차수가 0인 SCC 집합을 찾고, 그 안의 원소들을 출력하는 문제
+*/
+
+#define NODE_COUNT 5000
+
+using namespace std;
+
+int n, m, visitId = 0;	// 노드수, 간선수, 방문 순서 아이디
+int discover[NODE_COUNT + 1] = { 0, };	// 방문순서를 저장할 배열
+bool finished[NODE_COUNT + 1] = { 0, };	// DFS수행중인지를 저장할 배열
+vector<int> edges[NODE_COUNT + 1];	// 간선정보
+stack<int> st;	// 타잔 알고리즘에 사용할 스택
+vector<vector<int>> SCC;	// 전체 SCC 
+int group[NODE_COUNT + 1] = { 0, };	// SCC별 그룹을 저장할 배열
+int outDegree[NODE_COUNT + 1] = { 0 , };	// 진출차수를 계산할 배열
+
+// 초기화
+void init()
+{
+	visitId = 0;
+	for (int i = 0; i <= NODE_COUNT; i++)
+	{
+		discover[i] = -1;
+		finished[i] = false;
+		edges[i].clear();
+		group[i] = 0;
+		outDegree[i] = 0;
+	}
+	while (st.empty() == false) st.pop();
+	SCC.clear();
+}
+
+// 타잔 알고리즘 수행
+int dfs(int node)
+{
+	st.push(node);
+	discover[node] = ++visitId;
+	int nodeId = discover[node];
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (discover[next] == -1)
+		{
+			nodeId = min(nodeId, dfs(next));
+		}
+		else if (finished[next] == false)
+		{
+			nodeId = min(nodeId, discover[next]);
+		}
+	}
+
+	if (nodeId == discover[node])
+	{
+		vector<int> scc;
+		while (true)
+		{
+			int n = st.top();
+			st.pop();
+			scc.push_back(n);
+			finished[n] = true;
+			group[n] = SCC.size() + 1;
+			if (n == node) break;
+		}
+		SCC.push_back(scc);
+	}
+
+	return nodeId;
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i <= NODE_COUNT; i++) discover[i] = -1;
+
+	while (true)
+	{
+		// 사용자 입력 받음
+		cin >> n;
+		if (n == 0)
+			break;
+		cin >> m;
+
+		int first, second;
+		for (int i = 0; i < m; i++)
+		{
+			cin >> first >> second;
+			edges[first].push_back(second);
+		}
+
+		// 타잔 알고리즘 수행
+		for (int i = 1; i <= n; i++)
+		{
+			if (discover[i] == -1) dfs(i);
+		}
+
+		// 진출 차수 계산
+		for (int node = 1; node <= n; node++)
+		{
+			for (int i = 0; i < edges[node].size(); i++)
+			{
+				int next = edges[node].at(i);
+				if (group[node] == group[next])	 continue;	// 같은 그룹끼리는 pass
+
+				// 서로 다른 그룹의 node -> next 로 가는 간선이 있을경우
+				outDegree[group[node]]++;	// node의 진출차수 +1
+			}
+		}
+
+		// 진출차수가 0인 SCC 노드 찾음
+		vector<int> nodes;
+		for (int i = 1; i <= n; i++)
+		{
+			if (outDegree[group[i]] == 0)
+			{
+				nodes.push_back(i);
+			}
+		}
+		
+		// 결과 출력
+		for (int i = 0; i < nodes.size(); i++)
+		{
+			cout << nodes[i] << " ";
+		}
+		cout << "\n";
+		init();
+	}
+	
+	return 0;
+}
