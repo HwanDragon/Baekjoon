@@ -3,7 +3,7 @@
 #include <stack>
 #include <queue>
 /*
-반례 : 
+반례 :
 5
 1 1 1 1 1
 4
@@ -48,7 +48,7 @@ void createGraph()
 }
 
 // 타잔 알고리즘 수행
-int dfs(int node) 
+int dfs(int node)
 {
 	st.push(node);
 	discover[node] = ++visitId;
@@ -106,7 +106,7 @@ int main()
 
 	// 그래프 생성
 	createGraph();
-	
+
 	// 타잔 알고리즘 수행
 	for (int i = 1; i <= n; i++)
 	{
@@ -137,7 +137,7 @@ int main()
 	// 진입차수가 0인 항목, 시작지점 큐에 추가
 	for (int i = 1; i < sccGroupId; i++)
 	{
-		if (degree[i] == 0)
+		if (degree[i] == 0 && (group[startPos] != i))
 			q.push(i);
 	}
 	q.push(group[startPos]);

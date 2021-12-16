@@ -1,0 +1,163 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <stack>
+
+/*
+해당 문제는 시작 SCC노드에서 도착 SCC노드까지 총 들릴 수 있는 도시의 개수를 세는 문제이다.
+모든 SCC노드들에 도시가 몇개 포함되어있는지 개수를 확인하고, 시작 노드에서부터 위상정렬을 수행하여
+dp 배열을 갱신해가면 된다.
+*/
+/*
+반례 : https://www.acmicpc.net/board/view/63522
+*/
+#define NODE_COUNT 10000
+
+using namespace std;
+
+int n, m, startNode, endNode, visitId = 0, sccGroupId = 1;	// 노드수, 간선수, 시작노드, 종료노그, 방문 고유아이디, scc그룹별 아이디
+vector<int> edges[NODE_COUNT + 1];	// 간선 정보
+bool finished[NODE_COUNT + 1] = { 0, };	// DFS 수행중인지 여부
+int discover[NODE_COUNT + 1] = { 0, };	// 방문 순서 저장
+vector<vector<int>> SCC;	// 전체 SCC 정보 저장
+stack<int> st;	// 타잔 알고리즘에 사용할 스택
+
+int degree[NODE_COUNT + 1] = { 0, };	// 입력차수 계산	
+int dp[NODE_COUNT + 1] = { 0, };	// 최대 도시 개수를 세기위한 dp 배열
+int group[NODE_COUNT + 1] = { 0, };	// 노드별 scc 그룹 아이디 지정
+int citySCCTotalCnt[NODE_COUNT + 1] = { 0, };	// 각각의 scc들에 포함되어있는 도시 수 저장
+vector<int> sccEdges[NODE_COUNT + 1];	// SCC노드들로 이루어진 간선 
+bool accessFromStart[NODE_COUNT + 1] = { 0, };	// 시작노드에서부터 접근 가능한지 판단
+
+// 타잔 알고리즘 수행
+int dfs(int node)
+{
+	st.push(node);
+	discover[node] = ++visitId;
+	int nodeId = discover[node];
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (discover[next] == -1)
+		{
+			nodeId = min(nodeId, dfs(next));
+		}
+		else if (finished[next] == false)
+		{
+			nodeId = min(nodeId, discover[next]);
+		}
+	}
+
+	if (nodeId == discover[node])
+	{
+		vector<int> scc;
+		int cnt = 0;
+		while (true)
+		{
+			int n = st.top();
+			st.pop();
+			finished[n] = true;
+			scc.push_back(n);
+			group[n] = sccGroupId;
+			cnt++;
+			if (n == node)	break;
+		}
+		citySCCTotalCnt[sccGroupId] = cnt;
+		sccGroupId++;
+		SCC.push_back(scc);
+	}
+
+	discover[node] = nodeId;
+	return nodeId;
+}
+
+int main()
+{
+	cin.tie(0);
+	cout.tie(0);
+	ios::sync_with_stdio(false);
+
+	// 초기화
+	for (int i = 0; i <= NODE_COUNT; i++) discover[i] = -1;
+
+	// 사용자 입력 받음
+	cin >> n >> m >> startNode >> endNode;
+	int first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second;
+		edges[first].push_back(second);
+	}
+
+	// 타잔 알고리즘 수행
+	for (int i = 1; i <= n; i++)
+	{
+		if (discover[i] == -1) dfs(i);
+	}
+
+	// DP 배열 초기화
+	for (int i = 1; i < sccGroupId; i++)
+	{
+		dp[i] = citySCCTotalCnt[i];
+	}
+
+	// 새로운 SCC 간선 정보 생성, 진입차수 계산
+	for (int node = 1; node <= n; node++)
+	{
+		for (int i = 0; i < edges[node].size(); i++)
+		{
+			int next = edges[node].at(i);
+			if (group[node] != group[next])
+			{
+				sccEdges[group[node]].push_back(group[next]);	// SCC 간선 정보 생성
+				degree[group[next]]++;	// 진입차수 계산
+			}
+		}
+	}
+
+	// 진입차수가 0인 항목 큐에 추가, 시작점 추가
+	queue<int> q;
+	for (int i = 1; i < sccGroupId; i++)
+	{
+		if (degree[i] == 0 && (group[startNode] != i))
+			q.push(i);
+	}
+	q.push(group[startNode]);
+	accessFromStart[group[startNode]] = true;
+
+	// 위상정렬
+	while (q.empty() == false)
+	{
+		int cur = q.front();
+		q.pop();
+
+		for (int i = 0; i < sccEdges[cur].size(); i++)
+		{
+			int next = sccEdges[cur].at(i);
+
+			if (accessFromStart[cur] == true)
+			{
+				accessFromStart[next] = true;
+				if (dp[next] < dp[cur] + citySCCTotalCnt[next])
+				{
+					dp[next] = dp[cur] + citySCCTotalCnt[next];
+				}
+			}
+
+			if (--degree[next] == 0)	// 진입차수가 0인 항목 큐에 추가
+				q.push(next);
+		}
+	}
+
+	if (accessFromStart[group[endNode]] == false)
+	{
+		cout << 0;	// 시작도시에서 도착도시까지 도달 불가능
+	}
+	else
+	{
+		cout << dp[group[endNode]];
+	}
+
+	return 0;
+}
