@@ -1,0 +1,166 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <queue>
+
+#define NODE_COUNT 500000
+
+using namespace std;
+
+int n, m, visitId = 0, sccGroupId = 1, startNode, atmCnt;	// 노드수, 간선수, 방문 고유 아이디, scc 그룹 아이디, 시작노드, atm 수
+stack<int> st;	// 타잔 알고리즘에 사용할 스택
+vector<int> edges[NODE_COUNT + 1];	// 간선정보
+bool finished[NODE_COUNT + 1] = { 0, };	// DFS 수행중인지 여부
+int discover[NODE_COUNT + 1] = { 0, };	// 방문 순서 저장할 배열
+int atmCash[NODE_COUNT + 1] = { 0, };	// atm기에 들어있는 현금수
+bool restaurant[NODE_COUNT + 1] = { 0, };	// 레스토랑 위치
+vector<vector<int>> SCC;	// 전체 SCC 정보
+vector<int> sccEdges[NODE_COUNT + 1];	// scc 간선 정보
+
+int group[NODE_COUNT + 1] = { 0, };	// scc 그룹 아이디
+int degree[NODE_COUNT + 1] = { 0, };	// 입력 차수 계산
+bool accessFromStart[NODE_COUNT + 1] = { 0, };	// 시작 노드로부터 접근 가능 여부
+int dp[NODE_COUNT + 1] = { 0, };	// 결과값을 저장할 dp배열
+int sccAtmSum[NODE_COUNT + 1] = { 0, };	// scc그룹에 속해있는 atm 현금 총 수
+
+// 타잔 알고리즘 수행
+int dfs(int node)
+{
+	st.push(node);
+	discover[node] = ++visitId;
+	int minOrder = discover[node];
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (discover[next] == -1)
+		{
+			minOrder = min(dfs(next), minOrder);
+		}
+		else if (finished[next] == false)
+		{
+			minOrder = min(discover[next], minOrder);
+		}
+	}
+
+	if (minOrder == discover[node])
+	{
+		vector<int> scc;
+		while (true)
+		{
+			int n = st.top();
+			st.pop();
+			finished[n] = true;
+			scc.push_back(n);
+			group[n] = sccGroupId;	// 그룹 아이디 지정
+			sccAtmSum[sccGroupId] += atmCash[n];	// scc그룹별로 dp배열 초기화
+			if (node == n) break;
+		}
+		sccGroupId++;
+		SCC.push_back(scc);
+	}
+
+	discover[node] = minOrder;
+	return minOrder;
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i <= NODE_COUNT; i++) discover[i] = -1;
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second;
+		edges[first].push_back(second);
+	}
+
+	for (int i = 1; i <= n; i++)
+	{
+		cin >> atmCash[i];
+	}
+
+	int resCnt;
+	cin >> startNode >> resCnt;
+	int s;
+	for (int i = 1; i <= resCnt; i++)
+	{
+		cin >> s;
+		restaurant[s] = true;
+	}
+
+	// 타잔 알고리즘 수행
+	for (int i = 1; i <= n; i++)
+	{
+		if (discover[i] == -1) dfs(i);
+	}
+
+	// SCC 간선정보 생성
+	for (int node = 1; node <= n; node++)
+	{
+		for (int i = 0; i < edges[node].size(); i++)
+		{
+			int next = edges[node].at(i);
+			if (group[node] != group[next])
+			{
+				degree[group[next]]++;
+				sccEdges[group[node]].push_back(group[next]);
+			}
+		}
+	}
+
+	// dp 배열 초기화
+	for (int i = 1; i < sccGroupId; i++)
+	{
+		dp[i] = sccAtmSum[i];
+	}
+
+	// 진입차수가 0인 항목 큐에 추가
+	queue<int> q;
+	for (int i = 1; i < sccGroupId; i++)
+	{
+		if (degree[i] == 0)
+			q.push(i);
+	}
+	accessFromStart[group[startNode]] = true;	// 시작 노드로부터 접근가능여부 표시
+
+	// 위상정렬
+	while (q.empty() == false)
+	{
+		int current = q.front();
+		q.pop();
+
+		for (int i = 0; i < sccEdges[current].size(); i++)
+		{
+			int next = sccEdges[current].at(i);
+
+			if (accessFromStart[current] == true)
+			{
+				accessFromStart[next] = true;	// 해당노드는 시작 노드로부터 접근 가능함
+				if (dp[next] < dp[current] + sccAtmSum[next])
+				{
+					dp[next] = dp[current] + sccAtmSum[next];
+				}
+			}
+
+			if (--degree[next] == 0)
+				q.push(next);
+		}
+	}
+
+	// 레스토랑이고 시작 노드로부터 접근 가능한 경우 dp값 확인
+	int result = 0;
+	for (int i = 1; i <= n; i++)
+	{
+		int groupNum = group[i];
+		if (restaurant[i] == false || accessFromStart[groupNum] == false)	continue;
+
+		result = max(result, dp[group[i]]);
+	}
+	cout << result;
+
+	return 0;
+}
