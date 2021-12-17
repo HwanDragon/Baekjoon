@@ -137,13 +137,10 @@ int main()
 	// 진입차수가 0인 항목, 시작지점 큐에 추가
 	for (int i = 1; i < sccGroupId; i++)
 	{
-		if (degree[i] == 0 && (group[startPos] != i))
+		if (degree[i] == 0)
 			q.push(i);
 	}
-	// 만약 시작노드가 두번 들어가게 되면 위상정렬시 다른 노드의 진입차수가 두번 감소되어 원하는 결과가
-	// 나오지 않을 수도 있음
-	q.push(group[startPos]);
-	accessFromStart[group[startPos]] = true;
+	accessFromStart[group[startPos]] = true;	// 시작지점으로부터 도달할 수 있는지 체크
 
 	// 위상정렬
 	while (q.empty() == false)
