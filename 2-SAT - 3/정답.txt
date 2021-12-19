@@ -1,0 +1,140 @@
+#include <iostream>
+#include <stack>
+#include <vector>
+
+#define NODE_COUNT 10001 * 2
+
+using namespace std;
+
+/*
+간선 정보 받을 때
+
+  노드정보  배열 인덱스
+	-1			0
+	1			1
+
+	-2			2
+	2			3
+
+	-3			4
+	3			5
+
+	-4			6
+	4			7
+
+	a가 -3 이라면, 배열인덱스는 4가 되고, not_a는 3, 배열 인덱스는 5가 되어야함
+	a가 3이라면 배열 인덱스는 5가 되고ㅡ not_a는 -3, 배열 인덱스는 4가 되어야함
+
+위 조건을 고려하여 입력 받음
+*/
+
+int n, m, visitId = 0, sccGroupId = 0;	// 노드 수, 간선 수, 방문 고유 아이디, scc 그룹 아이디
+vector<int> edges[NODE_COUNT];	// 간선정보
+bool finished[NODE_COUNT] = { 0, };	// DFS 수행중인지 여부
+int discover[NODE_COUNT] = { 0, };	// 방문 아이디 저장할 배열
+int group[NODE_COUNT] = { 0, };	// 그룹 아이디
+stack<int> st;	// 타잔 알고리즘을 수행할 스택
+
+// 타잔 알고리즘 수행
+int dfs(int node)
+{
+	st.push(node);
+	discover[node] = ++visitId;
+	int minOrder = discover[node];
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (discover[next] == -1)
+		{
+			minOrder = min(minOrder, dfs(next));
+		}
+		else if (finished[next] == false)
+		{
+			minOrder = min(minOrder, discover[next]);
+		}
+	}
+
+	if (minOrder == discover[node])
+	{
+		while (true)
+		{
+			int n = st.top();
+			st.pop();
+			finished[n] = true;
+			group[n] = sccGroupId;
+			if (node == n) break;
+		}
+		sccGroupId++;
+	}
+
+	return minOrder;
+}
+
+// 입력받은 내용으로 간선 정보 생성
+void input(int num1, int num2)
+{
+	int a = num1;
+	int b = num2;
+	int not_a, not_b;
+	if (a < 0)
+	{
+		a = (a + 1) * (-2);
+		not_a = a + 1;
+	}
+	else
+	{
+		a = a * 2 - 1;
+		not_a = a - 1;
+	}
+
+	if (b < 0)
+	{
+		b = (b + 1) * (-2);
+		not_b = b + 1;
+	}
+	else
+	{
+		b = b * 2 - 1;
+		not_b = b - 1;
+	}
+
+	edges[not_a].push_back(b);
+	edges[not_b].push_back(a);
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i < NODE_COUNT; i++) discover[i] = -1;
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int a, b;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> a >> b;
+		input(a, b);
+	}
+
+	// 타잔 알고리즘 수행
+	for (int i = 0; i < n * 2; i++)
+	{
+		if (discover[i] == -1) dfs(i);
+	}
+
+	// i, i+1번째, 즉 a와 !a 가 같은 scc 안에 속해있으면 결과값을 1로 만드는게 불가능
+	bool flag = true;
+	for (int i = 0; i < n * 2; i+=2)
+	{
+		if (group[i] == group[i + 1])
+		{
+			flag = false;
+			break;
+		}
+	}
+
+	cout << flag;
+
+	return 0;
+}
