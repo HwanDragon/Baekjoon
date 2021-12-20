@@ -1,0 +1,121 @@
+#include <iostream> 
+#include <vector>
+#include <stack>
+
+#define NODE_COUNT 10000 * 2
+
+using namespace std;
+
+int n, m, visitId = 0, sccGroupId = 1;	// 학생수, 가위바위보 횟수, 방문 고유 아이디, scc 그룹 아이디
+vector<int> edges[NODE_COUNT];	// 간선 정보
+bool finished[NODE_COUNT] = { 0, };	// DFS 수행중인지 여부를 저장할 배열
+int discover[NODE_COUNT] = { 0, };	// 방문 아이디 저장
+stack<int> st;	// 타잔알고리즘을 수행할 스택
+int group[NODE_COUNT] = { 0, };	// 노드별 그룹 아이디 저장
+
+// 사용자 입력으로 간선정보 생성 (배열인덱스는 not_a -> 0번, a -> 1번)
+void input(int num1, int num2)
+{
+	int a = num1, b = num2, not_a, not_b;
+	if (a > 0)
+	{
+		a = a * 2 - 1;
+		not_a = a - 1;
+	}
+	else
+	{
+		a = (a + 1) * -2;
+		not_a = a + 1;
+	}
+
+	if (b > 0)
+	{
+		b = b * 2 - 1;
+		not_b = b - 1;
+	}
+	else
+	{
+		b = (b + 1) * -2;
+		not_b = b + 1;
+	}
+
+	edges[not_a].push_back(b);
+	edges[not_b].push_back(a);
+}
+
+// 타잔 알고리즘 수행
+int dfs(int node)
+{
+	st.push(node);
+	discover[node] = ++visitId;
+	int minOrder = discover[node];
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (discover[next] == -1)
+		{
+			minOrder = min(minOrder, dfs(next));
+		}
+		else if (finished[next] == false)
+		{
+			minOrder = min(minOrder, discover[next]);
+		}
+	}
+
+	if (minOrder == discover[node])
+	{
+		while (true)
+		{
+			int num = st.top();
+			st.pop();
+			finished[num] = true;
+			group[num] = sccGroupId;	// 그룹아이디 지정
+			if (node == num) break;
+		}
+		sccGroupId++;
+	}
+
+	return minOrder;
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i < NODE_COUNT; i++) discover[i] = -1;
+
+	// 사용자 입력
+	cin >> n >> m;
+	int first, second;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> first >> second;
+		input(first, second);
+	}
+
+	// 타잔 알고리즘 수행
+	for (int i = 0; i < m * 2; i++)
+	{
+		if (discover[i] == -1) dfs(i);
+	}
+	
+	// a와 not_a가 같은 그룹에 속해있는지 확인
+	// 같은 그룹에 속해있다면
+	// 전체 식을 true로 만드는것이 불가능함
+	bool flag = true;
+	for (int i = 0; i < m * 2; i+=2)
+	{
+		if (group[i] == group[i + 1])
+		{
+			flag = false;
+			break;
+		}
+	}
+
+	if (flag == true)
+		cout << "^_^";
+	else
+		cout << "OTL";
+
+	return 0;
+}
