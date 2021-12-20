@@ -1,0 +1,141 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+
+#define NODE_COUNT 10000
+
+using namespace std;
+
+int n, m, visitId = 0, sccGroupId = 1;	// 노드 수, 간선 수, 방문 고유 아이디, scc 그룹 아이디
+vector<int> edges[NODE_COUNT * 2];	// 간선 정보
+int discover[NODE_COUNT * 2] = { 0, };	// 방문 아이디 저장
+bool finished[NODE_COUNT * 2] = { 0, };	// DFS 수행중인지 여부
+stack<int> st;	// 타잔알고리즘에 사용할 스택
+int group[NODE_COUNT * 2] = { 0, };	// scc 그룹 번호 저장
+
+// 타잔 알고리즘 수행
+int dfs(int node)
+{
+	st.push(node);
+	discover[node] = ++visitId;
+	int minOrder = discover[node];
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (discover[next] == -1)
+		{
+			minOrder = min(minOrder, dfs(next));
+		}
+		else if (finished[next] == false)
+		{
+			minOrder = min(minOrder, discover[next]);
+		}
+	}
+
+	if (discover[node] == minOrder)
+	{
+		while (true)
+		{
+			int n = st.top();
+			st.pop();
+			finished[n] = true;
+			group[n] = sccGroupId;
+			if (node == n) break;
+		}
+		sccGroupId++;
+	}
+
+	return minOrder;
+}
+
+// 입력받은 내용으로 간선 정보 생성
+void input(int num1, int num2)
+{
+	int a = num1, b = num2, not_a, not_b;
+	if (a < 0)
+	{
+		a = (a + 1) * -2;
+		not_a = a + 1;
+	}
+	else
+	{
+		a = a * 2 - 1;
+		not_a = a - 1;
+	}
+
+	if (b < 0)
+	{
+		b = (b + 1) * -2;
+		not_b = b + 1;
+	}
+	else
+	{
+		b = b * 2 - 1;
+		not_b = b - 1;
+	}
+
+	edges[not_a].push_back(b);
+	edges[not_b].push_back(a);
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i < NODE_COUNT * 2; i++) discover[i] = -1;
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second;
+		input(first, second);
+	}
+
+	// 타잔 알고리즘 수행
+	for (int i = 0; i < n * 2; i++)
+	{
+		if (discover[i] == -1) dfs(i);
+	}
+
+	// i, i + 1번쨰
+	// 즉, not_a 와 a 가 같은 scc 그룹에 속해있으면 식을 true로 만드는것이 불가능함
+	bool flag = true;
+	for (int i = 0; i < n * 2; i+=2)
+	{
+		if (group[i] == group[i + 1])
+		{
+			flag = false;
+			break;
+		}
+	}
+
+	cout << flag << "\n";
+	if (flag == false)
+		return 0;
+	
+	// i번째는 not_a , i + 1번째는 a값이 저장되어있음
+	// DFS를 이용하여 그룹값을 추가하였고, 이것은 그룹값이 클 수록 위상정렬을 했을 때 더 앞에 있다는 뜻임
+	// (DFS를 이용한 위상정렬 참조)
+	// 또한, p -> q 의 명제가 있을 때 p가 참이면 q는 무조건 참이어야 한다.
+	// 위의 명제는 p가 참일경우에만 q가 참이면 되므로
+	// p가 거짓일 경우에는 q가 참이어도 되고, 거짓이어도된다. 즉 p가 거짓일 경우에는 어떤 제약도 없음
+	// 
+	// 이를 이용하여 위상정렬을 했을 때 제일 먼저 발견되는 변수들은 무조건 거짓으로 놓고, 그다음 값을 찾는게 유리함
+	// 즉, group[i] , group[i + 1]을 비교하여 만약 group[i]가 더 클경우에는 not_a 가 위상정렬 수행시 먼저
+	// 발견된다는 뜻이고, 먼저 발견한 not_a는 거짓으로 처리하는게 명제 훼손 우려가 없고 유리함.
+	// 즉, not_a를 거짓으로 처리했으므로 a는 true가 됨
+	// 정리하면 group[i] > group[i + 1] 일 경우에는 a 는 true, 반대일경우는 false로 처리하면됨
+	for (int i = 0; i < n * 2; i+=2)
+	{
+		int not_a_group = group[i];
+		int a_group = group[i + 1];
+		if (not_a_group > a_group)
+			cout << true << " ";
+		else
+			cout << false << " ";
+	}
+
+	return 0;
+}
