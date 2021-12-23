@@ -1,0 +1,148 @@
+#include <iostream>
+#include <stack>
+#include <vector>
+
+/*
+각 방마다 연결된 스위치가 2개이므로 
+방의 문이 닫혀 있을 경우는 연결되어 있는 스위치 A, B 중에서 둘중 하나만 눌려야함
+즉 방이 닫혀있을 경우 : (A || B) && (!A || !B)
+위의 식에서 A, B 중에서 둘중 하나만 참일경우 식이 true가 됨
+
+방문이 열려있을 경우 : (!A || B) && (A || !B)
+위의 식에서 A, B가 모두 1이거나 0일경우에만 식이 true가 됨
+그렇다면 하나의 방 마다, 현재 방의 상태에 따라 위의 두개 식중 하나에 해당하고,
+총 4개의 간선이 생성됨.
+생성된 간선정보로 식을 true로 만들 수 있는지 확인하면 됨
+*/
+
+#define NODE_COUNT 100001 * 2
+
+using namespace std;
+
+int roomCount, switchCount, visitId = 0, sccGroupId = 1;	// 방 개수, 스위치 개수, 방문 아이디, scc 그룹 아이디
+bool finished[NODE_COUNT] = { 0, };	// DFS 수행 여부
+int discover[NODE_COUNT] = { 0, };	// 방문 아이디 저장
+vector<int> edges[NODE_COUNT];	// 간선 정보
+int group[NODE_COUNT] = { 0, };	// scc 그룹 정보 저장
+stack<int> st;	// 타잔 알고리즘에 사용할 스택
+int roomState[NODE_COUNT / 2] = { 0, };	// 방의 현재 상태 (0 : 닫힘, 1 : 열림)
+vector<int> roomSwitch[NODE_COUNT / 2];	// 각각의 방에 연결된 스위치 정보(무조건 방마다 2개 연결됨)
+
+// 입력받은 정보로 그래프 생성
+void createGraph()
+{
+	// 방의 개수만큼 돌면서 확인
+	for (int i = 1; i <= roomCount; i++)
+	{
+		int a, b, not_a, not_b;
+		a = roomSwitch[i].at(0);
+		b = roomSwitch[i].at(1);
+		// not_a -> A 스위치를 안누를 경우, a : A스위치를 누를경우
+		a = a * 2 + 1;	// 배열인덱스 2 : not_a , 3 : a   , 4 : not_b , 5 : b ....
+		b = b * 2 + 1;
+		not_a = a - 1;
+		not_b = b - 1;
+
+		if (roomState[i] == 1)
+		{
+			// (!A || B) && (A || !B)
+			edges[a].push_back(b);
+			edges[not_b].push_back(not_a);
+			edges[not_a].push_back(not_b);
+			edges[b].push_back(a);
+		}
+		else
+		{
+			// (A || B) && (!A || !B)
+			edges[not_a].push_back(b);
+			edges[not_b].push_back(a);
+			edges[a].push_back(not_b);
+			edges[b].push_back(not_a);
+		}
+	}
+}
+
+// 타잔 알고리즘 수행
+int dfs(int node)
+{
+	st.push(node);
+	discover[node] = ++visitId;
+	int minOrder = discover[node];
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (discover[next] == -1)
+		{
+			minOrder = min(minOrder, dfs(next));
+		}
+		else if (finished[next] == false)
+		{
+			minOrder = min(minOrder, discover[next]);
+		}
+	}
+
+	if (discover[node] == minOrder)
+	{
+		while (true)
+		{
+			int num = st.top();
+			st.pop();
+			finished[num] = true;
+			group[num] = sccGroupId;
+			if (node == num) break;
+		}
+		sccGroupId++;
+	}
+
+	return minOrder;
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i < NODE_COUNT; i++) discover[i] = -1;
+
+	// 사용자 입력 받음
+	cin >> roomCount >> switchCount;
+	for (int i = 1; i <= roomCount; i++)
+	{
+		cin >> roomState[i];
+	}
+
+	int num, roomNum;
+	// switch 개수만큼 확인해야함 (주의)
+	// 1번 스위치를 눌렀을 경우, 안눌렀을 경우 2가지로 나뉨
+	for (int i = 1; i <= switchCount; i++) 
+	{
+		cin >> num;
+		for (int j = 0; j < num; j++)
+		{
+			cin >> roomNum;
+			roomSwitch[roomNum].push_back(i);	// 각 방마다 연결된 스위치 정보 기록
+		}
+	}
+
+	// 그래프 생성
+	createGraph();
+
+	// 타잔 알고리즘 수행
+	for (int i = 2; i <= switchCount * 2; i++)
+	{
+		if (discover[i] == -1) dfs(i);
+	}
+
+	// 식을 true로 만들 수 있는지 검토
+	bool flag = true;
+	for (int i = 2; i <= switchCount * 2; i+=2)
+	{
+		if (group[i] == group[i + 1])
+		{
+			flag = false;
+			break;
+		}
+	}
+
+	cout << flag;
+	return 0;
+}

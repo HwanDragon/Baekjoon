@@ -1,0 +1,135 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+
+#define NODE_COUNT 20000 * 2
+
+using namespace std;
+
+int n, nodeCount, visitId = 0, sccGroupId = 1;	// 규칙 수, 증세 수, 방문 고유 아이디, scc 그룹 아이디
+vector<int> edges[NODE_COUNT];	// 간선 정보
+int discover[NODE_COUNT] = { 0, };	// 방문 정보 기록
+bool finished[NODE_COUNT] = { 0, };	// DFS수행중인지 여부
+int group[NODE_COUNT] = { 0, };	// 그룹 아이디 기록
+stack<int> st;	// 타잔 알고리즘을 수행할 스택
+
+// 입력받은 정보로 간선 정보 생성
+// not_a0 , a0, not_a1, a1, ..... 순서로 배열에 추가
+void input(int num1, int num2)
+{
+	int a = num1, b = num2, not_a, not_b;
+	if (a > 0)
+	{
+		a = (a * 2) - 1;
+		not_a = a - 1;
+	}
+	else
+	{
+		a = (a + 1) * -2;
+		not_a = a + 1;
+	}
+
+	if (b > 0)
+	{
+		b = b * 2 - 1;
+		not_b = b - 1;
+	}
+	else
+	{
+		b = (b + 1) * -2;
+		not_b = b + 1;
+	}
+
+	edges[not_a].push_back(b);
+	edges[not_b].push_back(a);
+}
+
+// 초기화
+void init()
+{
+	visitId = 0;
+	sccGroupId = 1;
+	for (int i = 0; i < NODE_COUNT; i++)
+	{
+		edges[i].clear();
+		discover[i] = -1;
+		finished[i] = false;
+		group[i] = 0;
+	}
+}
+
+// 타잔알고리즘 수행
+int dfs(int node)
+{
+	st.push(node);
+	discover[node] = ++visitId;
+	int minOrder = discover[node];
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (discover[next] == -1)
+		{
+			minOrder = min(minOrder, dfs(next));
+		}
+		else if (finished[next] == false)
+		{
+			minOrder = min(minOrder, discover[next]);
+		}
+	}
+
+	if (minOrder == discover[node])
+	{
+		while (true)
+		{
+			int num = st.top();
+			st.pop();
+			finished[num] = true;
+			group[num] = sccGroupId;
+			if (node == num) break;
+		}
+		sccGroupId++;
+	}
+
+	return minOrder;
+}
+
+int main()
+{
+	while (true)
+	{
+		// 초기화
+		init();
+
+		// 사용자 입력 받음
+		cin >> n >> nodeCount;	// 규칙의 개수, 증세의 종류
+		if (n == 0 && nodeCount == 0) break;
+
+		int first, second;
+		for (int i = 0; i < n; i++)
+		{
+			cin >> first >> second;
+			input(first, second);
+		}
+
+		// 타잔 알고리즘 수행
+		for (int i = 0; i < 2 * nodeCount; i++)	// nodeCount * 2 까지 반복문을 수행해야함
+		{
+			if (discover[i] == -1) dfs(i);
+		}
+
+		// 조건식을 true로 만드는게 가능한지 확인
+		bool flag = true;
+		for (int i = 0; i < 2 * nodeCount; i+=2) // nodeCount * 2 까지 반복문을 수행해야함
+		{
+			if (group[i] == group[i + 1])
+			{
+				flag = false;
+				break;
+			}
+		}
+
+		cout << flag << "\n";
+	}
+	return 0;
+}

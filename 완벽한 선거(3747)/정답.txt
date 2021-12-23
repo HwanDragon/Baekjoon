@@ -1,0 +1,151 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+
+#define NODE_COUNT 1000 * 2
+
+using namespace std;
+
+int n, m, visitId, sccGroupId;	// 노드수 ,간선수, 방문 고유 아이디, scc 그룹 아이디
+vector<int> edges[NODE_COUNT];	// 간선 정보
+bool finished[NODE_COUNT] = { 0, };	// DFS 수행중인지 여부
+int discover[NODE_COUNT] = { 0, };	// 방문 아이디 저장
+int group[NODE_COUNT] = { 0, };	// scc 그룹 저장
+stack<int> st;	// 타잔 알고리즘을 수행할 스택
+
+// 입력받은 정보로 간선 정보 생성 
+/*
+노드  배열인덱스
+-1		0
+1		1
+
+-2		2
+2		3
+
+-3		4
+3		5
+
+-4		6
+4		7
+*/
+void input(int num1, int num2)
+{
+	int a = num1, b = num2, not_a, not_b;
+	if (a > 0)
+	{
+		a = a * 2 - 1;
+		not_a = a - 1;
+	}
+	else
+	{
+		a = (a + 1) * -2;
+		not_a = a + 1;
+	}
+
+	if (b > 0)
+	{
+		b = b * 2 - 1;
+		not_b = b - 1;
+	}
+	else
+	{
+		b = (b + 1) * -2;
+		not_b = b + 1;
+	}
+
+	edges[not_a].push_back(b);
+	edges[not_b].push_back(a);
+}
+
+// 초기화
+void init()
+{
+	visitId = 0;
+	sccGroupId = 1;
+	while (st.empty() == false) st.pop();
+
+	for (int i = 0; i < NODE_COUNT; i++)
+	{
+		group[i] = 0;
+		finished[i] = false;
+		edges[i].clear();
+		discover[i] = -1;
+	}
+}
+
+// 타잔알고리즘 수행
+int dfs(int node)
+{
+	st.push(node);
+	discover[node] = ++visitId;
+	int minOrder = discover[node];
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (discover[next] == -1)
+		{
+			minOrder = min(minOrder, dfs(next));
+		}
+		else if (finished[next] == false)
+		{
+			minOrder = min(minOrder, discover[next]);
+		}
+	}
+
+	if (minOrder == discover[node])
+	{
+		while (true)
+		{
+			int num = st.top();
+			st.pop();
+			finished[num] = true;
+			group[num] = sccGroupId;
+			if (node == num) break;
+		}
+		sccGroupId++;
+	}
+
+	return minOrder;
+}
+
+int main()
+{
+	while ((cin >> n >> m).eof() == false)
+	{
+		// 초기화
+		init();
+
+		// 사용자 입력 받음
+		int first, second;
+		for (int i = 0; i < m; i++)
+		{
+			cin >> first >> second;
+			input(first, second);
+		}
+
+		// 타잔 알고리즘 수행
+		for (int i = 0; i < 2*n; i++)
+		{
+			if (discover[i] == -1) dfs(i);
+		}
+
+		// not_a 와 a가 같은 그룹 번호를 가지면 해당 식은 true 만드는것이 불가능함
+		bool flag = true;
+		for (int i = 0; i < 2*n; i += 2)
+		{
+			if (group[i] == group[i + 1])
+			{
+				flag = false;
+				break;
+			}
+		}
+
+		if (flag == true)
+			cout << 1 << "\n";
+		else
+			cout << 0 << "\n";
+	}
+
+	return 0;
+}
