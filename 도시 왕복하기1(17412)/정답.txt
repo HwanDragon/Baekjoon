@@ -1,0 +1,86 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+#define INF 1000000000
+#define NODE_COUNT 401
+
+using namespace std;
+
+int n, p;
+vector<int> edges[NODE_COUNT];	// 간선 정보
+int capacity[NODE_COUNT][NODE_COUNT] = { 0, };	// 용량 정보
+int flow[NODE_COUNT][NODE_COUNT] = { 0, };	// 유량 정보
+int prevNode[NODE_COUNT] = { 0, };	// 이전노드 정보 저장
+
+// 에드몬드 카프 알고리즘 수행(최대 유량 계산)
+int edmondsKarp(int start, int end)
+{
+	int result = 0;
+	while (true)
+	{
+		// 초기화
+		fill(prevNode, prevNode + NODE_COUNT, -1);
+
+		queue<int> q;
+		q.push(start);
+		while (q.empty() == false && prevNode[end] == -1)
+		{
+			int cur = q.front();
+			q.pop();
+			for (int i = 0; i < edges[cur].size(); i++)
+			{
+				int next = edges[cur].at(i);
+				if (prevNode[next] != -1)	continue;
+
+				if (capacity[cur][next] - flow[cur][next] > 0)
+				{
+					q.push(next);
+					prevNode[next] = cur;
+					if (next == end) break;
+				}
+			}
+		}
+
+		if (prevNode[end] == -1)	break;	// start 노드에서 end 노드까지 더이상 도달 불가능
+
+		// 찾은 경로중 가장 작은 flow값 탐색
+		int minFlow = INF;
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			minFlow = min(minFlow, capacity[prev][i] - flow[prev][i]);
+		}
+
+		// 탐색한 유량(flow)값을 반영
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			flow[prev][i] += minFlow;	
+			flow[i][prev] -= minFlow;	// 음의 유량 처리
+		}
+
+		result += minFlow;
+	}
+
+	return result;
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> p;
+	int first, second;
+	for (int i = 0; i < p; i++)
+	{
+		cin >> first >> second;
+		edges[first].push_back(second);
+		edges[second].push_back(first);
+		capacity[first][second] = 1;
+	}
+
+	// 최대 유량 계산
+	cout <<  edmondsKarp(1, 2);
+
+	return 0;
+}
