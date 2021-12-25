@@ -1,0 +1,99 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+/*
+최대유량 최소 컷 정리는
+start -> end로 이어진 경로들 중 간선을 잘라서 두개의 컴포넌트로 분리시킬 때 
+가장 적은 용량을 가진 경로를 잘라서 분리시키는 것이다.
+해당 문제는 s, t가 비연결, 즉 두개의 컴포넌트로 분리되어야 하고,
+이때 최소 가중치의 합이 되려면 최대 유량을 구한 뒤, 그 최대 유량이 지나가는 간선을 자르는것이
+가중치 합의 최소값이다.
+*/
+
+#define INF 1000000000
+#define NODE_COUNT 501
+
+using namespace std;
+
+int n, m;	// 정점 수, 간선 수
+vector<int> edges[NODE_COUNT];	// 간선 정보
+int capacity[NODE_COUNT][NODE_COUNT] = { 0, };	// 용량 정보
+int flow[NODE_COUNT][NODE_COUNT] = { 0, };	// 유량 정보
+int prevNode[NODE_COUNT] = { 0, };	// 이전 노드 정보 저장
+
+// 최대 유량 계산
+int edmondsKarp(int start, int end)
+{
+	int result = 0;
+	while (true)
+	{
+		// 초기화
+		fill(prevNode, prevNode + NODE_COUNT, -1);
+
+		// 시작점에서 도착점까지 하나의 경로를 찾음
+		queue<int> q;
+		q.push(start);
+		while (q.empty() == false && prevNode[end] == -1)
+		{
+			int cur = q.front();
+			q.pop();
+			for (int i = 0; i < edges[cur].size(); i++)
+			{
+				int next = edges[cur].at(i);
+				if (prevNode[next] != -1) continue;
+
+				if (capacity[cur][next] - flow[cur][next] > 0)
+				{
+					prevNode[next] = cur;
+					q.push(next);
+					if (next == end) break;
+				}
+			}
+		}
+
+		if (prevNode[end] == -1) break;	// 시작점에서 끝점까지 도달 불가능할 경우(최대유량 찾음)
+
+		// 찾은 경로에서 최대 유량 계산
+		int minFlow = INF;
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			minFlow = min(minFlow, capacity[prev][i] - flow[prev][i]);
+		}
+
+		// 최대 유량 적용
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			flow[prev][i] += minFlow;
+			flow[i][prev] += minFlow;
+		}
+
+		result += minFlow;
+	}
+
+	return result;
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int first, second, weight;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second >> weight;
+		edges[first].push_back(second);
+		edges[second].push_back(first);
+		capacity[first][second] = weight;
+		capacity[second][first] = weight;
+	}
+	int start, end;
+	cin >> start >> end;
+
+	// 최대 유량 계산
+	cout << edmondsKarp(start, end);
+
+	return 0;
+}
