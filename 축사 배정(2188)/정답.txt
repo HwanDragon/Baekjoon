@@ -1,0 +1,59 @@
+#include <iostream>
+#include <vector>
+
+#define NODE_COUNT 201
+
+using namespace std;
+
+int n, m;	// 소의 수, 축사의 수
+vector<int> edges[NODE_COUNT];	// 간선정보
+int prevNode[NODE_COUNT] = { 0, };	// 축사를 차지한 소의 번호 저장
+bool visited[NODE_COUNT] = { 0, };	// i번쨰 소를 탐색했는지 여부 저장
+
+// 이분매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (visited[node] == true) return false;
+	visited[node] = true;
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+
+		if (prevNode[next] == 0 || dfs(prevNode[next]))
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+	return false;
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 1; i <= n; i++)
+	{
+		int roomCnt, room;
+		cin >> roomCnt;
+		for (int j = 1; j <= roomCnt; j++)
+		{
+			cin >> room;
+			edges[i].push_back(room);
+		}
+	}
+
+	// 이분매칭 알고리즘 수행
+	int cnt = 0;
+	for (int i = 1; i <= n; i++)
+	{
+		fill(visited, visited + NODE_COUNT, false);
+		if (dfs(i) == true)
+			cnt++;
+	}
+
+	// 결과 출력
+	cout << cnt;
+	return 0;
+}
