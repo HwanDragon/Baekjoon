@@ -1,0 +1,58 @@
+#include <iostream>
+#include <vector>
+
+#define PERSON_COUNT 101	// 사람 수
+#define NOTBOOK_COUNT 5001	// 노트북 수
+
+using namespace std;
+
+int n, m;	// 사람 수, 노트북 개수
+vector<int> edges[PERSON_COUNT];	// 간선 정보
+bool visited[PERSON_COUNT] = { 0, };	// i번쨰 사람에 대해 dfs 탐색을 했는지 여부
+int prevNode[NOTBOOK_COUNT] = { 0, };	// i번째 노트북을 소유하고있는 사람 정보
+
+// 이분매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (visited[node] == true) return false;	// 이미 처리된 노드는 pass
+	visited[node] = true;	// 방문처리
+
+	// 모든 간선정보를 탐색하여 매칭가능한지 확인
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		// 매칭되지 않은 노트북이거나, 노트북을 차지하고있는 사람에게 다른 노트북을 소유할 수 있는지 확인함
+		if (prevNode[next] == 0 || dfs(prevNode[next]))
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+	return false;
+}
+
+int main()
+{
+	// 사용자 정보 받음
+	cin >> n >> m;
+	int first, second;
+	for (int i = 1; i <= m; i++)
+	{
+		cin >> first >> second;
+		edges[first].push_back(second);
+	}
+
+	// 이분매칭 알고리즘 수행
+	int cnt = 0;
+	for (int i = 1; i <= n; i++)
+	{
+		fill(visited, visited + PERSON_COUNT, false);
+		if (dfs(i) == true)
+			cnt++;
+	}
+
+	// 결과 출력
+	cout << cnt;
+
+	return 0;
+}
