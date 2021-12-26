@@ -1,0 +1,82 @@
+#include <iostream>
+#include <vector>
+
+/*
+직원이 N명, 일의 개수가 M개 를 매칭시키는 이분매칭 문제이므로
+이분매칭을 통해 최대 매칭 개수를 계산한 뒤, 
+모든 정점의 간선을 확인하여 매칭되지 않은 일이 있다면 벌점을 직원에게 주어 일을 추가로 더 시킴
+그렇게 추가로 매칭이 될 때마다 벌점 개수는 감소시키고, 일의개수는 증가시키면됨
+*/
+
+#define NODE_COUNT 1001
+
+using namespace std;
+
+int n, m, k;	// 직원 수, 일의 수, 벌점 수
+vector<int> edges[NODE_COUNT];	// 간선 정보
+bool visited[NODE_COUNT] = { 0, };	// n번째 노드 방문 여부
+int matchedNode[NODE_COUNT] = { 0, };	// B그룹과 매칭되어있는 a노드 정보
+
+// 이분매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (visited[node] == true)	return false;	// 이미 방문했던 노드는 방문 하지 않음
+
+	visited[node] = true;	// 해당 노드 방문처리
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		// B그룹(일)이 매칭되어있지 않거나, 이미 매칭되어있는 노드에게 다른곳으로 매칭할 수 있는지 확인하여 처리
+		if (matchedNode[next] == 0 || dfs(matchedNode[next]))
+		{
+			matchedNode[next] = node;
+			return true;
+		}
+	}
+	return false;
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m >> k;
+	for (int i = 1; i <= n; i++)
+	{
+		int workCnt, work;
+		cin >> workCnt;
+		for (int j = 1; j <= workCnt; j++)
+		{
+			cin >> work;
+			edges[i].push_back(work);
+		}
+	}
+
+	// 이분매칭 알고리즘 수행
+	int cnt = 0;
+	for (int i = 1; i <= n; i++)
+	{
+		fill(visited, visited + NODE_COUNT, false);	// 방문 여부 매번 초기화	
+		if (dfs(i) == true)
+			cnt++;
+	}
+
+	// 모든 노드의 간선 정보를 확인하여 B그룹(일)에서 매칭되지 않은 노드는 벌점을 소비하여 일을 추가로 더 배정함
+	for (int i = 1; i <= n; i++)
+	{
+		for (int j = 0; j < edges[i].size(); j++)
+		{
+			int cur = edges[i].at(j);
+			if (matchedNode[cur] == 0 && k > 0)
+			{
+				matchedNode[cur] = i;
+				cnt++;
+				k--;
+			}
+		}
+	}
+
+	// 결과 출력
+	cout << cnt;
+
+	return 0;
+}
