@@ -1,0 +1,84 @@
+#include <iostream>
+#include <vector>
+
+#define NODE_COUNT 1001
+
+using namespace std;
+
+int n, m, k;	// 직원 수, 일의 수, 2개의 일을 할 수 있는 직원 수
+vector<int> edges[NODE_COUNT];	// 간선 정보
+bool visited[NODE_COUNT] = { 0, };	// 직원 그룹 노드 방문 여부
+int prevNode[NODE_COUNT] = { 0, };	// i번쨰 일을 담당하고 있는 직원 정보
+
+// 이분매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (visited[node] == true) return false;
+	visited[node] = true;
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (prevNode[next] == 0 || dfs(prevNode[next]))
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+	return false;
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m >> k;
+	for (int i = 1; i <= n; i++)
+	{
+		int workCount, work;
+		cin >> workCount;
+		for (int j = 1; j <= workCount; j++)
+		{
+			cin >> work;
+			edges[i].push_back(work);
+		}
+	}
+
+	// 이분 매칭 알고리즘 수행
+	int cnt = 0;
+	for (int i = 1; i <= n; i++)
+	{
+		fill(visited, visited + NODE_COUNT, false);
+		if (dfs(i) == true)
+			cnt++;
+	}
+
+	// 이분매칭을 수행 하고 난 뒤, 처음 노드부터 확인하여 할 수 있는 일이 2개 이상인 직원들만 확인함
+	// 할 수 있는 일이 1개인 직원들은 이미 이분매칭 알고리즘을 수행하면서 다 매칭되었음
+	// 할 수있는 일이 2개 이상이고, k가 0보다 크면 다른 일을 수행 할 수있는지 다시 이분매칭 알고리즘을 수행하여
+	// 다른일을 또 매칭해줌.
+	// 매칭에 성공하면 cnt 값을 증가시키고, k값을 감소시킴
+	for (int i = 1; i <= n; i++)
+	{
+		if (edges[i].size() < 2) continue;	// 간선 개수가 1인 항목은 이미 매칭 되었으므로 확인할 필요없음
+		
+		if (k <= 0) break;	// k가 0보다 클때만 추가로 매칭함
+
+		fill(visited, visited + NODE_COUNT, false);	// 방문 여부 초기화
+		for (int j = 0; j < edges[i].size(); j++)	// 모든 간선을 순회
+		{
+			int next = edges[i].at(j);
+			// 만약 매칭 되지 않은 일이 있거나, 매칭 되었더라도 해당 일을 맡고있는 노드에게 다른일을
+			// 선택할 수 있는지 확인하여 가능하면 k값을 감소시키고, cnt값을 증가시킴
+			if (prevNode[next] == 0 || dfs(prevNode[next]))
+			{
+				cnt++;
+				prevNode[next] = i;
+				k--;
+				break;
+			}
+		}
+	}
+
+	cout << cnt;
+	return 0;
+}
