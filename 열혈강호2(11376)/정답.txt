@@ -1,0 +1,76 @@
+#include <iostream>
+#include <vector>
+
+/*
+반례 : 1
+2 5
+5 1 2 3 4 5
+2 1 2
+
+정답: 4
+잘못된 출력: 3
+*/
+
+#define NODE_COUNT 1001
+
+using namespace std;
+
+int n, m;	// 직원 수, 일의 수
+vector<int> edges[NODE_COUNT];	// 간선 정보
+bool visited[NODE_COUNT] = { 0, };	// 직원 노드 방문 여부
+int prevNode[NODE_COUNT] = { 0, };	// 일을 맡은 직원 정보 저장
+
+// 이분매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (visited[node] == true) return false;
+	visited[node] = true;
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (prevNode[next] == 0 || dfs(prevNode[next]))
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+	return false;
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 1; i <= n; i++)
+	{
+		int workCount, work;
+		cin >> workCount;
+		for (int j = 0; j < workCount; j++)
+		{
+			cin >> work;
+			edges[i].push_back(work);
+		}
+	}
+
+	// 이분 매칭 알고리즘 수행
+	int cnt = 0;
+	for (int i = 1; i <= n; i++)
+	{
+		fill(visited, visited + NODE_COUNT, false);
+		if (dfs(i) == true)
+			cnt++;
+	}
+
+	// 최대 두개까지 일을 할 수 있으므로 이분매칭 알고리즘 한번 더 수행
+	for (int i = 1; i <= n; i++)
+	{
+		fill(visited, visited + NODE_COUNT, false);
+		if (dfs(i) == true)
+			cnt++;
+	}
+
+	cout << cnt;
+
+	return 0;
+}
