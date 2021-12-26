@@ -1,0 +1,60 @@
+#include <iostream>
+#include <vector>
+
+#define NODE_COUNT 1001
+
+using namespace std;
+
+int n, m;	// 직원수, 일의 수
+vector<int> edges[NODE_COUNT];	// 간선 정보
+bool visited[NODE_COUNT] = { 0, };	// 직원 노드 방문 여부
+int prevNode[NODE_COUNT] = { 0, };	// 일을 맡고있는 직원 번호 저장
+
+// 이분매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (visited[node] == true) return false;	// 이미 방문한 노드는 pass
+	visited[node] = true; // 방문 처리
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		// 매칭되어있지 않거나 일을 차지하고있는 직원 노드에게 다른 일을 할 수 없는지 확인
+		if (prevNode[next] == 0 || dfs(prevNode[next]))
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+	return false;
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 1; i <= n; i++)
+	{
+		int workCount, work;
+		cin >> workCount;
+		for (int j = 1; j <= workCount; j++)
+		{
+			cin >> work;
+			edges[i].push_back(work);
+		}
+	}
+
+	// 이분매칭 알고리즘 수행
+	int cnt = 0;
+	for (int i = 1; i <= n; i++)
+	{
+		fill(visited, visited + NODE_COUNT, false);
+		if (dfs(i) == true)
+			cnt++;
+	}
+
+	// 결과 출력
+	cout << cnt;
+
+	return 0;
+}
