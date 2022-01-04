@@ -1,0 +1,43 @@
+#include <iostream>
+
+using namespace std;
+
+int usingNum[10] = { 0 , };
+
+int main()
+{
+	int n, num;
+	cin >> n;
+	num = n;
+
+	// 10으로 나누어가며 하나씩 체크
+	while (num > 0)
+	{
+		int temp = num % 10;
+		if (temp == 6 || temp == 9)
+		{
+			usingNum[6]++;	// 6과 9는 같은 항목이라 생각하고 6에 전부 추가
+		}
+		else
+		{
+			usingNum[temp]++;
+		}
+		num = num / 10;
+	}
+
+	// 6과 9를 분배
+	usingNum[9] = usingNum[6] / 2;
+	if (usingNum[6] % 2 == 0)
+		usingNum[6] = usingNum[6] / 2;
+	else
+		usingNum[6] = usingNum[6] / 2 + 1;
+
+	// 가장 큰 항목의 개수 카운팅
+	int maxCnt = 0;
+	for (int i = 0; i < 10; i++)
+	{
+		maxCnt = max(maxCnt, usingNum[i]);
+	}
+	cout << maxCnt;
+	return 0;
+}
