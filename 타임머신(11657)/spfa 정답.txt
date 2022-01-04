@@ -1,0 +1,105 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+/*
+반례 : 
+2 3
+1 2 3
+1 2 2
+1 2 1
+답 : 1
+*/
+#define INF 2000000000
+#define NODE_COUNT 501
+
+using namespace std;
+
+int n, m;	// 노드 수, 간선 수
+vector<pair<int, int>> edges[NODE_COUNT];	// 간선 정보
+long long dists[NODE_COUNT] = { 0, };	// 최단거리
+int cycle[NODE_COUNT] = { 0, };	// 사이클 감지 테이블
+bool inQueue[NODE_COUNT] = { 0, };	// 큐에 추가되었는지 여부
+
+// spfa 알고리즘
+bool spfa(int start)
+{
+	queue<int> q;
+	q.push(start);	// 큐에 시작노드 추가
+	dists[start] = 0;	// 시작노드 0으로 비용 초기화
+	inQueue[start] = true;	// 큐에 추가 여부
+	while (q.empty() == false)
+	{
+		int cur = q.front();
+		q.pop();
+		inQueue[cur] = false;	// 큐에서 제거하였으므로 false로 세팅
+		for (int i = 0; i < edges[cur].size(); i++)
+		{
+			pair<int, int> p = edges[cur].at(i);
+			int next = p.first;
+			int weight = p.second;
+			if (dists[next] > dists[cur] + weight)	// 최단거리 갱신
+			{
+				dists[next] = dists[cur] + weight;
+				cycle[next]++;	// 몇번 갱신되었음을 표시하기위해 값을 증가시킴
+				if (cycle[next] > n) return true;	// n번째(노드개수)에서도 값이 갱신되었을 경우 음의 사이클 존재
+				if (inQueue[next] == true) continue;	// 큐에 이미 존재하는 노드일경우 다시 추가하지 않음
+
+				inQueue[next] = true;
+				q.push(next);	// 큐에 next 노드 추가
+			}
+		}
+	}
+
+	return false;
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(nullptr);
+	for (int i = 0; i < NODE_COUNT; i++) dists[i] = INF;
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int first, second, weight;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second >> weight;
+		bool exist = false;
+		int index = 0;
+		for (int j = 0; j < edges[first].size(); j++)
+		{
+			pair<int, int> p = edges[first].at(j);
+			if (p.first == second)
+			{
+				// 중복 간선이 존재함
+				exist = true;
+				index = j;
+				break;
+			}
+		}
+		if (exist == true) //중복 간선이 존재할 경우 더 작은 간선으로 체인지
+			edges[first].at(index).second = min(edges[first].at(index).second, weight);
+		else
+			edges[first].push_back({ second, weight });	// 간선 추가
+	}
+
+	// spfa 알고리즘 수행
+	bool c = spfa(1);
+
+	// 결과 출력
+	if (c == true)
+		cout << -1;
+	else
+	{
+		for (int i = 2; i <= n; i++)
+		{
+			if (dists[i] == INF)
+				cout << -1 << "\n";
+			else
+				cout << dists[i] << "\n";
+		}
+	}
+
+	return 0;
+}
