@@ -1,0 +1,57 @@
+#include <iostream>
+
+using namespace std;
+
+int nums1[1000000] = { 0, };
+int nums2[1000000] = { 0, };
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	int n, m;
+	cin >> n >> m;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> nums1[i];
+	}
+	for (int i = 0; i < m; i++)
+	{
+		cin >> nums2[i];
+	}
+
+	// n1p, n2p 포인터 두개를 선언 후 값을 비교하여 하나씩 증가시킴
+	int index = 0, n1p = 0, n2p = 0;
+	while (index < n + m -1)
+	{
+		if (n1p >= n || n2p >= m) break;
+
+		if (nums1[n1p] > nums2[n2p])
+		{
+			cout << nums2[n2p] << " ";
+			n2p++;
+		}
+		else
+		{
+			cout << nums1[n1p] << " ";
+			n1p++;
+		}
+		index++;
+	}
+
+	// 남은 항목들 출력
+	for (int i = n1p; i < n; i++)
+	{
+		cout << nums1[i] << " ";
+	}
+
+	for (int i = n2p; i < m; i++)
+	{
+		cout << nums2[i] << " ";
+	}
+
+	return 0;
+}
