@@ -1,0 +1,93 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+using namespace std;
+
+#define NODE_COUNT 402	// 노드 개수는 source + sink + cow(200) + house(200) 으로 총 402개로 잡음
+
+vector<int> edges[NODE_COUNT];	// 0번 : Source, 401번 : Sink, 1~200 : 소, 201~400 : 축사
+int capacity[NODE_COUNT][NODE_COUNT] = { 0, };	// 용량 정보
+int flow[NODE_COUNT][NODE_COUNT] = { 0, };	// 유량 정보
+int n, m;		// 소의 수, 축사의 수
+int prevNode[NODE_COUNT] = { 0, };	// 이전 노드 정보
+
+// 에드몬드 카프 알고리즘 수행
+int edmondKarp(int start, int end)
+{
+	int result = 0;
+	while (true)
+	{
+		// 초기화
+		fill(prevNode, prevNode + NODE_COUNT, -1);
+
+		// 시작점에서 도착점까지 경로 찾음
+		queue<int> q;
+		q.push(start);
+		while (q.empty() == false && prevNode[end] == -1)
+		{
+			int cur = q.front();
+			q.pop();
+			for (int i = 0; i < edges[cur].size(); i++)
+			{
+				int next = edges[cur].at(i);
+				if (prevNode[next] == -1 && capacity[cur][next] - flow[cur][next] > 0)
+				{
+					q.push(next);
+					prevNode[next] = cur;
+					if (next == end) break;
+				}
+			}
+		}
+
+		// 시작노드에서 끝 노드까지 도달할 수 없다면 모든 용량이 가득 참
+		if (prevNode[end] == -1) break;	
+
+		int minFlow = 1;	// minFlow는 무조건 1이 나옴(소 한마리가 들어갈 수 있으므로)
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			flow[prev][i] += minFlow;
+			flow[i][prev] -= minFlow;
+		}
+
+		result += minFlow;
+	}
+
+	return result;
+}
+
+int main()
+{
+	cin >> n >> m;
+	for (int i = 0; i < n; i++)
+	{
+		int num, house;
+		cin >> num;
+		for (int j = 0; j < num; j++)
+		{
+			cin >> house;
+			edges[i + 1].push_back(house + 200);	// 201 ~ 400 : 축사
+			edges[house + 200].push_back(i + 1);	// 201 ~ 400 : 축사
+			capacity[i + 1][house + 200] = 1000;	// 무한대만큼 용량을 잡음
+		}
+	}
+
+	// Source와 소(1~200) 연결, 용량은 1
+	for (int i = 1; i <= n; i++)
+	{
+		edges[0].push_back(i);
+		capacity[0][i] = 1;	// 용량 1
+	}
+
+	// 축사(201~400)와 Sink(401) 연결, 용량은 1
+	for (int i = 1; i <= m; i++)
+	{
+		edges[i + 200].push_back(401);
+		capacity[i + 200][401] = 1;	// 용량 1
+	}
+
+	cout << edmondKarp(0, 401);	// Source : 0,  Sink : 401
+
+	return 0;
+}

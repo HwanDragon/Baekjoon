@@ -1,0 +1,133 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+#define INF 1000000000
+#define NODE_COUNT 802	// Source : 0, Sink : 801, 직원 : 1~400, 일 : 401 ~800
+#define SOURCE 0	// Source
+#define SINK 801	// Sink
+
+using namespace std;
+
+int n, m;
+vector<int> edges[NODE_COUNT];	// 용량 계산하기 위한 간선정보
+int capacity[NODE_COUNT][NODE_COUNT] = { 0, };	// 용량 정보
+int flow[NODE_COUNT][NODE_COUNT] = { 0, };	// 유량 정보
+int costs[NODE_COUNT][NODE_COUNT];	//	최단거리를 찾기위한 간선정보(급여)
+int prevNode[NODE_COUNT] = { 0, };	// 이전 노드 저장
+
+bool inQueue[NODE_COUNT] = { 0, }; // SPFA 알고리즘에서 큐에 추가되었는지 여부
+int dists[NODE_COUNT] = { 0, };	// 최단 경로 탐색
+
+void mcmf(int start, int end)
+{
+	int minCost = 0;	// 최소 월급 계산
+	int workCnt = 0;	// 할 수 있는 일의 개수 카운팅
+	while (true)
+	{
+		// 초기화
+		fill(prevNode, prevNode + NODE_COUNT, -1);
+		fill(dists, dists + NODE_COUNT, INF);	// 최단경로 저장 베열은 INF로 초기화
+        fill(inQueue, inQueue + NODE_COUNT, false);
+        
+		// SPFA 알고리즘 사용
+		queue<int> q;
+		q.push(start);
+		inQueue[start] = true;	// 큐에 추가 여부 체크
+		dists[start] = 0;	// 시작지점 최단거리 비용 0으로 세팅
+
+		while (q.empty() == false)
+		{
+			int cur = q.front();
+			q.pop();
+			inQueue[cur] = false;	// 큐에서 제거 여부 체크
+
+			for (int i = 0; i < edges[cur].size(); i++)
+			{
+				int next = edges[cur].at(i);
+				int weight = costs[cur][next];
+				// 최단거리 탐색과, 잔여용량을 같이 확인
+				if (dists[next] > dists[cur] + weight && capacity[cur][next] - flow[cur][next] > 0)
+				{
+					dists[next] = dists[cur] + weight;	// 최단거리 갱신
+					prevNode[next] = cur;	// 이전노드 저장
+					if (inQueue[next] == true) continue;	// 이미 큐에 들어가 있는 경우
+
+					q.push(next);	// 큐에 추가
+					inQueue[next] = true;
+				}
+			}
+		}
+
+		// 시작정점에서 도착정점까지 더이상 경로가 없음
+		if (prevNode[end] == -1) break;
+
+		// 흘릴 수 있는 유량 계산
+		int minFlow = INF;
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			minFlow = min(minFlow, capacity[prev][i] - flow[prev][i]);
+		}
+
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			// 유량 흘려보내기
+			int prev = prevNode[i];
+			flow[prev][i] += minFlow;
+			flow[i][prev] -= minFlow;	// 음의 간선 처리
+
+			// 해당 경로로 유량을 흘릴 때 드는 비용 계산
+			minCost += minFlow * costs[prev][i];
+		}
+		// 할수 있는 일 개수
+		workCnt += minFlow;
+	}
+
+	cout << workCnt << "\n" << minCost;	// 결과 출력
+}
+
+int main()
+{
+	int workCount, pay, work;
+	cin >> n >> m;
+	// Source : 0, Sink : 801, 직원 : 1~400, 일 : 401 ~800
+	for (int i = 1; i <= n; i++)
+	{
+		cin >> workCount;
+		for (int j = 1; j <= workCount; j++)
+		{
+			cin >> work >> pay;
+			work += 400;	//일 : 401 ~ 800
+			edges[i].push_back(work);
+			edges[work].push_back(i);
+
+			capacity[i][work] = 100000000;	// INF
+
+			// 최단거리를 찾기위한 비용 저장
+			costs[i][work] = pay;
+			costs[work][i] = -pay;
+		}
+	}
+
+	// Source 와 사람 연결(비용 : 0)
+	for (int i = 1; i <= n; i++)
+	{
+		edges[SOURCE].push_back(i);
+		capacity[SOURCE][i] = 1;
+		costs[SOURCE][i] = 0;	// 0 이므로 없어도됨
+	}
+
+	// Source : 0, Sink : 801, 직원 : 1~400, 일 : 401 ~800
+	// 일과 Sink 연결(비용 : 0)
+	for (int i = 1; i <= m; i++)
+	{
+		edges[i + 400].push_back(SINK);
+		capacity[i + 400][SINK] = 1;
+		costs[i + 400][SINK] = 0;
+	}
+
+	mcmf(SOURCE, SINK);
+
+	return 0;
+}

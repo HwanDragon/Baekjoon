@@ -1,0 +1,91 @@
+#include <iostream>
+
+using namespace std;
+
+int n;
+
+char colors[101][101];
+bool visited[101][101] = { 0, };	// 방문 체크
+
+// DFS 탐색 
+void dfs(int x, int y, bool normal)
+{
+	visited[y][x] = true;
+	int dx[4] = {-1, 1, 0, 0 };
+	int dy[4] = { 0, 0,-1, 1 };
+	for (int i = 0; i < 4; i++)
+	{
+		int tempX = x + dx[i];
+		int tempY = y + dy[i];
+
+		if (tempX < 0 || tempY < 0 || tempX >= n || tempY >= n)	continue;	// 배열 범위 초과
+
+		if (visited[tempY][tempX] == true) continue;	// 이미 방문한 지점
+		
+		if (normal == true)	
+		{
+			if (colors[y][x] != colors[tempY][tempX])	continue; // 적록색약이 아닌 사람
+		}
+		else
+		{
+			// 적록색약인 사람
+			/*
+				적록색약은 R과 G를 같게 인식하므로 R과 G를 하나로 보고 처리
+			*/
+			if ((colors[y][x] == 'R' || colors[y][x] == 'G') && (colors[tempY][tempX] == 'B'))	continue;
+
+			if (colors[y][x] == 'B' && (colors[tempY][tempX] == 'R' || colors[tempY][tempX] == 'G')) continue;
+		}
+		dfs(tempX, tempY, normal);
+	}
+}
+
+int main()
+{
+	cin >> n;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> colors[i];
+	}
+
+	// 적록색약이 아닌사람
+	int result1 = 0;
+	for (int y = 0; y < n; y++)
+	{
+		for (int x = 0; x < n; x++)
+		{
+			if (visited[y][x] == true)
+				continue;
+
+			result1++;
+			dfs(x, y, true);
+		}
+	}
+	
+	// visited배열 초기화
+	for (int i = 0; i < 101; i++)
+	{
+		for (int j = 0; j < 101; j++)
+		{
+			visited[i][j] = false;
+		}
+	}
+
+	// 적록색약인 사람
+	int result2 = 0;
+	for (int y = 0; y < n; y++)
+	{
+		for (int x = 0; x < n; x++)
+		{
+			if (visited[y][x] == true)
+				continue;
+
+			result2++;
+			dfs(x, y, false);
+		}
+	}
+
+	cout << result1 << " " << result2;
+
+	return 0;
+}

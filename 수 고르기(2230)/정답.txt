@@ -1,0 +1,44 @@
+#include <iostream>
+#include <algorithm>
+
+using namespace std;
+
+int n, m;
+long long nums[100000];
+
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> nums[i];
+	}
+	sort(nums, nums + n);
+
+	int end = 1;
+	long long minValue = 2000000000;
+
+	for (int start = 0; start < n; start++)
+	{
+		while (end < n)
+		{
+			if (nums[end] - nums[start] < m)	// 두 수의 차가 m보다 작으면 end를 증가시킴
+				end++;
+			else
+				break;
+
+			if (end == start)	// end 포인터가 항상 start보다 커야함
+				end++;
+		}
+
+		if (((nums[end] - nums[start]) - m) < 0)	// 두수의 차가 m보다 작음
+			continue;
+
+		if (((minValue - m) > ((nums[end] - nums[start]) - m)))
+			minValue = (nums[end] - nums[start]);
+	}
+	cout << minValue;
+	return 0;
+}

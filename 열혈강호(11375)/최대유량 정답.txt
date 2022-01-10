@@ -1,0 +1,105 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+#define NODE_COUNT 2002	// Source : 0, Sink : 2001, 직원 : 1~1000, 일 : 1000~2000
+#define SOURCE 0
+#define SINK 2001
+
+using namespace std;
+
+int n, m;	// 직원 수, 일의 수
+vector<int> edges[NODE_COUNT];	// 간선정보
+int capacity[NODE_COUNT][NODE_COUNT] = { 0, };	// 용량 정보
+int flow[NODE_COUNT][NODE_COUNT] = { 0, };	// 유량 정보
+int prevNode[NODE_COUNT] = { 0, };	// 이전노드 저장
+
+int edmondKarp(int start, int end)
+{
+	int result = 0;
+
+	while (true)
+	{
+		// 초기화
+		fill(prevNode, prevNode + NODE_COUNT, -1);
+
+		// 출발점에서 도착점까지 경로를 찾음
+		queue<int> q;
+		q.push(start);
+		while (q.empty() == false && prevNode[end] == -1)
+		{
+			int cur = q.front();
+			q.pop();
+			for (int i = 0; i < edges[cur].size(); i++)
+			{
+				int next = edges[cur].at(i);
+				if (prevNode[next] == -1 && capacity[cur][next] - flow[cur][next] > 0)
+				{ 
+					q.push(next);
+					prevNode[next] = cur;
+					if (next == end) break;
+				}
+			}
+		}
+
+		if (prevNode[end] == -1) break;	// Source에서 Sink로 도달 불가능(최대유량 찾음)
+
+		int minFlow = 100000000;
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			minFlow = min(minFlow, capacity[prev][i] - flow[prev][i]);
+		}
+
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			flow[prev][i] += minFlow;
+			flow[i][prev] -= minFlow;
+		}
+
+		result += minFlow;
+	}
+
+	return result;
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int workCount, work;
+	for (int i = 1; i <= n; i++)
+	{
+		cin >> workCount;
+		for (int j = 0; j < workCount; j++)
+		{
+			cin >> work;
+			// 직원: 1~1000, 일 : 1000~2000
+			work += 1000;
+			edges[i].push_back(work);
+			edges[work].push_back(i);
+			capacity[i][work] = 1;
+		}
+	}
+
+	// 직원 : 1~1000, 일 : 1000~2000
+	// Source - 사람 간선 이어줌
+	for (int i = 1; i <= n; i++)
+	{
+		edges[SOURCE].push_back(i);
+		capacity[SOURCE][i] = 1;
+	}
+
+	// 직원 : 1~1000, 일 : 1000~2000
+	// 노트북 - Sink 간선 이어줌
+	for (int i = 1; i <= m; i++)
+	{
+		edges[i + 1000].push_back(SINK);
+		capacity[i + 1000][SINK] = 1;
+	}
+
+	cout << edmondKarp(SOURCE, SINK);
+
+	return 0;
+}
