@@ -1,0 +1,65 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+vector<pair<long long, long long>> e;
+
+// 가격순 정렬
+int cmp(pair<long long, long long>& f, pair<long long, long long>& s)
+{
+	return f.first < s.first;
+}
+
+// a번 부터 b번 까지 만족도의 합을 더하여 반환
+long long sum(int a, int b)
+{
+	long long s = 0;
+	for (int i = a; i <= b; i++)
+	{
+		s += e[i].second;
+	}
+	return s;
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	int n, d;
+	int first, second;
+
+	// 사용자 입력 받음
+	cin >> n >> d;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> first >> second;
+		e.push_back({ first, second });
+	}
+
+	// 가격순으로 정렬
+	sort(e.begin(), e.end(), cmp);
+
+	int end = 0;
+	long long result = 0;
+	for (int start = 0; start < n; start++)
+	{
+		pair<long long, long long> p1 = e.at(start);
+		while (end < n)
+		{
+			pair<long long, long long> p2 = e.at(end);
+			if (p2.first - p1.first < d)	// 선물 가격이 d이상이 되면 미안함을 느낌
+				end++;	// d 미만일 경우 end를 증가시켜 선물을 더 받을 수 있음
+			else
+				break;
+		}
+
+		result = max(result, sum(start, end - 1));	// 최대값 저장
+		if (end == n) break;
+	}
+	cout << result;
+	return 0;
+}

@@ -1,0 +1,58 @@
+#include <iostream>
+#include <algorithm>
+
+using namespace std;
+
+int a, b, c;
+int aArr[1000] = { 0, }, bArr[1000] = { 0, }, cArr[1000] = { 0, };
+int ap = 0, bp = 0, cp = 0;
+
+// 문제에 주어진 식 계산
+int getCalcValue(int a, int b, int c)
+{
+	return abs(max(max(a, b), c) - min(min(a, b), c));
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> a >> b >> c;
+	for (int i = 0; i < a; i++)	cin >> aArr[i];
+	for (int i = 0; i < b; i++)	cin >> bArr[i];
+	for (int i = 0; i < c; i++)	cin >> cArr[i];
+	
+	// 전부 다 정렬
+	sort(aArr, aArr + a);
+	sort(bArr, bArr + b);
+	sort(cArr, cArr + c);
+
+	int minValue = getCalcValue(aArr[ap], bArr[bp], cArr[cp]);
+
+	// 정렬한 상태에서 반복문을 순회하며 aArr[ap], bArr[bp], cArr[cp] 중에서, 가장 작은 값을 가지는 포인터 값을 증가시킴
+	bool update;
+	while (true)
+	{
+		update = false;
+		if ((aArr[ap] <= bArr[bp] && aArr[ap] <= cArr[cp]) && ap < a)	// a 값이 가장 작을 경우
+		{
+			ap++;
+			update = true;
+		}
+		else if ((bArr[bp] <= aArr[ap] && bArr[bp] <= cArr[cp]) && bp < b)	// b 값이 가장 작을 경우
+		{
+			bp++;
+			update = true;
+		}
+		else if ((cArr[cp] <= bArr[bp] && cArr[cp] <= aArr[ap]) && cp < c)	// c 값이 가장 작을 경우
+		{
+			cp++;
+			update = true;
+		}
+		minValue = min(minValue, getCalcValue(aArr[ap], bArr[bp], cArr[cp]));
+
+		if (update == false)	// 한번도 업데이트 되지 않는다면 반복문을 빠져나옴
+			break;
+	}
+	cout << minValue;
+	return 0;
+}
