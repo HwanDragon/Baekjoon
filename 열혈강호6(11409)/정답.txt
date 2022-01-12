@@ -1,0 +1,127 @@
+#include <iostream>
+#include <queue>
+#include <vector>
+
+/*
+해당 문제는 월급의 최대값을 구하는 문제이므로
+비용을 추가할 때 음수를 곱해주어 추가한 다음
+최단거리를 찾은 뒤, 음수를 곱하면 그 값이 최대 거리가 됨
+*/
+
+#define INF 1000000000
+#define NODE_COUNT 802	// 0:Source, 1~400:직원 수, 401~800:일의 수, 801:Sink
+#define SOURCE	0
+#define SINK	801
+
+using namespace std;
+
+int n, m;	// 사람 수, 일의 수
+vector<int> edges[NODE_COUNT];	// 간선 정보
+int capacity[NODE_COUNT][NODE_COUNT] = { 0, };	// 용량
+int flow[NODE_COUNT][NODE_COUNT] = { 0, };	// 유량
+int pays[NODE_COUNT][NODE_COUNT] = { 0, };	// 월급 
+int prevNode[NODE_COUNT] = { 0, };	// 이전 노드 저장
+bool inQueue[NODE_COUNT] = { 0, };	// SPFA 알고리즘 수행시 큐에 삽입 여부 저장
+int dists[NODE_COUNT] = { 0, };	// 최단거리 계산
+
+void mcmf(int start, int end)
+{
+	int maxCost = 0, workCount = 0;
+	while (true)
+	{
+		// 초기화
+		fill(prevNode, prevNode + NODE_COUNT, -1);
+		fill(inQueue, inQueue + NODE_COUNT, false);
+		fill(dists, dists + NODE_COUNT, INF);	
+
+		// 큐에 시작지점 추가
+		queue<int> q;
+		q.push(start);
+		inQueue[start] = true;
+		dists[start] = 0;
+
+		// SPFA 알고리즘 수행
+		while (q.empty() == false)
+		{
+			int cur = q.front();
+			q.pop();
+			inQueue[cur] = false;
+			for (int i = 0; i < edges[cur].size(); i++)
+			{
+				int next = edges[cur].at(i);
+				if ((dists[next] > dists[cur] + pays[cur][next]) && (capacity[cur][next] - flow[cur][next] > 0))
+				{
+					dists[next] = dists[cur] + pays[cur][next];
+					prevNode[next] = cur;
+					if (inQueue[next] == true) continue;
+
+					inQueue[next] = true;
+					q.push(next);
+				}
+			}
+		}
+
+		if (prevNode[end] == -1) break;	// 출발점에서 도착점까지 경로가 존재하지 않음
+
+		// 한사람당 할 수 있는 일의 개수가 1개이기 때문에 minFlow는 항상 1이 나옴
+		int minFlow = 1;	
+		//for (int i = end; i != start; i = prevNode[i])
+		//{
+		//	int prev = prevNode[i];
+		//	minFlow = min(minFlow, capacity[prev][i] - flow[prev][i]);
+		//}
+
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			flow[prev][i] += minFlow;
+			flow[i][prev] -= minFlow;
+			maxCost += minFlow * pays[prev][i];
+		}
+		workCount += minFlow;
+	}
+	cout << workCount << "\n" << -maxCost;
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	// 0:Source, 1~400:직원, 401~800:일, 801:Sink
+	cin >> n >> m;
+	for (int i = 1; i <= n; i++)
+	{
+		// Source와 직원 연결
+		edges[SOURCE].push_back(i);
+		capacity[SOURCE][i] = 1;	// 한사람이 최대 한개의 일을 할 수 있음
+
+		int workCnt, workNum, cost;
+		cin >> workCnt;
+		for (int j = 1; j <= workCnt; j++)
+		{
+			cin >> workNum >> cost;
+			// 일과 Sink 연결
+			workNum += 400;	// 일은 400번부터 시작
+			edges[SINK].push_back(workNum);
+			edges[workNum].push_back(SINK);
+			capacity[workNum][SINK] = 1;	// 한사람이 최대 한개의 일을 할 수 있음
+
+			// 직원과 일 연결
+			edges[i].push_back(workNum);
+			edges[workNum].push_back(i);
+
+			// 월급의 최소값을 출력하는게 아니라 최대값을 출력하는 문제이므로
+			// 비용을 음수로 추가하여 최단거리를 찾은뒤, 음수를 곱해주면 최대거리가 됨
+			pays[i][workNum] = -cost;	// 
+			pays[workNum][i] = cost;	// 
+			capacity[i][workNum] = INF;	// 용량은 무한대
+		}
+	}
+
+	mcmf(SOURCE, SINK);
+
+	return 0;
+}
