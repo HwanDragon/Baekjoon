@@ -1,0 +1,118 @@
+#include <iostream>
+#include <queue>
+#include <vector>
+
+#define INF 1000000000
+#define NODE_COUNT 202 // 0 : Source, 1~100 : 서점, 101~200 : 사람, 201 : Sink
+#define SOURCE 0
+#define SINK 201
+
+using namespace std;
+
+int peopleCount, bookstoreCount;	// 사람수, 서점수
+vector<int> edges[NODE_COUNT];	// 간선정보 저장
+int costs[NODE_COUNT][NODE_COUNT] = { 0, };	// 비용 저장
+int capacity[NODE_COUNT][NODE_COUNT] = { 0, };	// 용량 저장
+int flow[NODE_COUNT][NODE_COUNT] = { 0, };	// 용량정보
+int prevNode[NODE_COUNT] = { 0, };	// 이전 노드 저장
+int dists[NODE_COUNT] = { 0, };	// 최단거리 계산
+bool inQueue[NODE_COUNT] = { 0, };	// SPFA 알고리즘 수행시 큐에 삽입 여부
+
+// mcmf 알고리즘 수행
+int mcmf(int start, int end)
+{
+	int result = 0;
+	while (true)
+	{
+		// 초기화
+		fill(prevNode, prevNode + NODE_COUNT, -1);
+		fill(inQueue, inQueue + NODE_COUNT, false);
+		fill(dists, dists + NODE_COUNT, INF);
+
+		queue<int> q;
+		q.push(start);
+		inQueue[start] = true;
+		dists[start] = 0;
+
+		// SPFA 알고리즘 수행(Queue가 빌때까지 반복해야함)
+		while (q.empty() == false)
+		{
+			int cur = q.front();
+			q.pop();
+			inQueue[cur] = false;
+			for (int i = 0; i < edges[cur].size(); i++)
+			{
+				int next = edges[cur].at(i);
+				if ((dists[next] > dists[cur] + costs[cur][next]) && (capacity[cur][next] - flow[cur][next] > 0))
+				{
+					prevNode[next] = cur;
+					dists[next] = dists[cur] + costs[cur][next];
+					if (inQueue[next] == true) continue;
+
+					inQueue[next] = true;
+					q.push(next);
+				}
+			}
+		}
+
+		if (prevNode[end] == -1) break;	// 출발점에서 도착점까지 더이상 경로가 존재하지 않음
+
+		int minFlow = INF;
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			minFlow = min(minFlow, capacity[prev][i] - flow[prev][i]);
+		}
+
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			flow[prev][i] += minFlow;
+			flow[i][prev] -= minFlow;
+			result = result + (minFlow * costs[prev][i]);	// 비용 계산
+		}
+	}
+	return result;
+}
+
+int main()
+{
+	// Source:0, 서점:1~100, 사람:101~200, 201:Sink
+	cin >> peopleCount >> bookstoreCount;
+
+	// 사람과 Sink 연결(비용은 0)
+	for (int i = 1; i <= peopleCount; i++)
+	{
+		cin >> capacity[i + 100][SINK];
+		edges[i + 100].push_back(SINK);
+		edges[SINK].push_back(i + 100);
+	}
+
+	// Source와 서점 연결(비용 0)
+	for (int i = 1; i <= bookstoreCount; i++)
+	{
+		cin >> capacity[SOURCE][i];
+		edges[SOURCE].push_back(i);
+		edges[i].push_back(SOURCE);
+	}
+
+	// Source:0, 서점:1~100, 사람:101~200, 201:Sink
+	// 서점과 사람 연결(비용 존재, 유량 무한대)
+	for (int i = 1; i <= bookstoreCount; i++)
+	{
+		for (int j = 1; j <= peopleCount; j++)
+		{
+			int pNum = j + 100;
+			cin >> costs[i][pNum];
+			costs[pNum][i] = -costs[i][pNum];
+
+			edges[i].push_back(pNum);
+			edges[pNum].push_back(i);
+			capacity[i][pNum] = INF;
+		}
+	}
+
+	cout << mcmf(SOURCE, SINK);
+
+	return 0;
+}
