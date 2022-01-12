@@ -1,0 +1,66 @@
+#include <iostream>
+
+using namespace std;
+
+int n, m;
+
+int parents[201] = { 0, };	// 각 노드들의 부모노드 저장
+
+// Union Find 알고리즘
+
+int findParent(int node, int parent[])
+{
+	if (node == parent[node]) return node;
+	return parent[node] = findParent(parent[node], parent);
+}
+
+void unionParent(int first, int second, int parent[])
+{
+	int firstParent = findParent(first, parent);
+	int secondParent = findParent(second, parent);
+	if (firstParent < secondParent)
+		parent[secondParent] = firstParent;
+	else
+		parent[firstParent] = secondParent;
+}
+
+bool sameParent(int first, int second, int parent[])
+{
+	if (findParent(first, parent) == findParent(second, parent))
+		return true;
+	return false;
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i < 201; i++) parents[i] = i;
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	bool connected;
+	for (int i = 1; i <= n; i++)
+	{
+		for (int j = 1; j <= n; j++)
+		{
+			cin >> connected;
+			if (connected == true)	// 두 도시가 연결되어있을경우
+				unionParent(i, j, parents);	// union으로 도시 연결
+		}
+	}
+
+	int basis, num;
+	cin >> basis;	// 처음 입력받은 도시와 연결되어있는지 확인만 해주면됨
+	for (int i = 1; i < m; i++)	// 0번은 basis로 입력받았으므로 1부터 시작
+	{
+		cin >> num;
+		if (sameParent(basis, num, parents) == false)	// 연결되어있느지 확인
+		{
+			cout << "NO";
+			return 0;
+		}
+	}
+	cout << "YES";
+
+	return 0;
+}

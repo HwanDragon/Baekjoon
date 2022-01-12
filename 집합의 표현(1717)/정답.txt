@@ -1,0 +1,63 @@
+#include <iostream>
+
+#define NODE_COUNT 1000001
+
+using namespace std;
+
+int n, m;
+
+int parents[NODE_COUNT] = { 0, };
+
+// Union Find 알고리즘을 이용하여 분리집합 문제 해결
+
+int getParent(int node, int parent[])
+{
+	if (node == parent[node])
+		return node;
+
+	return parent[node] = getParent(parent[node], parent);
+}
+
+void unionParent(int first, int second, int parent[])
+{
+	int firstParent = getParent(first, parent);
+	int secondParent = getParent(second, parent);
+
+	if (firstParent < secondParent)
+		parent[secondParent] = firstParent;
+	else
+		parent[firstParent] = secondParent;
+}
+
+bool findParent(int first, int second, int parent[])
+{
+	if (getParent(first, parent) == getParent(second, parent))
+		return true;
+	return false;
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 초기화
+	for (int i = 0; i < NODE_COUNT; i++) parents[i] = i;
+
+	cin >> n >> m;
+	int oper, first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> oper >> first >> second;
+		if (oper == 0)
+		{
+			unionParent(first, second, parents);	// first, second 집합 합침
+		}
+		else
+		{
+			cout << (findParent(first, second, parents) ? "YES\n" : "NO\n");	// 두개 그룹이 같은지 확인
+		}
+	}
+	return 0;
+}
