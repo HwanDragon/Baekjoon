@@ -1,0 +1,74 @@
+#include <iostream>
+#include <queue>
+#include <vector>
+
+#define NODE_COUNT 200001
+#define INF 1000000000
+
+using namespace std;
+
+int  n, m;
+int dp[NODE_COUNT] = { 0, };	// 해당 지점까지 이동하는데 걸리는 가장 짧은 시간 저장
+int prevNode[NODE_COUNT] = { 0, };	// 이전 노드 값 저장
+
+int main()
+{
+	fill(dp, dp + NODE_COUNT, INF);
+	cin >> n >> m;
+
+	// 왼쪽으로 한칸이동, 오른쪽으로 한칸 이동, 2배 지점으로 순간이동
+	// 세가지 경우를 모두 bfs탐색 후보지에 추가하여 dp 배열을 갱신시켜나감
+	queue<int> q;
+	q.push(n);
+	dp[n] = 0;
+	while (q.empty() == false)
+	{
+		int cur = q.front();
+		q.pop();
+		if (cur > 0)
+		{
+			if (dp[cur - 1] > dp[cur] + 1)	// 왼쪽으로 이동
+			{
+				dp[cur - 1] = dp[cur] + 1;
+				prevNode[cur - 1] = cur;
+				q.push(cur - 1);
+			}
+		}
+
+		if (cur < m * 2)
+		{
+			if (dp[cur + 1] > dp[cur] + 1)	// 오른쪽으로 이동
+			{
+				dp[cur + 1] = dp[cur] + 1;
+				prevNode[cur + 1] = cur;
+				q.push(cur + 1);
+			}
+		}
+
+		// 2*x 위치로 순간이동
+		if (cur * 2 < m * 2)
+		{
+			if (dp[cur * 2] > dp[cur] + 1)
+			{
+				dp[cur * 2] = dp[cur] + 1;
+				prevNode[cur * 2] = cur;
+				q.push(cur * 2);
+			}
+		}
+	}
+	cout << dp[m] << "\n";
+	int temp = m;
+	vector<int> path;
+	// 경로 찾기
+	for (int i = m; i != n; i = prevNode[i])
+	{
+		path.push_back(i);
+	}
+	path.push_back(n);	
+
+	for (int i = path.size() - 1; i >= 0; i--)
+	{
+		cout << path[i] << " ";
+	}
+	return 0;
+}
