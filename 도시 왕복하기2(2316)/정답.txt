@@ -1,0 +1,107 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+/*
+해당 문제는 최대 유량을 구하여 해결할 수 있는데, 
+간선 정보가 아니라 노드에 가중치가 주어져 있으므로
+정점분할 기법을 사용하여 최대유량을 계산하여야 한다.
+*/
+
+#define INF 1000000000
+#define NODE_COUNT 802
+#define OFFSET 400
+
+using namespace std;
+
+int n, p;
+vector<int> edges[NODE_COUNT];	// 1~400 : in, 401~800 out
+int capacity[NODE_COUNT][NODE_COUNT] = { 0, };	// 용량 정보
+int flow[NODE_COUNT][NODE_COUNT] = { 0, };	// 유량 정보
+int prevNode[NODE_COUNT] = { 0, };	// 이전노드 저장
+
+int edmondKarp(int start, int end)
+{
+	int result = 0;
+	while (true)
+	{
+		// 초기화
+		fill(prevNode, prevNode + NODE_COUNT, -1);
+
+		// 출발점에서 도착점까지 경로를 하나 찾음
+		queue<int> q;
+		q.push(start);
+		while (q.empty() == false && prevNode[end] == -1)
+		{
+			int cur = q.front();
+			q.pop();
+			for (int i = 0; i < edges[cur].size(); i++)
+			{
+				int next = edges[cur].at(i);
+				if (prevNode[next] == -1 && capacity[cur][next] - flow[cur][next] > 0)
+				{
+					prevNode[next] = cur;
+					q.push(next);
+					if (next == end) break;
+				}
+			}
+		}
+
+		if (prevNode[end] == -1) break;	// 출발점에서 도착점까지 더이상 경로가 존재하지 않음
+
+		// 찾은 경로에서 최대로 흘릴수 있는 유량 탐색
+		int minFlow = INF;
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			minFlow = min(minFlow, capacity[prev][i] - flow[prev][i]);
+		}
+
+		// 흘릴 수 있는 최대 유량을 실제로 적용
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			flow[prev][i] += minFlow;
+			flow[i][prev] -= minFlow;
+		}
+		result += minFlow;
+	}
+	return result;
+}
+
+int main()
+{
+	// 정점분할 기법 이용
+	// in - out 연결 (용량 in -> out 으로 1)
+	for (int i = 1; i <= 400; i++)
+	{
+		edges[i].push_back(i + 400);
+		edges[i + 400].push_back(i);
+		capacity[i][i + 400] = 1;	// 최대 한번만 방문 가능
+	}
+
+	// 사용자 입력 받음
+	cin >> n >> p;
+	int first, second;
+	for (int i = 0; i < p; i++)
+	{
+		cin >> first >> second;
+		// first -> second 연결
+		edges[first + 400].push_back(second);	// first-out 에서 second-in 으로 연결
+		edges[second].push_back(first + 400);	// second-in에서 first-out 으로 연결
+		// 용량은 first-out에서 second-in으로 INF
+		capacity[first + 400][second] = INF;
+
+		// second -> first 연결
+		edges[second + 400].push_back(first);	// second-out에서 first-in으로 연결
+		edges[first].push_back(second + 400);	// first-in에서 second-out으로 연결
+		// 용량은 second-out에서 first-in으로 INF
+		capacity[second + 400][first] = INF;	// 양방향 도로 이므로 용량 양쪽 추가
+	}
+	
+	int s = 1 + 400;	// 1번 노드의 out 노드
+	int e = 2;	// 2번 노드의 in노드
+	cout << edmondKarp(s, e);
+
+	return 0;
+}
