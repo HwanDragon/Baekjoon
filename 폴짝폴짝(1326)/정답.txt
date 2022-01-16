@@ -1,0 +1,74 @@
+#include <iostream>
+#include <queue>
+
+/*
+돌의 점프가능횟수의 배수만큼 이동 할 수 있으므로
+가장 왼쪽 지점부터 개구리가 있는 위치에서 도달할 수 있는지 확인하여
+dp 배열을 갱신해줌
+*/
+
+/*
+반례 : 
+7
+4 2 1 2 3 4 2
+5 2
+답 : 1
+
+7
+4 2 1 2 3 4 2
+5 3
+답 : -1
+*/
+
+#define INF 1000000000
+
+using namespace std;
+
+int stone[10001] = { 0, };	// 돌에서의 점프 수 기록
+int dp[10001] = { 0, };		// 최소 점프 횟수 기록
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i < 10001; i++) dp[i] = INF;
+
+	// 사용자 입력 받음
+	int totalCount, start, end;
+	cin >> totalCount;
+	for (int i = 1; i <= totalCount; i++)
+	{
+		cin >> stone[i];
+	}
+	cin >> start >> end;
+
+	// BFS 탐색
+	queue<int> q;
+	q.push(start);
+	dp[start] = 0;
+	while (q.empty() == false)
+	{
+		int n = q.front();
+		q.pop();
+		int next = n % stone[n];	// 가장 왼쪽 돌부터 확인하기 위해 나머지 계산
+		if (next == 0)
+			next = stone[n];	// 0일경우 stone[n] 이 확인할 가장 왼쪽 지점임
+
+		while (next <= totalCount)	// 최대 돌의 개수보다 작으면 계속 반복
+		{
+			if (dp[next] > dp[n] + 1)	// 기존값보다 더 짧은 거리로 도달이 가능할 경우
+			{
+				dp[next] = dp[n] + 1;	// 갱신해줌
+				q.push(next);	// 해당 지점 큐에 추가
+			}
+			next = next + stone[n];	// 배수만큼 이동하면서 탐색
+		}
+	}
+
+	// 결과 출력
+	if (dp[end] == INF)
+		cout << -1 << "\n";
+	else
+		cout << dp[end] << "\n";
+
+	return 0;
+}
