@@ -1,0 +1,128 @@
+#include <iostream>
+#include <queue>
+
+#define NODE_COUNT 300
+
+using namespace std;
+
+int n, m;
+int map[NODE_COUNT][NODE_COUNT] = { 0, };
+int diffs[NODE_COUNT][NODE_COUNT] = { 0, };
+int result = 0;	// 몇년이 흘렀는지 결과
+int dx[4] = { 0, 0, 1, -1 };
+int dy[4] = { 1, -1, 0, 0 };
+bool visited[NODE_COUNT][NODE_COUNT] = { 0, };	// BFS 방문 여부 저장
+
+// map을 순회하며 녹아야 할 빙산의 크기를 diffs에 저장한 뒤, 
+// 탐색이 끝나면 map에서 diffs를 빼서 실제로 빙산을 녹임
+void meltIce()
+{
+	// 사방이 얼음으로 둘러쌓인곳의 크기 계산
+	for (int y = 0; y < n; y++)
+	{
+		for (int x = 0; x < m; x++)
+		{
+			if (map[y][x] == 0) continue;
+
+			int diff = 0;
+			for (int i = 0; i < 4; i++)
+			{
+				int tempX = x + dx[i];
+				int tempY = y + dy[i];
+
+				if (tempX < 0 || tempY < 0 || tempX >= m || tempY >= n) continue;	// 배열 범위 초과
+
+				if (map[tempY][tempX] != 0)	// 해당 위치가 바다가 아님
+					continue;
+
+				diff++;	// 사방이 얼음인 곳의 개수 확인
+			}
+
+			diffs[y][x] = diff;	// 녹아야 할 빙하의 크기 저장
+		}
+	}
+
+	// 빙산을 녹임(실제 map 에서 녹아야 할 빙산의 크기만큼 제외)
+	for (int y = 0; y < n; y++)
+	{
+		for (int x = 0; x < m; x++)
+		{
+			if (map[y][x] - diffs[y][x] < 0)
+				map[y][x] = 0;
+			else
+				map[y][x] -= diffs[y][x];
+		}
+	}
+}
+
+// DFS 순회
+void dfs(int x, int y)
+{
+	visited[y][x] = true;	// 방문 처리
+	for (int i = 0; i < 4; i++)
+	{
+		int tempX = x + dx[i];
+		int tempY = y + dy[i];
+
+		if (tempX < 0 || tempY < 0 || tempX >= m || tempY >= n) continue;	// 배열 범위 초과
+
+		if (map[tempY][tempX] == 0)	// 해당 위치가 바다이면 pass
+			continue;
+
+		if (visited[tempY][tempX] == true) continue;	// 이미 방문한 지역
+
+		dfs(tempX, tempY);
+	}
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < m; j++) 
+			cin >> map[i][j];
+		
+	int result = 0;
+	bool find = false;
+	while (true)
+	{
+		// 초기화
+		fill(&diffs[0][0], &diffs[NODE_COUNT - 1][NODE_COUNT - 1], 0);
+		fill(&visited[0][0], &visited[NODE_COUNT - 1][NODE_COUNT - 1], false);
+
+		// 빙하 녹임
+		meltIce();
+		result++;	// 년도 증가
+
+		int cnt = 0;	// 분리된 빙하의 개수
+		for (int y = 0; y < n; y++)
+		{
+			for (int x = 0; x < m; x++)
+			{
+				if (visited[y][x] == false && map[y][x] != 0)	// 방문하지 않았고, 바다가 아니면
+				{
+					dfs(x, y);
+					cnt++;	// 분리된 빙하의 개수 카운트
+					if (cnt >= 2) {	
+						find = true;	// 2개 이상일 경우 
+					}
+				}
+			}
+		}
+			
+		if (find == true)
+		{
+			cout << result;
+			return 0;
+		}
+
+		// 빙하가 모두 녹을때까지 2개 이상으로 분리되지 않은 경우
+		if (cnt == 0)
+		{
+			cout << 0;
+			return 0;
+		}
+	}
+	return 0;
+}
