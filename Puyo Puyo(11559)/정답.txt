@@ -1,0 +1,125 @@
+#include <iostream>
+#include <queue>
+
+#define MAX_X 6
+#define MAX_Y 12
+
+using namespace std;
+
+char map[12][6 + 1] = { 0, };
+bool dfsVisited[12][6] = { 0, };	// 4개 이상 붙어있는 뿌요를 찾기위한 dfs visited 배열
+bool bfsVisited[12][6] = { 0, };	// 뿌요 제거시 사용할 bfs visited 배열
+int dx[4] = { 0, 0, 1, -1 };
+int dy[4] = { 1, -1, 0, 0 };
+
+// curPuyo와 같은 뿌요를 찾으며 상하좌우의 같은 뿌요 개수를 샘
+int dfs(int x, int y, int cnt, char curPuyo)
+{
+	dfsVisited[y][x] = true;
+	for (int i = 0; i < 4; i++)
+	{
+		int tempX = x + dx[i];
+		int tempY = y + dy[i];
+
+		if (tempX < 0 || tempY < 0 || tempX >= MAX_X || tempY >= MAX_Y)	continue;	// 배열범위초과
+		if (map[tempY][tempX] == '.')	continue;	// 빈공간
+		if (map[tempY][tempX] != curPuyo)	 continue;	// 다른 뿌요 
+		if (dfsVisited[tempY][tempX] == true) continue;
+
+		cnt = dfs(tempX, tempY, ++cnt, curPuyo);
+	}
+
+	return cnt;
+}
+
+void gravity()
+{
+	// 뿌요를 한칸 밑으로 붙이는 작업을 칸의 크기인 12번만큼 반복함
+	for (int i = 0; i < MAX_Y; i++)
+	{
+		// 뿌요를 한칸 밑으로 붙임
+		for (int y = MAX_Y - 1; y >= 1; y--)
+		{
+			for (int x = 0; x < MAX_X; x++)
+			{
+				int tempY = y - 1;
+				if (map[y][x] == '.' && map[tempY][x] != '.')
+				{
+					map[y][x] = map[tempY][x]; // 위쪽 뿌요 아래로 붙임
+					map[tempY][x] = '.';	// 위쪽뿌요는 빈칸으로 처리
+				}
+			}
+		}
+	}
+}
+
+int main()
+{
+	for (int i = 0; i < MAX_Y; i++)
+		cin >> map[i];
+
+	gravity();	// 아직 떨어지지 않은 뿌요가 있으면 밑으로 붙임
+
+	int result = 0;
+	while (true)
+	{
+		// 초기화
+		for (int i = 0; i < MAX_Y; i++)
+		{
+			for (int j = 0; j < MAX_X; j++)
+			{
+				dfsVisited[i][j] = false;
+				bfsVisited[i][j] = false;
+			}
+		}
+
+		queue<pair<int, int>> q;
+		// 4개 이상의 뿌요의 위치를 찾아 큐에 추가
+		for (int y = MAX_Y - 1; y >= 0; y--)
+		{
+			for (int x = 0; x < MAX_X; x++)
+			{
+				if (dfsVisited[y][x] == false && map[y][x] != '.')
+				{
+					int cnt = dfs(x, y, 1, map[y][x]);
+					if (cnt >= 4)	// 4개 이상이 붙어있을경우 후보지에 추가함
+					{
+						bfsVisited[y][x] = true;
+						q.push({ x, y });
+					}
+				}
+			}
+		}
+
+		if (q.empty() == true) break;
+
+		// 뿌요를 터트림 (BFS 탐색)
+		while (q.empty() == false)
+		{
+			pair<int, int> p = q.front();
+			q.pop();
+			int curX = p.first;
+			int curY = p.second;
+			for (int i = 0; i < 4; i++)
+			{
+				int tempX = curX + dx[i];
+				int tempY = curY + dy[i];
+
+				if (tempX < 0 || tempY < 0 || tempX >= MAX_X || tempY >= MAX_Y)	continue;	// 배열범위초과
+				if (bfsVisited[tempY][tempX] == true)	continue;	// 방문한지역
+				if (map[tempY][tempX] == '.')	continue;	// 빈공간
+				if (map[tempY][tempX] != map[curY][curX])	 continue;	// 다른 뿌요 
+
+				bfsVisited[tempY][tempX] = true;
+				q.push({ tempX, tempY });	// 다음 뿌요 후보지 큐에 추가
+			}
+			map[curY][curX] = '.';	// 뿌요 제거
+		}
+
+		gravity();	// 뿌요를 밑으로 붙임
+		result++;
+	}
+
+	cout << result;
+	return 0;
+}
