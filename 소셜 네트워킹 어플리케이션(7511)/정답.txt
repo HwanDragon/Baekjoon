@@ -1,0 +1,66 @@
+#include <iostream>
+
+#define NODE_COUNT 1000001
+
+using namespace std;
+
+// 유니온 파인드 알고리즘 사용
+int getParent(int node, int parent[])
+{
+	if (node == parent[node]) return node;
+	return parent[node] = getParent(parent[node], parent);
+}
+
+void unionParent(int first, int second, int parent[])
+{
+	first = getParent(first, parent);
+	second = getParent(second, parent);
+	if (first > second)
+		parent[first] = second;
+	else
+		parent[second] = first;
+}
+
+bool sameParent(int first, int second, int parent[])
+{
+	if (getParent(first, parent) == getParent(second, parent)) return true;
+	return false;
+}
+
+int n, k, m;
+int parents[NODE_COUNT] = { 0, };
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	int testCase, index = 1;
+	cin >> testCase;
+	while (testCase--)
+	{
+		for (int i = 0; i < NODE_COUNT; i++) parents[i] = i;
+
+		cin >> n;	// 유저의 수
+		cin >> k;	// 친구 관계의 수
+		int first, second;
+		for (int i = 0; i < k; i++)
+		{
+			cin >> first >> second;	// 친구 관계
+			unionParent(first, second, parents);
+		}
+		
+		// 쿼리 수
+		cin >> m;
+		cout << "Scenario " << index << ":\n";
+		for (int i = 0; i < m; i++)
+		{
+			cin >> first >> second;
+			cout << sameParent(first, second, parents) << "\n";
+		}
+		cout << "\n";
+		index++;
+	}
+	return 0;
+}
