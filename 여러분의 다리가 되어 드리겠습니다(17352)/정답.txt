@@ -1,0 +1,60 @@
+#include <iostream>
+
+using namespace std;
+
+// 유니온 파인드 알고리즘
+int getParent(int node, int parent[])
+{
+	if (node == parent[node]) return node;
+
+	return parent[node] = getParent(parent[node], parent);
+}
+
+void unionParent(int first, int second, int parent[])
+{
+	first = getParent(first, parent);
+	second = getParent(second, parent);
+	if (first > second)
+		parent[first] = second;
+	else
+		parent[second] = first;
+}
+
+bool sameParent(int first, int second, int parent[])
+{
+	if (getParent(first, parent) == getParent(second, parent)) return true;
+	return false;
+}
+
+int parents[300001] = { 0, };
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+
+	// 초기화
+	for (int i = 0; i < 300001; i++) parents[i] = i;
+
+	// 사용자 입력 받음
+	int n;
+	cin >> n;
+	int first = 1, second;
+	for (int i = 0; i < n - 2; i++)
+	{
+		cin >> first >> second;
+		unionParent(first, second, parents);	// 입력받은 다리는 서로 연결해줌
+	}
+
+	// 마지막으로 입력받은 first와 반복문을 돌며 연결되지 않은 다리를 찾은 후 출력
+	for (int i = 1; i <= n; i++)
+	{
+		if (sameParent(first, i, parents) == false)
+		{
+			cout << first << " " << i;
+			break;
+		}
+	}
+
+	return 0;
+}
