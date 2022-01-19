@@ -1,0 +1,66 @@
+#include <iostream>
+
+using namespace std;
+
+// 유니온 파인드 알고리즘
+int getParent(int node, int parent[])
+{
+	if (node == parent[node]) return node;
+
+	return parent[node] = getParent(parent[node], parent);
+}
+
+void unionParent(int first, int second, int parent[])
+{
+	first = getParent(first, parent);
+	second = getParent(second, parent);
+
+	if (first > second)
+		parent[first] = second;
+	else
+		parent[second] = first;
+}
+
+bool sameParent(int first, int second, int parent[])
+{
+	if (getParent(first, parent) == getParent(second, parent))	return true;
+
+	return false;
+}
+
+int n, m, cnt = 0;
+int parents[500000] = { 0, };
+bool noCycle = true;	// 사이클이 생성되었는지 확인
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(0);
+
+	// 초기화
+	for (int i = 0; i < 500000; i++) parents[i] = i;
+
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second;
+
+		if (noCycle == true)	// 사이클이 생성되지 않았을 경우에만 카운트 증가시킴
+			cnt++;
+		
+		if (sameParent(first, second, parents) == true) // 사이클이 생성되면 flag 값 변경
+			noCycle = false;
+
+		if (noCycle == true)
+			unionParent(first, second, parents);	// 두 정점 연결
+	}
+
+	if (noCycle == false)
+		cout << cnt;
+	else
+		cout << 0;
+	return 0;
+}
