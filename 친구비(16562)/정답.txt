@@ -1,0 +1,81 @@
+#include <iostream>
+
+using namespace std;
+
+/*
+반례 : 
+5 3 20
+10 20 20 10 30
+1 3
+2 4
+5 4
+답 : 20
+*/
+
+int n, m, money;
+int parents[10001] = { 0, };
+int costs[10001] = { 0, };
+
+// 유니온 파인드 알고리즘
+int getParent(int node, int parent[])
+{
+	if (node == parent[node]) return node;
+
+	return parent[node] = getParent(parent[node], parent);
+}
+
+void unionParent(int first, int second, int parent[])
+{
+	first = getParent(first, parent);
+	second = getParent(second, parent);
+	if (costs[first] > costs[second])	// 비용이 더 적게드는 노드를 부모노드로 적용함
+		parent[first] = second;
+	else
+		parent[second] = first;
+}
+
+bool sameParent(int first, int second, int parent[])
+{
+	if (getParent(first, parent) == getParent(second, parent)) return true;
+	return false;
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i < 10001; i++) parents[i] = i;
+
+	// 친구비 입력 받음
+	cin >> n >> m >> money;
+	for (int i = 1; i <= n; i++)
+	{
+		cin >> costs[i];
+	}
+
+	// 친구관계 입력 받음
+	int first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second;
+		unionParent(first, second, parents);	// first, second는 친구사이고, 비용이 더 적은 노드로 합침
+	}
+
+	int cost = 0;
+	// 준석이를 0번 노드로 두고 계산
+	for (int i = 1; i <= n; i++)
+	{
+		if (sameParent(0, i, parents) == false)	// 준석이와 i번 사람이 친구가 아니면
+		{
+			int node = getParent(i, parents);	// 해당 노드의 부모를 찾음
+			cost += costs[node];	// 비용 추가
+			unionParent(0, node, parents);	// 친구로 만듬
+		}
+	}
+
+	if (money - cost < 0)	// 비용이 초과되었을 경우
+		cout << "Oh no";
+	else
+		cout << cost;
+
+	return 0;
+}
