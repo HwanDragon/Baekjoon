@@ -1,0 +1,82 @@
+#include <iostream>
+
+/*
+해당 문제는 유니온 파인드를 사용하여 노드를 합칠 때, 만약 다른 노드끼리 연결할 경우
+해당 노드들이 이루고있는 집합의 수를 더해주는것이다.
+더 작은 노드를 부모로 하므로, 1, 2번 노드가 있고, 1번 노드가 이루고 있는 집합의 크기가 2,
+2번 노드가 이루고있는 집합의 크기가 3이라면
+1, 2번 노드를 유니온 하고나면
+2번 노드의 부모는 1번 노드가 되고, 1번 노드가 이루고있는 집합의 크기는 2+ 3으로 5가 된다.
+*/
+
+#define NODE_COUNT 1000001
+using namespace std;
+
+// 유니온 파인드 알고리즘 사용
+int getParent(int node, int parent[])
+{
+	if (node == parent[node]) return node;
+
+	return parent[node] = getParent(parent[node], parent);
+}
+
+void unionParent(int first, int second, int parent[])
+{
+	first = getParent(first, parent);
+	second = getParent(second, parent);
+	if (first > second)
+		parent[first] = second;
+	else
+		parent[second] = first;
+}
+
+char query;
+int n;
+int cnt[NODE_COUNT] = { 0, };	// 각 노드가 이루고있는 부품의 개수 저장
+int parents[NODE_COUNT] = { 0, };	// 부모노드 저장
+
+int main()
+{
+	ios::sync_with_stdio(false);
+	cin.tie(0);
+
+	// 초기화
+	fill(cnt, cnt + NODE_COUNT, 1);
+	for (int i = 0; i < NODE_COUNT; i++) parents[i] = i;
+
+	// 사용자 입력 받음
+	cin >> n;
+	while (n--)
+	{
+		int first, second, num;
+		cin >> query;
+		if (query == 'I')
+		{
+			cin >> first >> second;
+			int firstParent = getParent(first, parents);
+			int secondParent = getParent(second, parents);
+			if (firstParent > secondParent)
+			{
+				parents[firstParent] = secondParent;
+				cnt[secondParent] += cnt[firstParent];	// 부품의 갯수를 서로 합해줌
+			}
+			else if(firstParent < secondParent)
+			{
+				parents[secondParent] = firstParent;
+				cnt[firstParent] += cnt[secondParent];
+			}
+			else
+			{
+				// 서로 같은 부모값을 가지는 부품을 연결할 경우는 처리하지 않음
+				// firstParent == secondParent 일 경우에 해당함
+			}
+		}
+		else
+		{
+			cin >> num;
+			int p = getParent(num, parents);
+			cout << cnt[p] << "\n";
+		}
+	}
+	return 0;
+}
