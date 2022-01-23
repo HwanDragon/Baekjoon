@@ -1,0 +1,60 @@
+#include <iostream>
+
+#define NODE_COUNT 100001
+
+using namespace std;
+
+// 유니온 파인드 알고리즘 사용
+
+int getParent(int node, int parent[])
+{
+	if (node == parent[node]) return node;
+
+	return parent[node] = getParent(parent[node], parent);
+}
+
+// 두 은하를 연결 하고, 행성의 개수를 부모노드에 더해줌
+void unionParent(int first, int second, int parent[], int plant[])
+{
+	first = getParent(first, parent);
+	second = getParent(second, parent);
+	if (first < second)
+	{
+		parent[second] = first;
+		plant[first] += plant[second];	// 행성의 개수를 부모노드에 더해줌
+	}
+	else if (first > second)
+	{
+		parent[first] = second;
+		plant[second] += plant[first];
+	}
+}
+
+int n, m;
+int plants[NODE_COUNT] = { 0, };
+int parents[NODE_COUNT] = { 0, };
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	for (int i = 0; i < NODE_COUNT; i++) parents[i] = i;
+
+	// 사용자 입력 받음
+	cin >> n >> m;	// 은하수, 철도 수
+	for (int i = 1; i <= n; i++)
+		cin >> plants[i];	// 각 은하에 속해있는 행성의 개수
+	
+	int first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second;
+		unionParent(first, second, parents, plants);	// 두 행성을 연결함
+		int p = getParent(first, parents);	// 부모노드를 가져옴
+		cout << plants[p] << "\n";	// 행성의 개수 출력
+	}
+
+	return 0;
+}
