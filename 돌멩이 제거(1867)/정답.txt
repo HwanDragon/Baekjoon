@@ -1,0 +1,85 @@
+#include <iostream>
+#include <vector>
+
+/*
+(버텍스 커버는 그래프 G에서 일부 정점들을 제거하여 간선이 같은 부분 그래프를 말함)
+(최소 버텍스 커버는 버텍스를 가장 많이 제거하였을 때 남은 부분 그래프를 말함)
+해당 문제는 최소 버텍스 커버 문제이다.
+이분매칭에서 최소 버텍스 커버는 == 최대 이분매칭 과 같으며 
+이는 쾨닉의 정리에 나와있다. (홀의정리는 쾨닉의 정리를 일반화한 정리)
+따라서, 행과 열을 L, R그룹의 노드로 보고, 돌멩이를 간선으로 하여 이분매칭 그래프로 만들 수 있는데
+돌멩이는 행 노드나 열 노드 중 하나에만 걸려있어도 청소되므로, 최소 버텍스 커버를 찾는 문제이고,
+이분그래프에서 최소 버텍스 커버는 이분그래프의 최대 매칭과 같다.(쾨닉의 정리)
+따라서 행, 열을 노드로 하고, 돌멩이를 간선으로 하여 이분그래프를 만든 뒤, 이분매칭을 하면 해결할 수 있다.
+*/
+
+#define NODE_COUNT 501
+
+using namespace std;
+
+int n, k;	// 운동장의 크기, 돌멩이의 수
+bool map[NODE_COUNT][NODE_COUNT] = { 0, };	// 돌멩이 위치 저장
+vector<int> edges[NODE_COUNT];	// 행과 열을 정점으로 두고, 돌멩이를 간선으로 그래프 정보 생성
+int prevNode[NODE_COUNT] = { 0, };	// 이분매칭에서 이전노드를 저장할 배열
+bool visited[NODE_COUNT] = { 0, };	// 노드 방문 여부 저장
+
+// 이분매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (visited[node] == true) return false;
+
+	visited[node] = true;
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (prevNode[next] == 0 || dfs(prevNode[next]))
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+	return false;
+}
+
+// 이분 그래프 생성
+void createGraph()
+{
+	for (int row = 1; row <= n; row++)
+	{
+		for (int col = 1; col <= n; col++)
+		{
+			if (map[row][col] == true)
+			{
+				edges[row].push_back(col);
+			}
+		}
+	}
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> k;
+	int x, y;
+	for (int i = 0; i < k; i++)
+	{
+		cin >> y >> x;
+		map[y][x] = true;	// 돌멩이 위치 저장
+	}
+
+	// 이분 그래프 생성
+	createGraph();
+
+	// 이분매칭 수행
+	int result = 0;
+	for (int i = 1; i <= n; i++)
+	{
+		fill(visited, visited + NODE_COUNT, false);
+		if (dfs(i) == true)
+			result++;
+	}
+
+	cout << result;
+
+	return 0;
+}
