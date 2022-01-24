@@ -1,0 +1,113 @@
+#include <iostream>
+#include <vector>
+
+#define NODE_COUNT 51
+#define MAX_NODE_COUNT 51 * 51
+
+using namespace std;
+
+int row, col;
+int rowNumber[NODE_COUNT][NODE_COUNT] = { 0, };		// 행번호 넘버링
+int colNumber[NODE_COUNT][NODE_COUNT] = { 0, };		// 열번호 넘버링
+char map[NODE_COUNT][NODE_COUNT] = { 0, };
+vector<int> edges[MAX_NODE_COUNT];	// 간선 정보 저장 (그래프 크기는 (행 * 열)의 개수임 )
+bool visited[MAX_NODE_COUNT] = { 0, };	// 이분매칭 방문여부 저장 (배열 크기는 (행 * 열)의 개수임 )
+int prevNode[MAX_NODE_COUNT] = { 0, };	// 이전에 매칭된 노드정보 저장 (배열 크기는 (행 * 열)의 개수임 )
+
+// 이분매칭 알고리즘 실행
+bool dfs(int node)
+{
+	if (visited[node] == true) return false;
+
+	visited[node] = true;
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (prevNode[next] == 0 || dfs(prevNode[next]))
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+	return false;
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> row >> col;
+	for (int i = 0; i < row; i++)
+	{
+		cin >> map[i];
+	}
+
+	// 행번호 넘버링
+	int rowNum = 0;
+	char prev = '.';
+	bool isNext = false;
+	for (int i = 0; i < row; i++)
+	{
+		for (int j = 0; j < col; j++)
+		{
+			if (map[i][j] == '*')	// 구멍이 뚤려있는경우
+			{
+				if (prev == '.')	// 이전 상태가 막혀있던 경우
+				{
+					rowNumber[i][j] = ++rowNum;	// 카운트를 하나 증가시켜 추가
+				}
+				else 
+				{
+					// 이전상태가 구멍이었던 경우
+					if (j == 0) rowNum++;	// 이전상태가 구멍이었으나, 행이 바뀌면 번호를 하나 증가시킴
+					rowNumber[i][j] = rowNum;	// 이전상태가 구멍이었으면 번호를 증가시키지 않고 그냥 추가함
+				}
+			}
+			prev = map[i][j];	// 이전 상태 저장
+		}
+	}
+
+	// 열 번호 넘버링
+	int clNum = 0;
+	prev = '.';
+	for (int i = 0; i < col; i++)
+	{
+		for (int j = 0; j < row; j++)
+		{
+			if (map[j][i] == '*')	// 구멍이 뚤려있는 경우
+			{
+				if (prev == '.')	// 이전 상태가 막혀있던 경우
+				{
+					colNumber[j][i] = ++clNum;	// 카운트를 하나 증가시켜 추가
+				}
+				else
+				{
+					// 이전상태가 구멍이었던 경우
+					if (j == 0) clNum++;	// 이전상태가 구멍이었으나, 행이 바뀌면 번호를 하나 증가시킴
+					colNumber[j][i] = clNum;	// 이전상태가 구멍이었으면 번호를 증가시키지 않고 그냥 추가함
+				}
+			}
+			prev = map[j][i];	// 이전 상태 저장
+		}
+	}
+
+	// 행을 L 그룹 노드 집합으로,  열을 R그룹 노드 집합으로, 구멍을 간선으로 하는 이분 그래프 생성
+	for (int y = 0; y < row; y++)
+	{
+		for (int x = 0; x < col; x++)
+		{
+			if (rowNumber[y][x] != 0)
+				edges[rowNumber[y][x]].push_back(colNumber[y][x]);
+		}
+	}
+
+	// 이분매칭 수행
+	int cnt = 0;
+	for (int i = 1; i <= rowNum; i++)	// 행을 기준으로 수행함
+	{
+		fill(visited, visited + MAX_NODE_COUNT, false);
+		if (dfs(i) == true) cnt++;
+	}
+
+	cout << cnt;
+	return 0;
+}
