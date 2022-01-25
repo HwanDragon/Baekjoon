@@ -1,0 +1,122 @@
+#include <iostream>
+#include <vector>
+
+#define NODE_COUNT 101
+
+using namespace std;
+
+/*
+행과 열을 각각 L, R 그룹 노드들로 하고, 행과 열이 교차하는 지역은 간선으로 모델링(폰이 있는 지역 제외)
+행과 열로 모델링 한 뒤, 룩을 하나 배치하면, 하나의 행과 하나의 열을 사용할 수 없게 되므로
+모델링한 그래프에서 최대 이분매칭을 하면 그때의 개수가 최대로 놓을 수 있는 룩의 개수가 된다
+*/
+
+int n;
+char map[NODE_COUNT][NODE_COUNT] = { 0, };
+int rowNumber[NODE_COUNT][NODE_COUNT] = { 0, };	// 행 넘버링
+int colNumber[NODE_COUNT][NODE_COUNT] = { 0, };	// 열 넘버링
+vector<int> edges[NODE_COUNT * NODE_COUNT];	// 행 - 열 로 모델링 된 그래프 간선정보(간선 최대정보는 n * n / 2 보다 적음)
+bool visited[NODE_COUNT * NODE_COUNT] = { 0, };
+int prevNode[NODE_COUNT * NODE_COUNT] = { 0, };
+
+// 이분매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (visited[node] == true) return false;
+
+	visited[node] = true;
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (prevNode[next] == 0 || dfs(prevNode[next]))
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+int main()
+{
+	cin >> n;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> map[i];
+	}
+	
+	// 행 넘버링
+	char prev = 'X';	// 이전상태는 놓을 수 없는 상태로 초기화
+	int rowNum = 0;
+	for (int y = 0; y < n; y++)
+	{
+		for (int x = 0; x < n; x++)
+		{
+			if (map[y][x] == '.')	// 현재 룩을 놓을 수 있는 상태
+			{
+				if (prev == 'X')	// 이전상태가 룩을 놓을 수 없는 상태였을 경우
+				{
+					rowNumber[y][x] = ++rowNum;	// 넘버를 하나 증가시키고 넘버링함
+				}
+				else
+				{
+					// 이전상태가 룩을 놓을 수 있는 상태였을 경우
+					if (x == 0)	// 다음 행으로 넘어갔을 경우에만 넘버를 하나 증가시킴
+						++rowNum;
+
+					rowNumber[y][x] = rowNum;	// 이전번호와 같은 번호로 넘버링함
+				}
+			}
+			prev = map[y][x];
+		}
+	}
+
+	// 열 넘버링
+	prev = 'X';	// 이전상태는 놓을 수 없는 상태로 초기화
+	int colNum = 0;
+	for (int x = 0; x < n; x++)
+	{
+		for (int y = 0; y < n; y++)
+		{
+			if (map[y][x] == '.')	// 현재 룩을 놓을 수 있는 상태
+			{
+				if (prev == 'X')	// 이전상태가 룩을 놓을 수 없는 상태였을 경우
+				{
+					colNumber[y][x] = ++colNum;	// 넘버를 하나 증가시키고 넘버링함
+				}
+				else
+				{
+					// 이전상태가 룩을 놓을 수 있는 상태였을 경우
+					if (y == 0)	// 다음 행으로 넘어갔을 경우에만 넘버를 하나 증가시킴
+						++colNum;
+
+					colNumber[y][x] = colNum;	// 이전번호와 같은 번호로 넘버링함
+				}
+			}
+			prev = map[y][x];
+		}
+	}
+
+	// 그래프 생성
+	for (int y = 0; y < n; y++)
+	{
+		for (int x = 0; x < n; x++)
+		{
+			if (map[y][x] != 'X')	// 폰이 놓여있는 지역이 아닌경우
+			{
+				edges[rowNumber[y][x]].push_back(colNumber[y][x]);
+			}
+		}
+	}
+
+	int cnt = 0;
+	for (int i = 1; i <= rowNum; i++)
+	{
+		fill(visited, visited + NODE_COUNT * NODE_COUNT, false);
+		if (dfs(i) == true) cnt++;
+	}
+	cout << cnt;
+
+	return 0;
+}
