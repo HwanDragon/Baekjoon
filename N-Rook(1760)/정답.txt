@@ -1,0 +1,130 @@
+#include <iostream>
+#include <vector>
+
+#define NODE_COUNT 101
+
+using namespace std;
+
+/*
+행과 열을 각각 L, R그룹 노드로 두고, 빈격자는 격자판의 i번째 행과 j번째 열이 연결되는 간선으로 모델링함
+*/
+
+int row, col;
+int map[NODE_COUNT][NODE_COUNT] = { 0, };	// 맵 정보 저장(벽과 빈격자만 저장)
+bool hole[NODE_COUNT][NODE_COUNT] = { 0, };	// 구멍정보 별도저장(최대한 프로그래밍을 간단하게 하기위해)
+
+int rowNumber[NODE_COUNT][NODE_COUNT] = { 0, };	// 행 넘버링
+int colNumber[NODE_COUNT][NODE_COUNT] = { 0, };	// 열 넘버링
+vector<int> edges[NODE_COUNT * NODE_COUNT];	// 간선정보 저장
+int prevNode[NODE_COUNT * NODE_COUNT] = { 0, };
+bool visited[NODE_COUNT * NODE_COUNT] = { 0, };
+
+
+// 이분매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (visited[node] == true) return false;
+
+	visited[node] = true;
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (prevNode[next] == 0 || dfs(prevNode[next]))
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> row >> col;
+	int m;
+	for (int i = 0; i < row; i++)
+	{
+		for (int j = 0; j < col; j++)
+		{
+			cin >> m;
+			if (m == 1)	// 구멍일 경우
+			{
+				map[i][j] = 0;	// 맵에는 빈칸으로 저장	
+				hole[i][j] = true;	// 구멍정보 별도저장
+			}
+			else
+			{
+				map[i][j] = m;
+			}
+		}
+		
+	}
+
+	// 행 넘버링(벽과 빈칸만 생각)
+	int rowNum = 0;
+	int prev = 2;	// 이전 값 저장(벽으로 초기화)
+	for (int y = 0; y < row; y++)
+	{
+		for (int x = 0; x < col; x++)
+		{
+			if (map[y][x] == 0)	// 빈공간
+			{
+				if (prev == 0)	// 빈공간
+				{
+					if (x == 0) rowNum++;	// 새로운 행 시작
+				}
+				else if (prev == 2)	// 벽
+				{
+					++rowNum;
+				}
+				rowNumber[y][x] = rowNum;
+			}
+			prev = map[y][x];
+		}
+	}
+
+	// 열 넘버링(벽과 빈칸만 생각)
+	int colNum = 0;
+	prev = 2;
+	for (int x = 0; x < col; x++)
+	{
+		for (int y = 0; y < row; y++)
+		{
+			if (map[y][x] == 0)	// 빈공간
+			{
+				if (prev == 0)	// 빈공간
+				{
+					if (y == 0) colNum++;	// 새로운 행 시작
+				}
+				else if (prev == 2)	// 벽
+				{
+					++colNum;
+				}
+				colNumber[y][x] = colNum;
+			}
+			prev = map[y][x];
+		}
+	}
+
+	// 그래프 생성(그래프 생성시에는 구덩이는 제외하고 매칭시킴)
+	for (int y = 0; y < row; y++)
+	{
+		for (int x = 0; x < col; x++)
+		{
+			if (map[y][x] == 0 && hole[y][x] == false)
+				edges[rowNumber[y][x]].push_back(colNumber[y][x]);
+		}
+	}
+
+	// 이분매칭 알고리즘 수행
+	int cnt = 0;
+	for (int i = 1; i <= rowNum; i++)
+	{
+		fill(visited, visited + NODE_COUNT * NODE_COUNT, false);
+		if (dfs(i) == true) cnt++;
+	}
+	cout << cnt;
+	return 0;
+}

@@ -1,0 +1,73 @@
+#include <iostream>
+#include <vector>
+
+#define NODE_COUNT 301
+
+using namespace std;
+
+/*
+행과 열을 각각 L, R 그룹의 노드로 하고, 빈칸이 아닌곳을 간선으로하여 그래프를 모델링함
+그럼 행, 열, 룩을 놓을 수 있는 위치가 그래프로 모델링 되고, 
+룩을 가장 많이 놓는것이 목적이므로 이분그래프의 최대 매칭 문제가 된다
+해당 문제에서는 행 - 열  로 이분매칭 모델링함
+*/
+
+int row, col, emptyCnt;	// 행의 수, 열의 수, 빈칸의 개수
+bool emptyPos[NODE_COUNT][NODE_COUNT] = { 0, };	// 빈칸의 위치
+int prevNode[NODE_COUNT] = { 0, };	// 이전노드 저장
+int visited[NODE_COUNT] = { 0, };	// 방문 여부 체크
+vector<int> edges[NODE_COUNT];
+
+// 이분매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (visited[node] == true) return false;
+
+	visited[node] = true;
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (prevNode[next] == 0 || dfs(prevNode[next]))
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> row >> col >> emptyCnt;
+	int r, c;
+	for (int i = 0; i < emptyCnt; i++)
+	{
+		cin >> r >> c;
+		emptyPos[r][c] = true;	// 빈칸 저장
+	}
+
+	// 그래프 생성
+	// 행 - 열  로 모델링 하였으며, x, y의 위치가 빈칸일 경우는 연결하지 않음
+	for (int y = 1; y <= row; y++)
+	{
+		for (int x = 1; x <= col; x++)
+		{
+			if (emptyPos[y][x] == false)
+			{
+				edges[y].push_back(x);
+			}
+		}
+	}
+
+	// 이분매칭 알고리즘 수행
+	int cnt = 0;
+	for (int i = 1; i <= row; i++)
+	{
+		fill(visited, visited + NODE_COUNT, false);
+		if (dfs(i) == true) cnt++;
+	} 
+	cout << cnt;
+	return 0;
+}
