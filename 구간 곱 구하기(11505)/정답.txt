@@ -1,0 +1,80 @@
+#include <iostream>
+
+/*
+해당 문제는 1000000007 으로 나눈 나머지를 출력 해야함
+처음부터 init 이나 업데이트, 구간쿼리 계산에서 MOD로 나눈 나머지를 세그먼트 트리에 추가해야함
+*/
+
+#define NODE_COUNT 1000001
+#define MOD  1000000007	// 해당 수로 나눈 나머지 출력(주의 필요)
+
+using namespace std;
+
+int n, m, k;
+long long arr[NODE_COUNT] = { 0, };
+long long segTree[NODE_COUNT * 4] = { 0, };	// 세그먼트 트리
+
+// 초기화
+long long init(int start, int end, int node)
+{
+	if (start == end) return segTree[node] = arr[start];
+
+	int mid = (start + end) / 2;
+	return segTree[node] = ((init(start, mid, node * 2) % MOD) * (init(mid + 1, end, node * 2 + 1) % MOD)) % MOD;
+}
+
+long long multiply(int start, int end, int left, int right, int node)
+{
+	// 구간에 속하지 않을 경우
+	if (left > end || start > right) return 1;
+
+	// 구간에 완전히 속할 경우
+	if (left <= start && end <= right)	return segTree[node];
+
+	// 구간에 일부만 속할 경우
+	int mid = (start + end) / 2;
+	return ((multiply(start, mid, left, right, node * 2) % MOD) * (multiply(mid + 1, end, left, right, node * 2 + 1) % MOD)) % MOD;
+}
+
+long long update(int start, int end, int node, int index, int nextValue)
+{
+	// 구간에 속하지 않았을 경우
+	if (start > index || index > end) return segTree[node];	// 범위에 속하지 않음
+
+	// 가장 하위 원소일 경우
+	if ((start == end) && (start == index)) return segTree[node] = nextValue;
+
+	// 구간을 나눠 재귀적으로 갱신
+	int mid = (start + end) / 2;
+	return segTree[node] = ((update(start, mid, node * 2, index, nextValue) % MOD) * (update(mid + 1, end, node * 2 + 1, index, nextValue) % MOD)) % MOD;
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m >> k;
+	for (int i = 1; i <= n; i++)
+		cin >> arr[i];
+	
+	// 초기화
+	init(1, n, 1);
+
+	// 쿼리
+	int first, second, third;
+	for (int i = 0; i < m + k; i++)
+	{
+		cin >> first >> second >> third;
+		if (first == 1)
+		{
+			// update
+			update(1, n, 1, second, third);
+			arr[second] = third;
+		}
+		else
+		{
+			// 구간곱
+			cout << multiply(1, n, second, third, 1) % MOD << "\n";
+		}
+	}
+	return 0;
+}
