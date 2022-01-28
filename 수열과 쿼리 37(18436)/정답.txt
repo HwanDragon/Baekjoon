@@ -1,0 +1,103 @@
+#include <iostream>
+
+/*
+세그먼트 트리를 이용하여 홀수의 개수만 저장하거나, 짝수의 개수만 저장하여 처리
+*/
+
+#define NODE_COUNT 100001
+
+using namespace std;
+
+int n, m;	// 수열의 크기, 쿼리 수
+int arr[NODE_COUNT] = { 0, };
+int segTree[NODE_COUNT * 4] = { 0, };	// 홀수의 개수를 저장
+
+// 세그먼트 트리 생성
+int init(int start, int end, int node)
+{
+	if (start == end) return segTree[node] = arr[start] % 2;	// 짝수면 0, 홀수면 1(홀수만 카운팅 하기 위해)
+
+	int mid = (start + end) / 2;
+	return segTree[node] = init(start, mid, node * 2) + init(mid + 1, end, node * 2 + 1);
+}
+
+int getOddCount(int start, int end, int left, int right, int node)
+{
+	// 구간 밖의 범위일 경우
+	if (end < left || right < start) return 0;
+
+	// 구간 내에 포함될경우
+	if (left <= start && end <= right) return segTree[node];
+
+	int mid = (start + end) / 2;
+	return getOddCount(start, mid, left, right, node * 2) + getOddCount(mid + 1, end, left, right, node * 2 + 1);
+}
+
+void update(int start, int end, int index, int node, int diff)
+{
+	// 구간 밖의 범위일 경우
+	if (index < start || index > end) return;
+
+	// 구간에 포함될 경우
+	segTree[node] += diff;
+	if (start == end) return;
+
+	int mid = (start + end) / 2;
+	update(start, mid, index, node * 2, diff);
+	update(mid + 1, end, index, node * 2 + 1, diff);
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 초기값 입력
+	cin >> n;
+	for (int i = 1; i <= n; i++)
+		cin >> arr[i];
+
+	// 초기화
+	init(1, n, 1);
+
+	// 쿼리 입력 받음
+	cin >> m;
+	int first, second, third;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second >> third;
+		switch (first)
+		{
+		case 1:	// 업데이트
+		{
+			if (arr[second] % 2 == 0)	// 기존값이 짝수
+			{
+				if (third % 2 == 1) // 새로운 값이 홀수
+					update(1, n, second, 1, 1);	// 짝수에서 홀수로 바뀌었으니 +1을 더해줌
+			}
+			else
+			{
+				// 기존 값이 홀수
+				if (third % 2 == 0)	// 새로운 값이 짝수
+					update(1, n, second, 1, -1);	
+			}
+			arr[second] = third;
+		}
+			break;
+		case 2:	// 짝수 개수 출력
+		{
+			int allCount = third - second + 1;
+			cout << allCount - getOddCount(1, n, second, third, 1) << "\n";
+		}
+			break;
+		case 3:	// 홀수 개수 출력
+			cout << getOddCount(1, n, second, third, 1) << "\n";
+			break;
+		default:
+			break;
+		}
+	}
+
+	return 0;
+}
