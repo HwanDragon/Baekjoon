@@ -1,0 +1,78 @@
+#include <iostream>
+
+#define NODE_COUNT 100001
+#define MIN_VALUE -1000000000
+#define MAX_VALUE 1000000000
+
+using namespace std;
+
+int n, m;	// 정수 개수, 쿼리 개수
+int arr[NODE_COUNT] = { 0, };
+int minSegTree[NODE_COUNT * 4] = { 0, };	// 최소값을 저장할 세그먼트 트리
+int maxSegTree[NODE_COUNT * 4] = { 0, };	// 최대값을 저장할 세그먼트 트리
+
+// 최대값을 저장할 세그먼트 트리 초기화
+int initMaxSeg(int start, int end, int node)
+{
+	if (start == end) return maxSegTree[node] = arr[start];
+
+	int mid = (start + end) / 2;
+	return maxSegTree[node] = max(initMaxSeg(start, mid, node * 2), initMaxSeg(mid + 1, end, node * 2 + 1));
+}
+
+// 최소값을 저장할 세그먼트 트리 초기화
+int initMinSeg(int start, int end, int node)
+{
+	if (start == end) return minSegTree[node] = arr[start];
+
+	int mid = (start + end) / 2;
+	return minSegTree[node] =  min(initMinSeg(start, mid, node * 2), initMinSeg(mid + 1, end, node * 2 + 1));
+}
+
+int getMinValue(int start, int end, int left, int right, int node)
+{
+	// 구간에 포함되지 않을 경우
+	if (end < left || right < start) return MAX_VALUE;
+
+	// 구간에 완전히 포함될 경우
+	if (left <= start && right >= end) return minSegTree[node];
+
+	int mid = (start + end) / 2;
+	return min(getMinValue(start, mid, left, right, node * 2), getMinValue(mid + 1, end, left, right, node * 2 + 1));
+}
+
+int getMaxValue(int start, int end, int left, int right, int node)
+{
+	// 구간에 포함되지 않을 경우
+	if (end < left || right < start) return MIN_VALUE;
+
+	// 구간에 완전히 포함될 경우
+	if (left <= start && end <= right) return maxSegTree[node];
+
+	int mid = (start + end) / 2;
+	return max(getMaxValue(start, mid, left, right, node * 2), getMaxValue(mid + 1, end, left, right, node * 2 + 1));
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 1; i <= n; i++)
+		cin >> arr[i];
+
+	initMaxSeg(1, n, 1);
+	initMinSeg(1, n, 1);
+	// 구간 쿼리 입력
+	int first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second;
+		cout << getMinValue(1, n, first, second, 1) << " " << getMaxValue(1, n, first, second, 1) << "\n";
+	}
+	
+	return 0;
+}

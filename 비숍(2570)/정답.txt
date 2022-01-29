@@ -1,0 +1,133 @@
+#include <iostream>
+#include <vector>
+
+/*
+양 대각선을 노드로, 각 노드별로 겹치는 점을 간선으로 모델링하여 이분매칭으로 접근
+*/
+
+#define NODE_COUNT 100
+
+using namespace std;
+
+int n, m;
+bool map[NODE_COUNT][NODE_COUNT] = { 0, };	// 벽 위치 저장
+int rightBottomNumber[NODE_COUNT][NODE_COUNT] = { 0, };	// 오른쪽 아래방향 대각선 넘버링
+int leftBottomNumber[NODE_COUNT][NODE_COUNT] = { 0 , };	// 왼쪽 아래방향 대각선 넘버링
+vector<int> edges[NODE_COUNT * NODE_COUNT]; // 대각선이 서로 만나는 곳을 간선으로 저장
+bool visited[NODE_COUNT * NODE_COUNT] = { 0, };
+int prevNode[NODE_COUNT * NODE_COUNT] = { 0, };
+
+// 이분매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (visited[node] == true) return false;
+
+	visited[node] = true;
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (prevNode[next] == 0 || dfs(prevNode[next]))
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+	return false;
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int tempX, tempY;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> tempY >> tempX;
+		map[tempY - 1][tempX - 1] = true;
+	}
+
+	// \ 방향(오른쪽 아래 방향) 넘버링
+	int rbNum = 0;
+	bool prevState = true;	// 1 : 벽, 0 : 빈칸
+	for (int i = n; i >= -n; i--)
+	{	
+		int x = 0, y = i;
+		while (x < n)
+		{
+			if (y >= 0 && y < n)	// 넘버링 가능
+			{
+				if (map[y][x] == 0)	// 현재 빈칸일 경우
+				{
+					if (prevState == 1)	// 이전상태가 벽이었을 경우
+					{
+						rbNum++;
+					}
+					else
+					{
+						// 이전상태가 빈칸이었을 경우
+						if (x == 0 || y == 0)	// 다음 대각선으로 넘어왓을 경우 하나 증가시킴
+							rbNum++;
+					}
+					rightBottomNumber[y][x] = rbNum;
+				}
+				prevState = map[y][x];	// 이전상태 저장
+			}
+			x++;
+			y++;
+		}
+	}
+
+	// / 방향(왼쪽 아래 방향) 넘버링
+	// 방향은 왼쪽 아래에서 오른쪽 위로 향함
+	int lbNum = 0;
+	prevState = true;	// 1 : 벽, 0 : 빈칸
+	for (int i = 2*n; i >= 0; i--)
+	{
+		int x = 0, y = i;
+		while (x < n)
+		{
+			if (y >= 0 && y < n)	// 넘버링 가능
+			{
+				if (map[y][x] == 0)	// 현재 빈칸일 경우
+				{
+					if (prevState == 1)	// 이전상태가 벽이었을 경우
+					{
+						lbNum++;
+					}
+					else
+					{
+						// 이전상태가 빈칸이었을 경우
+						if (x == 0 || y == n - 1)	// 다음 대각선으로 넘어왓을 경우 하나 증가시킴
+							lbNum++;
+					}
+					leftBottomNumber[y][x] = lbNum;
+				}
+				prevState = map[y][x];	// 이전상태 저장
+			}
+			// 아래에서 오른쪽 위로 한칸 이동(x는 증가, y는 감소)
+			x++;	
+			y--;
+		}
+	}
+
+	// 그래프 생성
+	for (int y = 0; y < n; y++)
+	{
+		for (int x = 0; x < n; x++)
+		{
+			if (map[y][x] == 0)	// 벽이 아닐때만 연결
+				edges[rightBottomNumber[y][x]].push_back(leftBottomNumber[y][x]);
+		}
+	}
+
+	// 이분매칭 수행
+	int cnt = 0;
+	for (int i = 1; i <= rbNum; i++)
+	{
+		fill(visited, visited + NODE_COUNT * NODE_COUNT, false);
+		if (dfs(i) == true) cnt++;
+	}
+	cout << cnt;
+
+	return 0;
+}
