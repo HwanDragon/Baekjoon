@@ -33,64 +33,64 @@
 
 // 즉 dfs를 이용하여 그래프를 탐색하고 노드들을 탐색할 때마다 해킹할 수 있는 컴퓨터 개수를 새면 됨
 
-
 #include <iostream>
-#include <vector>
-#include <cstring>
+#include<algorithm>
+#include<queue>
+#include<vector>
+
+#define NODE_COUNT 10001
+
 using namespace std;
 
-vector<int> v[10001];
-int visited[10001];
-int cnt;
+int n, m;
+vector<int> edges[NODE_COUNT];	// 간선정보 저장
+int hackingCnt[NODE_COUNT] = { 0 };	// 각 컴퓨터마다 해킹할 수 있는 컴퓨터 수
+bool visited[NODE_COUNT] = { 0, };	// 방문여부 확인
 
-void dfs(int x) {
-    // x 번째 노드에 방문했으면 빠져나온다
-    if (visited[x]) return;
-
-    visited[x] = true;  // 방문하지 않았으면 방문했다고 변경
-    cnt++;  // 해킹할 수 있는 컴퓨터의 개수를 1 증가시킴
-    // x번째 컴퓨터를 해킹하면 추가로 해킹이 가능한 다른 컴퓨터가 있는지 검사
-    for (int i = 0; i < v[x].size(); i++) {
-        // 신뢰할 수 있는 다른 컴퓨터가 있으면 다시 dfs 탐색 시작
-        int y = v[x][i];
-        dfs(y);
-    }
+int dfs(int node, int cnt)
+{
+	visited[node] = true;
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (visited[next] == true) continue;	// 이미 방문한 노드는 pass
+		cnt = dfs(next, cnt + 1);
+	}
+	return cnt;
 }
 
-int main(int argc, const char* argv[]) {
-    // 사용자 입력받음
-    int N, M;
-    cin >> N >> M;
-    int a, b;
-    for (int i = 0; i < M; i++) {
-        cin >> a >> b;
-        v[b].push_back(a);
-    }
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
 
-    
-    int depth[10001]; //탐색 결과 저장
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second;
+		edges[second].push_back(first);
+	}
 
-    // dfs 탐색
-    for (int i = 1; i <= N; i++) {
-        memset(visited, 0, sizeof(visited));
-        cnt = 0;
-        dfs(i);
-        depth[i] = cnt;
-    }
+	// dfs를 수행하여 각 컴퓨터마다 해킹할 수 있는 컴퓨터 수 저장
+	int maxValue = 0;
+	for (int i = 1; i <= n; i++)
+	{
+		fill(visited, visited + NODE_COUNT, false);	// visited 배열 초기화
 
-    // 탐색 결과에서 최대값 검색
-    int max = 0;
-    for (int i = 1; i <= N; i++) {
-        if (max < depth[i])
-            max = depth[i];
-    }
+		hackingCnt[i] = dfs(i, 1);	// 해킹 가능한 컴퓨터 수 반환
+		if (maxValue < hackingCnt[i])	// 최대값 확인
+			maxValue = hackingCnt[i];	// 최대값 저장
+	}
 
-    // 결과 출력
-    for (int i = 0; i <= N; i++) {
-        if (max == depth[i])
-            cout << i << ' ';
-    }
+	// 최대값과 같은 컴퓨터 출력
+	for (int i = 1; i <= n; i++)
+	{
+		if (maxValue == hackingCnt[i])
+			cout << i << " ";
+	}
 
-
-    return 0;
+	return 0;
 }
