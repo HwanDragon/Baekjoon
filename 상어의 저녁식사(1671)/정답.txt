@@ -1,0 +1,118 @@
+#include <iostream>
+#include <vector>
+/*
+상어들이 서로 최대 두마리까지 잡아먹으므로 A가 B를 잡아먹을 경우 A->B로 그래프를 생성해준다.
+해당 예제에서 1번~5번 상어까지 있다고 할 때
+5
+4 5 5
+10 10 8
+5 7 10
+8 7 7
+8 10 3
+
+2번 상어가 1, 4, 5번을 잡아먹을 수 있고,
+3번 상어가 1번을 잡아먹고
+4번 상어가 1번 상어를 잡아먹을 수 있다.
+
+2 -> 1,2,4
+3 -> 1
+4 -> 1
+위의 예씨처럼 상어를 잡아먹는 그래프를 생성해주고,
+상어가 최대한 많이 잡아먹을 수 있도록 하면 된다.
+이는 minimum path cover에서 최대한 간선을 많이 사용하여 해답을 구하는 문제이고
+이는 이분매칭 그래프로 inDegree, outDegree로 표현하여 최대 매칭을 하면 된다.
+최소경로커버(https://m.blog.naver.com/PostView.naver?isHttpsRedirect=true&blogId=jqkt15&logNo=222058427237)
+그럼 전체 상어수 - 매칭된 상어수 = 살아남은 상어 수 
+가 되며, 또는 prevNode에서 매칭되지 않은 상어의 수를 계산해도 된다.
+*/
+#define NODE_COUNT 51
+
+using namespace std;
+
+class Shark {
+public:
+	int id;	// 고유 번호
+	int size;	// 크기
+	int speed;		// 속도
+	int intellegence;	// 지능
+};
+
+int n;	// 전체 상어의 수
+int prevNode[NODE_COUNT] = { 0, };	// 이전노드 정보 저장
+vector<int> edges[NODE_COUNT];	// 간선정보
+vector<Shark*> sharks;	// 전체 상어 정보
+bool visited[NODE_COUNT] = { 0, };	// 방문 노드 처리
+
+// 이분매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (visited[node] == true) return false;
+	visited[node] = true;
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (prevNode[next] == 0 || dfs(prevNode[next]))
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+	return false;
+}
+
+int main()
+{
+	// 상어 정보 입력 받음
+	cin >> n;
+	int index = 0;
+	for (int i = 0; i < n; i++) 
+	{
+		Shark* s = new Shark();
+		s->id = ++index;
+		cin >> s->size >> s->speed >> s->intellegence;
+		sharks.push_back(s);
+	}
+
+	// 상어 정보를 이용하여 그래프 생성
+	// 정보가 완전히 같을 경우는 i번째 상어가 j번째 상어를 잡아먹도록 생성
+	// 정보가 다를경우는 큰 쪽이 작은쪽을 잡아먹도록 설계
+	for (int i = 0; i < sharks.size(); i++)
+	{
+		Shark* curShark = sharks.at(i);
+		for (int j = i + 1; j < sharks.size(); j++)
+		{
+			Shark* nextShark = sharks.at(j);
+			if (curShark->intellegence == nextShark->intellegence && curShark->size == nextShark->size && curShark->speed == nextShark->speed)
+			{
+				edges[curShark->id].push_back(nextShark->id);
+			}
+			else if (curShark->intellegence >= nextShark->intellegence && curShark->size >= nextShark->size && curShark->speed >= nextShark->speed)
+			{
+				edges[curShark->id].push_back(nextShark->id);
+			}
+			else if (curShark->intellegence <= nextShark->intellegence && curShark->size <= nextShark->size && curShark->speed <= nextShark->speed)
+			{
+				edges[nextShark->id].push_back(curShark->id);
+			}
+		}
+	}
+
+	// 상어가 최대 두마리까지 잡아먹을 수 있으므로 이분매칭 알고리즘 두번 수행
+	for (int i = 1 ; i <= n; i++)
+	{
+		fill(visited, visited + NODE_COUNT, false);	// 방문배열 초기화
+		dfs(i);
+		fill(visited, visited + NODE_COUNT, false);	// 방문배열 초기화
+		dfs(i);
+	}
+
+	// 전체 상어수 - 매칭된 상어수 = 살아남은 상어수
+	// prevNode에서 매칭되지 않은 상어의 수를 세어도 됨
+	int cnt = 0;
+	for (int i = 1 ; i <= n; i++)
+	{
+		if (prevNode[i] == 0) cnt++;
+	}
+	cout << cnt;
+	return 0;
+}
