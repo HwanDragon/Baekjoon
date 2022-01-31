@@ -1,0 +1,60 @@
+#include <iostream>
+#include <algorithm>
+
+#define NODE_COUNT 1000000
+
+using namespace std;
+
+int n, m;
+int nums[NODE_COUNT];
+
+// 이진 탐색 시작
+int search()
+{
+	int start = 0;	// 최소값
+	int end = *max_element(nums, nums + n);	// nums 에서 최대값 추출
+	int mid;
+	int answer = 0;
+
+	while (start <= end)	// start <= end 로 하면 while안에서 값 비교시 end = mid - 1로 해야함
+	{
+		mid = (start + end) / 2;
+
+		// mid로 나무를 잘랐을 때 총 얼마만큼의 나무를 얻을 수 있는지 value에 저장
+		long long value = 0;	
+		for (int i = 0; i < n; i++)
+		{
+			if (nums[i] > mid)
+				value += (nums[i] - mid);
+		}
+
+		if (value == m)	// 값이 같을 경우는 바로 반환
+			return mid;
+		else if (value > m)	// 얻을 수 있는 양이 좀더 많을 경우
+		{
+			start = mid + 1;	// 시작지점을 mid + 1로 변경
+			answer = mid;	// 이떄의 정답 저장
+		}
+		else if (value < m)
+			end = mid - 1;	// 나무양이 모자를 경우 end를 줄여서 잘랐을때 얻는 나무양을 늘림
+	}
+	return answer;
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 0; i < n; i++)
+		cin >> nums[i];
+	
+	sort(nums, nums + n);	// 이분탐색을 하기 위해 정렬
+
+	cout << search();	// 이분탐색 시작
+
+	return 0;
+}
