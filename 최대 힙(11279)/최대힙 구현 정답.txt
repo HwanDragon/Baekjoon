@@ -1,0 +1,107 @@
+#include <iostream>
+
+#define ROOT_NODE 1	// 계산의 편의를 위해 1번부터 데이터 추가
+
+using namespace std;
+
+int arrIndex = 1;	// 계산의 편의를 위해 인덱스도 1번부터 시작
+int heap[100001] = { 0, };	// 1번 노드부터 시작
+
+// heap에 데이터 추가
+/*
+	최대힙에 데이터를 추가하는 방법
+	1. 가장 마지막 인덱스에 데이터 추가
+	2. 부모값과 비교하여 부모가 값이 더 작을경우 값 교제
+	3. 부모값과 교체 후, 2번조건을 만족하지 않을때까지 반복
+*/
+void push(int num)
+{
+	heap[arrIndex] = num;	// 마지막 자리에 데이터 추가
+	int cur = arrIndex, parent;		// 현재 위치 cur -> 마지막 인덱스
+	arrIndex++;	// 데이터 추가하였으니 index 증가
+	while (cur != ROOT_NODE)
+	{
+		parent = cur / 2;	// 부모 인덱스는 현재 인덱스를 2로 나누어주면 됨
+		if (heap[parent] < heap[cur])	// 자식이 더 클경우 값 교체
+		{
+			int temp = heap[parent];
+			heap[parent] = heap[cur];
+			heap[cur] = temp;
+		}
+		else
+		{
+			break;
+		}
+
+		cur = parent;
+	}
+}
+
+// 데이터 반환
+/*
+	최대힙에서 데이터 반환은 항상 루트노드의 원소를 반환함
+	반환 후 힙을 재정리 해야하며, 방법은 아래와 같다.
+	1. heap의 루트노드를 별도로 저장
+	2. heap의 마지막 원소를 루트노드에 덮어씌움
+	3. 루트노드에서부터 왼쪽 자식과 오른쪽 자식중 더 큰값과 비교하여 자식이 더 크면 값을 갱신
+	4. 3번 항목을 더이상 갱신 항목이 없을 떄까지 반복
+*/
+int pop()
+{
+	if (arrIndex == 1) return 0;
+
+	arrIndex--;	// 데이터 개수 하나 감소
+	int top = heap[ROOT_NODE];	// 루트노드 값 저장
+	heap[ROOT_NODE] = heap[arrIndex];	// 마지막 원소를 루트노드에 추가
+	heap[arrIndex] = 0;	// 마지막 원소 0으로 초기화
+
+	int cur = ROOT_NODE;	// 현재위치는 루트노드로 설정
+	int child = cur * 2;
+	while (child < arrIndex)	// 자식 인덱스가 데이터 최대 인덱스를 초과하면 안됨
+	{
+		// (child + 1) -> 오른쪽 자식이 데이터 인덱스를 초과하지 않고, 오른쪽 자식이 더 클경우 오른쪽 자식 선택
+		if (child + 1 < arrIndex && heap[child] < heap[child + 1])	
+			child++;
+
+		// 자식이 더 클경우 값 교체
+		if (heap[child] > heap[cur])
+		{
+			int temp = heap[child];
+			heap[child] = heap[cur];
+			heap[cur] = temp;
+		}
+		else
+		{
+			break;
+		}
+		cur = child;
+		child = cur * 2;
+	}
+
+	return top;
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	int n, num;
+	cin >> n;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> num;
+		if (num == 0)
+		{
+			// pop
+			cout << pop() << "\n";
+		}
+		else
+		{
+			// push
+			push(num);
+		}
+	}
+	return 0;
+}

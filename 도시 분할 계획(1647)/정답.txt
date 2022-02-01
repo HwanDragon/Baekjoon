@@ -1,0 +1,95 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+/*
+도시를 두개로 분할하되, 최소의 유지비용만 남길 수 있도록 하여야 하므로,
+크루스칼 알고리즘을 이용하여 간선을 정렬한 뒤, n - 2개의 간선만 연결하면됨
+프림 알고리즘을 이용한다면 모든 도시를 다 연결한 뒤, 가중치가 가장 큰 간선만 자르면 됨
+*/
+
+#define NODE_COUNT 100001
+
+using namespace std;
+
+// 간선정보 저장
+class Edge {
+public :
+	int first;
+	int second;
+	int weight;
+};
+
+// 크루스칼 알고리즘 사용
+int getParent(int node, int parent[])
+{
+	if (node == parent[node]) return node;
+
+	return parent[node] = getParent(parent[node], parent);
+}
+
+void unionParent(int first, int second, int parent[])
+{
+	first = getParent(first, parent);
+	second = getParent(second, parent);
+	if (first > second)
+		parent[first] = second;
+	else
+		parent[second] = first;
+}
+
+bool sameParent(int first, int second, int parent[])
+{
+	if (getParent(first, parent) == getParent(second, parent)) return true;
+	return false;
+}
+
+int n, m;	// 집의 수, 길의 수
+int parents[NODE_COUNT] = { 0, };
+vector<Edge*> edges;
+
+bool cmp(Edge * f, Edge *s)
+{
+	return f->weight < s->weight;
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 초기화
+	for (int i = 0; i < NODE_COUNT; i++) parents[i] = i;
+
+	// 사용자 입력 받아 간선정보 생성
+	cin >> n >> m;
+	int first, second, weight;
+	for (int i = 0; i < m; i++)
+	{
+		Edge* edge = new Edge();
+		cin >> edge->first >> edge->second >> edge->weight;
+		edges.push_back(edge);
+	}
+
+	// 간선의 가중치 순으로 정렬(크루스칼 알고리즘 사용)
+	sort(edges.begin(), edges.end(), cmp);
+
+	int result = 0;	// 최소 비용 저장
+	int cnt = 0;	// 간선이 연결된 개수 저장
+	for (int i = 0; i < edges.size(); i++)
+	{
+		Edge* edge = edges[i];
+		if (sameParent(edge->first, edge->second, parents) == false)
+		{
+			unionParent(edge->first, edge->second, parents);	// 두 노드 연결
+			cnt++;	// 연결된 개수 증가
+			result += edge->weight;	// 비용 추가
+		}
+
+		if (cnt >= n - 2) break;	// 도시가 두개로 분할되어야 하므로 n-1개가 아닌 n-2개만 연결
+	}
+
+	cout << result;
+	return 0;
+}

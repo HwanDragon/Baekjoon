@@ -1,0 +1,49 @@
+#include <iostream>
+#include <vector>
+
+#define NODE_COUNT 1001
+
+using namespace std;
+
+int n, m;	// 정점의 수, 간선 수
+vector<int> edges[NODE_COUNT];	// 간선 정보
+bool visited[NODE_COUNT] = { 0, };	// 탐색시 사용할 방문처리 배열
+
+// dfs 탐색
+void dfs(int node)
+{
+	visited[node] = true;
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (visited[next] == true) continue;
+
+		dfs(next);
+	}
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second;
+		edges[first].push_back(second);	// 간선 정보 생성
+		edges[second].push_back(first);	// 양방향 간선으로 생각해야함
+	}
+
+	int cnt = 0;	// 연결요소 개수 카운팅
+	for (int i = 1; i <= n; i++)	// 1번 노드부터 시작
+	{
+		if (visited[i] == false)	// 방문하지 않은 정점은 dfs 탐색, 새로운 연결요소 이므로 cnt 증가
+		{
+			dfs(i);
+			cnt++;
+		}
+	}
+	cout << cnt;
+
+	return 0;
+}

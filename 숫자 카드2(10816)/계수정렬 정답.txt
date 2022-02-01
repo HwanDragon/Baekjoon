@@ -1,0 +1,39 @@
+#include <iostream>
+
+#define NODE_COUNT 10000000
+
+using namespace std;
+
+int positive[NODE_COUNT];
+int negative[NODE_COUNT];
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	int n, num;
+	cin >> n;
+	for (int i = 0 ; i < n; i++)
+	{
+		cin >> num;
+		if (num < 0)
+			negative[abs(num)]++;
+		else
+			positive[abs(num)]++;
+	}
+
+	int m, mm;
+	cin >> m;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> mm;
+		if (mm < 0)
+			cout << negative[abs(mm)] << " ";
+		else
+			cout << positive[mm] << " ";
+	}
+
+	return 0;
+}
