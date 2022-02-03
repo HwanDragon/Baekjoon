@@ -1,0 +1,53 @@
+#include <iostream>
+
+#define NODE_COUNT 250
+
+using namespace std;
+
+int m, n;
+bool map[NODE_COUNT][NODE_COUNT] = { 0, };
+bool visited[NODE_COUNT][NODE_COUNT] = { 0, };
+
+// 왼쪽 위 대각선, 위, 오른쪽 위 대각선, 왼쪽 , 오른쪽, 왼쪽 아래, 아래, 오르놎ㄱ아래
+int dx[8] = { -1, 0, 1, -1, 1, -1, 0, 1};	
+int dy[8] = { -1, -1,-1,  0, 0, 1, 1, 1};
+
+void dfs(int x, int y)
+{
+	visited[y][x] = true;
+
+	for (int i = 0; i < 8; i++)
+	{
+		int tempX = x + dx[i];
+		int tempY = y + dy[i];
+
+		if (tempX < 0 || tempY < 0 || tempX >= n || tempY >= m) continue;	// 배열 범위 초과
+		if (visited[tempY][tempX] == true)	continue;	// 이미 방문한 지역 pass
+		if (map[tempY][tempX] == 0) continue;	// 글자가 아님
+
+		dfs(tempX, tempY);
+	}
+}
+
+int main() 
+{
+	cin >> m >> n;	// y, x
+	for (int y = 0; y < m; y++)
+		for (int x = 0; x < n; x++)	
+			cin >> map[y][x];
+	
+	// dfs 수행
+	int cnt = 0;
+	for (int y = 0; y < m; y++)
+	{
+		for (int x = 0; x < n; x++)
+		{
+			if (visited[y][x] == false && map[y][x] == 1)
+			{
+				dfs(x, y);
+				cnt++;
+			}
+		}
+	}
+	cout << cnt;
+}
