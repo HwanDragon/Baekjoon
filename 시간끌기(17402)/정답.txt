@@ -1,0 +1,73 @@
+#include <iostream>
+#include <vector>
+
+/*
+이분매칭 + 최소버텍스커버
+해당문제는 행과 열을 노드로 모델링 하고, x표시가 없는 곳을 간선으로하여 모델링 하려고하면 답 도출이 안됨
+전체 매칭개수 (m + n) - 최대 연결 가능 수 = 연결할 수 없는 수
+정리하면
+
+전체 매칭수(m + n) - 연결 불가능한 간선수(x표시) = 최대 연결 가능 수
+
+이고, 연결 불가능한 간선수는 만약 2행 1, 2, 3열 세곳에 x 표시가 있을 때
+2행을 연결하지 않는다고 하면 
+2행 1,2,3열에 간선이 겹치는것을 생각하지 않아도 된다.
+현재는 각 행과 열을 노드로, x표시를 간선으로 모델링 하면
+x표시 간선이 연결되어있는 행이나 열을 하나 사용하지 않으면, 그 행이나 열과 연결되어있는 간선은 모두
+고려하지 않아도 되는것이 되므로 최소 버텍스 커버문제로 생각 할 수 있다.
+즉, 각 행과 열을 노드로, x표시를 간선으로 두고 최소버텍스커버를 고려해 최대 이분매칭을 돌리고
+전체개수(m + n)에서 빼주면 된다
+*/
+
+#define NODE_COUNT 201
+
+using namespace std;
+
+int n, m, k;
+vector<int> edges[NODE_COUNT];	// x 표시를 간선으로하여 간선정보 저장
+bool visited[NODE_COUNT] = { 0, };	// 방문처리
+int prevNode[NODE_COUNT] = { 0, };	// 이전노드저장
+
+// 이분매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (visited[node] == true) return false;
+
+	visited[node] = true;
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (prevNode[next] == -1 || dfs(prevNode[next]))
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+int main()
+{
+	// 초기화
+	fill(prevNode, prevNode + NODE_COUNT, -1);
+
+	cin >> n >> m >> k;	// n이 열, m이 행
+	int first, second;
+	for (int i = 0; i < k; i++)
+	{
+		cin >> first >> second;	// 열, 행 순서로 주어짐
+		edges[second].push_back(first);	// 행 - 간선 - 열로 모델링 하기위해 바꿔서 추가함
+	}
+
+	int cnt = 0;
+	for (int i = 1; i <= m; i++)	// 행 기준으로 최대 이분매칭 수행
+	{
+		fill(visited, visited + NODE_COUNT, false);
+		if (dfs(i) == true) cnt++;
+	}
+
+	cout << n + m - cnt;	// 전체 매칭수 - 매칭할 수 없는 수 = 최대 매칭 가능수
+
+	return 0;
+}

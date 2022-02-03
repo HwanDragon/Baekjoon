@@ -1,0 +1,80 @@
+#include <iostream>
+#include <vector>
+
+/*
+왼쪽 그룹을 티셔츠로, 오른쪽 그룹을 카라로 두고 이분매칭 알고리즘 수행
+*/
+
+#define NODE_COUNT 201
+
+using namespace std;
+
+int n, m;	// 티셔츠 수, 카라 수
+vector<int> edges[NODE_COUNT];	// 티셔츠와 카라의 간선 정보 저장
+double tShirt[NODE_COUNT] = { 0, };	// i번째 티셔츠의 사이즈 저장(카라와의 매칭을 확인하기 위해, 연산과정에서 소수점이 생겨 double로 선언)
+bool visited[NODE_COUNT] = { 0, };	// 이분매칭 방분처리
+int prevNode[NODE_COUNT] = { 0, };	// 이분매칭 이전 노드 저장
+
+// 이분 매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (visited[node] == true) return false;
+
+	visited[node] = true;
+	for (int i = 0; i <edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (prevNode[next] == -1 || dfs(prevNode[next]))
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+int main()
+{
+	// 초기화
+	fill(prevNode, prevNode + NODE_COUNT, -1);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 1; i <= n; i++)
+		cin >> tShirt[i];
+
+	int k;
+	for (int i = 1; i <= m; i++)
+	{
+		cin >> k;
+		for (int j = 1; j <= n; j++)	// 해당 카라가 몇번 티셔츠와 연결할 수 있는지 확인
+		{
+			// 옷의 너비를 w라 할 떄 카라 사이즈k가
+			// w / 2 이상, w * 3/4 이하일 경우
+			if ((tShirt[j] / 2 <= k) && ((tShirt[j] * 3 / 4) >= k))	// 연산과정중 소수점이 생김(주의 필요)
+			{
+				edges[j].push_back(i);
+				continue;
+			}
+			
+			// w 이상, w * 5/4 이하일 경우
+			if ((tShirt[j] <= k) && (tShirt[j] * 5 / 4 >= k))	// 연산과정중 소수점이 생김(주의 필요)
+			{
+				edges[j].push_back(i);
+				continue;
+			}
+		}
+	}
+	
+	// 이분 매칭 수행
+	int cnt = 0;
+	for (int i = 1; i <= n; i++)
+	{
+		fill(visited, visited + NODE_COUNT, false);
+		if (dfs(i) == true) cnt++;
+	}
+	cout << cnt;
+
+	return 0;
+}

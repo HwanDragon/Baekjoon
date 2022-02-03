@@ -1,0 +1,39 @@
+#include <iostream>
+/*
+중복 순열 문제이다.
+상태공간 트리를 그려보면 이해가 좀더 쉽다.
+*/
+using namespace std;
+
+int n, m;
+int nums[8] = { 0, };
+
+void search(int depth)
+{
+	if (depth > m)
+	{
+		for (int i = 1; i <= n; i++)
+		{
+			if (nums[i] != 0) cout << nums[i] << " ";
+		}
+		cout << "\n";
+		return;
+	}
+
+	for (int i = 1; i <= n; i++)
+	{
+		nums[depth] = i;
+		search(depth + 1);
+	}
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	cin >> n >> m;
+	search(1);
+	return 0;
+}

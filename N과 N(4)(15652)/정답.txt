@@ -1,0 +1,38 @@
+#include <iostream>
+/*
+중복 조합 문제이다. 
+반드시 상태공간 트리를 그려서 문제를 확인하는게 좋음
+*/
+using namespace std;
+
+int n, m;
+int nums[9] = { 0 , };
+
+/*
+현재 depth와, 현재 상태부터 부터 n번까지 순회하기위해 cur 추가
+*/
+void search(int depth, int cur)
+{
+	if (depth > m)
+	{
+		for (int i = 1; i <= n; i++)
+		{
+			if (nums[i] != 0) cout << nums[i] << " ";
+		}
+		cout << "\n";
+		return;
+	}
+
+	for (int i = cur; i <= n; i++)
+	{
+		nums[depth] = i;
+		search(depth + 1, i);
+	}
+}
+
+int main()
+{
+	cin >> n >> m;
+	search(1, 1);
+	return 0;
+}
