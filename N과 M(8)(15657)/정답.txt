@@ -1,0 +1,47 @@
+#include <iostream>
+#include <algorithm>
+/*
+해당 문제는 중복조합 문제이다.
+상태공간 트리를 그려보면 패턴이 보이고, 재귀식을 만들 수 있음.
+*/
+using namespace std;
+
+int n, m;
+int nums[9] = { 0, };
+int inputs[9] = { 0 , };
+
+// 백트래킹 수행
+void search(int depth, int cur)
+{
+	if (depth > m)
+	{
+		for (int i = 1; i <= m; i++)
+		{
+			int tempNum = nums[i];
+			cout << inputs[tempNum] << " ";
+		}
+		cout << "\n";
+		return;
+	}
+
+	for (int i = cur; i <= n; i++)
+	{
+		nums[depth] = i;
+		search(depth + 1, i);
+	}
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 1; i <= n; i++)
+		cin >> inputs[i];
+
+	// 사전순으로 출력하기 위해 정렬
+	sort(inputs, inputs + n + 1);
+
+	// 백트래킹 탐색
+	search(1, 1);
+	return 0;
+}

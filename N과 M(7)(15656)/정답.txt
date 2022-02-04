@@ -1,0 +1,49 @@
+#include <iostream>
+#include <algorithm>
+
+/*
+해당문제는 중복순열 문제이다
+상태공간 트리를 그리면 좀더 이해하기 쉬움
+*/
+
+using namespace std;
+
+int n, m;
+int nums[8] = { 0, };
+int inputs[8] = { 0, };
+
+void search(int depth)
+{
+	if (depth > m)
+	{
+		for (int i = 1; i <= m; i++)
+		{
+			int tempNum = nums[i];
+			cout << inputs[tempNum] << " ";
+		}
+		cout << "\n";
+		return;
+	}
+
+	for (int i = 1; i <= n; i++)
+	{
+		nums[depth] = i;
+		search(depth + 1);
+	}
+}
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 1; i <= n; i++)
+		cin >> inputs[i];
+
+	// 사전순으로 증가하게 출력해야 하므로 정렬
+	sort(inputs, inputs + n + 1);
+
+	// 백트래킹을 이용한 탐색
+	search(1);
+	
+	return 0;
+}
