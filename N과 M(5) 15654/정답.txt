@@ -1,0 +1,54 @@
+#include <iostream>
+#include <algorithm>
+/*
+특정한 수를 입력받아 백트래킹으로 출력하는 순열 문제이다.
+꼭 상태공간 트리를 그려볼 것
+*/
+using namespace std;
+
+int n, m;
+int nums[9] = { 0, };
+int inputs[9] = { 0, };	// 입력받을 값
+
+void search(int depth)
+{
+	if (depth > m)
+	{
+		for (int i = 1; i <= n; i++)
+		{
+			for (int j = 1; j <= n; j++)
+			{
+				if (nums[j] == i) cout << inputs[j] << " ";
+			}
+		}
+		cout << "\n";
+		return;
+	}
+
+	for (int i = 1; i <= n; i++)
+	{
+		if (nums[i] != 0) continue;
+
+		nums[i] = depth;
+		search(depth + 1);
+		nums[i] = 0;
+	}
+}
+
+int main()
+{
+	// 입출력 속도 빠르게하기위해
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 1; i <= n; i++)
+		cin >> inputs[i];
+
+	sort(inputs, inputs + n + 1);	// 사전순 출력을 위해 정렬
+	search(1);	// 백트래킹
+	
+	return 0;
+}
