@@ -1,0 +1,59 @@
+#include <iostream>
+#include <queue>
+#include <memory.h>
+
+using namespace std;
+
+char command[6];
+
+int main()
+{
+	int n;
+	cin >> n;
+	queue<int> q;
+	while (n--)
+	{
+		cin >> command;
+
+		if (strcmp(command, "push") == 0)
+		{
+			int num;
+			cin >> num;
+			q.push(num);
+		}
+		else if (strcmp(command, "pop") == 0)
+		{
+			if (q.empty() == true)
+				cout << -1 << "\n";
+			else
+			{
+				cout << q.front() << "\n";
+				q.pop();
+			}
+		}
+		else if (strcmp(command, "size") == 0)
+		{
+			cout << q.size() << "\n";
+		}
+		else if (strcmp(command, "empty") == 0)
+		{
+			cout << q.empty() << "\n";
+		}
+		else if (strcmp(command, "front") == 0)
+		{
+			if (q.empty() == false)
+				cout << q.front() << "\n";
+			else
+				cout << -1 << "\n";
+		}
+		else if (strcmp(command, "back") == 0)
+		{
+			if (q.empty() == false)
+				cout << q.back() << "\n";
+			else
+				cout << -1 << "\n";
+		}
+		memset(command, 0, 6);
+	}
+	return 0;
+}

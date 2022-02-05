@@ -1,0 +1,51 @@
+#include <stack>
+#include <iostream>
+#include <cstring>
+/*
+i번째 문자가 '(' 일 경우에는 스택에 그냥 추가하고, ')' 일경우에는 그 전에 스택에 추가한 문자가 항상
+'(' 이어야 함.
+그전 문자를 확인하여 '(' 이 맞으면 스택에서 제거함(올바른 괄호이므로)
+만약 그전 문자열이 ')' 이거나 큐가 비어있으면 올바른 괄호가 아님
+*/
+using namespace std;
+
+int main()
+{
+	int n;
+	cin >> n;	// 테스트 케이스 입력
+	while (n--)
+	{
+		char s[51] = { 0, };
+		cin >> s;	// 관호 문자열 입력
+		stack<char> st;
+
+		bool result = true;
+		for (int i = 0; i < strlen(s); i++)	// 괄호문자열 길이만큼 반복
+		{
+			char c = s[i];
+			if (c == '(')
+			{
+				st.push('(');
+			}
+			else
+			{
+				if (st.empty() == true || st.top() == ')')
+				{
+					result = false;
+					break;
+				}
+				else
+				{
+					st.pop();
+				}
+			}
+		}
+
+		if (result == true && st.empty() == true)
+			cout << "YES" << "\n";
+		else
+			cout << "NO" << "\n";
+	}
+
+	return 0;
+}
