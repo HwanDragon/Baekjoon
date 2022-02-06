@@ -1,0 +1,57 @@
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+int n;
+int num;
+vector<int> arrows;
+int cnt = 0;
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	cin >> n;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> num;
+
+		if (arrows.size() == 0)	// 기존에 발사된 화살이 하나도 없을경우
+		{
+			arrows.push_back(--num);	// 풍선에 화살이 맞았으므로 높이가 1 감소된 화살 추가
+			cnt++;	// 필요한 화살 개수 하나 증가
+		}
+		else
+		{
+			bool isExplode = false;	// 풍선이 터졌는지 여부
+			for (int j = 0; j < arrows.size(); j++)
+			{
+				if (arrows[j] == num)	// 화살과 입력한 풍선의 높이가 같음
+				{
+					arrows[j]--;	// 화살의 높이 감소
+					isExplode = true;	// 풍선이 터져야함
+					break;
+				}
+
+				if (arrows[j] == 0)	// 높이가 0이된 화살은 제거
+				{
+					arrows.erase(arrows.begin() + j);	// j번째 화살 제거
+					j--;	// 인덱스 하나 감소시킴
+				}
+			}
+
+			// 만약 풍선이 터지지 않았다면 해당 풍선을 터트리기 위한 새로운 화살이 필요함
+			if (isExplode == false)
+			{
+				arrows.push_back(--num);	// 풍선을 만나 터졌으므로 높이가 1감소된 화살 추가
+				cnt++;	// 필요한 화살개수 1증가
+			}
+		}
+	}
+
+	cout << cnt;
+	return 0;
+}

@@ -1,0 +1,175 @@
+#include <iostream>
+#include <queue>
+#define CNT 1500
+
+/*
+문제 접근 : 물공간을 bfs 탐색 지역으로 하여 얼음이 몇일만에 녹는지 한번의 bfs로 탐색함(물지역을 0으로 둠)
+ex : 
+10 2
+.L
+..
+XX
+XX
+XX
+XX
+XX
+XX
+..
+.L
+위 예제의 경우
+.L
+..
+11
+22
+33
+33
+22
+11
+..
+.L
+으로 탐색 될 수 있음
+그 후, 1500 * 1500 크기의 맵에 모두 얼음으로 가득 차 있을경우 두 백조의 위치에서부터 녹기 시작하므로
+최대 걸리는 날은 3000일, 최소는 얼음이 없어 바로 만날 수 있는 0일임.
+따라서, start = 0, end = 3000으로 두고 이분 탐색을 이용하여 bfs탐색을 시작함.
+bfs에는 날짜를 입력으로 받아서, 해당 날짜보다 작은 얼음은 그냥 지나갈 수 있는것으로 판단하여 진행
+*/
+
+using namespace std;
+
+int n, m;	// 행의 수, 열의 수
+int firstX, firstY, secondX, secondY;	// 첫번째 백조의 x, y 좌표 , 두번째 백조의 x, y 좌표
+char map[CNT][CNT] = { 0, };	// 사용자로부터 입력받을 맵 정보 저장
+int iceMeltMap[CNT][CNT] = { 0, };	// 얼음이 몇일만에 녹는지 저장
+bool visited[CNT][CNT] = { 0, };	// 두 백조가 만날 수 있는 bfs 방문처리 배열
+
+/*
+물 지역을 0으로 두고, 모든 얼음이 몇일만에 녹는지 bfs를 통해 알아냄
+*/
+void searchIceBfs()
+{
+	queue<pair<int, int>> q;	// x, y 좌표를 저장할 큐 선언
+	for (int y = 0; y < n; y++)
+		for (int x = 0; x < m; x++)
+			if (map[y][x] == '.' || map[y][x] == 'L')	// 물, 백조의 위치도 큐에 추가
+				q.push({x, y});
+
+	int dx[4] = { 0, 0, 1, -1 };
+	int dy[4] = { 1, -1, 0, 0 };
+	while (q.empty() == false)
+	{
+		pair<int, int> p = q.front();
+		q.pop();
+		int curX = p.first;
+		int curY = p.second;
+
+		for (int i = 0; i < 4; i++)
+		{
+			int tempX = curX + dx[i];
+			int tempY = curY + dy[i];
+
+			if (tempX < 0 || tempY < 0 || tempX >= m || tempY >= n) continue;	// 배열 범위 초과
+			if (map[tempY][tempX] != 'X') continue;	// 얼음이 아닌 지역
+			if (iceMeltMap[tempY][tempX] != 0) continue;	// 이미 방문하여 처리한 지역
+
+			iceMeltMap[tempY][tempX] = iceMeltMap[curY][curX] + 1;	// dp로 몇일만에 녹는지 기록
+			q.push({tempX, tempY});	// 큐에 다음지역 추가
+		}
+	}
+}
+
+/*
+날짜를 입력받아 해당 날짜에 두마리의 백조가 만날 수 있는지 확인
+*/
+bool bfs(int day)
+{
+	queue<pair<int, int>> q;
+
+	int dx[4] = { 0, 0, 1, -1 };
+	int dy[4] = { 1, -1, 0, 0 };
+
+	q.push({firstX, firstY});	// 첫번째 백조 위치 추가
+	visited[firstY][firstX] = true;	// 방문처리
+	while (q.empty() == false)
+	{
+		pair<int, int> p = q.front();
+		q.pop();
+		int curX = p.first;
+		int curY = p.second;
+
+		if (curX == secondX && curY == secondY) return true;	// 두번째 백조를 만날 수 있음
+
+		for (int i = 0; i < 4; i++)
+		{
+			int tempX = curX + dx[i];
+			int tempY = curY + dy[i];
+
+			if (tempX < 0 || tempY < 0 || tempX >= m || tempY >= n) continue;	// 배열 범위 초과
+			if (iceMeltMap[tempY][tempX] > day) continue;	// 아직 녹지 않은 얼음
+			if (visited[tempY][tempX] == true) continue;	// 이미 방문한 지역 pass
+
+			visited[tempY][tempX] = true;	// 방문 처리
+			q.push({ tempX, tempY });
+		}
+	}
+	return false;
+}
+
+// bfs visited 배열 초기화
+void initVisited()
+{
+	for (int row = 0; row < n; row++)
+		for (int col = 0; col < m; col++)
+			visited[row][col] = false;
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int row = 0; row < n; row++)
+		cin >> map[row];
+	
+	// 첫번째 백조와 두번째 백조의 위치 기록
+	bool pos = false;
+	for (int row = 0; row < n; row++)
+	{
+		for (int col = 0; col < m; col++)
+		{
+			if (map[row][col] == 'L' && pos == false)	// 첫번째 백조 위치 저장
+			{
+				firstX = col;
+				firstY = row;
+				pos = true;
+			}
+			if (map[row][col] == 'L' && pos == true)	// 두번째 백조 위치 저장
+			{
+				secondX = col;
+				secondY = row;
+			}
+		}
+	}
+
+	// 얼음이 모두 몇일만에 녹는지 bfs 탐색 시작
+	searchIceBfs();
+
+	// 두마리의 백조가 모두 몇일만에 만날 수 있는지 이분탐색 시작
+	int start = 0;
+	int end = 3000;	// 1500*1500 크기의 맵에 모두 얼음으로 둘러쌓였을 경우 최대 일수
+	int mid;
+	while (start <= end)
+	{
+		mid = (start + end) / 2;
+		initVisited();	// visited 초기화
+		bool r = bfs(mid);	// 두마리의 백조가 만날 수 있는지 탐색
+		if (r == false)
+			start = mid + 1;
+		else
+			end = mid - 1;
+	}
+	cout << start;
+	return 0;
+}
