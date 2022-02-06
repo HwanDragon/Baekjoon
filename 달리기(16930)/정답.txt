@@ -1,0 +1,118 @@
+#include <iostream>
+#include <queue>
+
+#define CNT 1000
+#define INF 1000000000
+
+using namespace std;
+
+int n, m, k;	// 행의 크기, 열 크기, 최대 이동 가능 횟수
+int startX, startY, destX, destY;	// 시작점 좌표, 도착점 좌표
+char map[CNT][CNT] = { 0, };	// 맵 정보
+int dp[CNT][CNT] = { 0 , };	// bfs로 갱신해나갈 dp배열
+queue<pair<int, int>> q;
+
+void bfs()
+{
+	q.push({startX, startY});	// 시작점 큐에 추가
+	dp[startY][startX] = 0;	// dp배열 시작점 비용 0으로 초기와
+	while (q.empty() == false)
+	{
+		pair<int, int> p = q.front();
+		q.pop();
+		int curX = p.first;		// 현재 x좌표
+		int curY = p.second;	// 현재 y좌표
+
+		if (curX == destX && curY == destY) return;	// 도착점에 도착하면 빠져나옴
+
+		// 위쪽 방향 탐색
+		for (int i = 1; i <= k; i++)
+		{
+			int tempY = curY - i;
+			if (tempY < 0) break;	// 배열범위 초과
+			if (map[tempY][curX] == '#') break;	// 위쪽 방향으로는 더이상 탐색 불가능
+			if (dp[curY][curX] >= dp[tempY][curX]) break;	// 비용이 더 걸리는 방법은 pass
+			if (dp[tempY][curX] == dp[curY][curX] + 1) continue;	// 만약 이미 방문하였고, 해당 지점까지 가는 비용이 같을경우
+
+			dp[tempY][curX] = dp[curY][curX] + 1;
+			q.push({ curX, tempY });
+		}
+
+		// 아래 방향 탐색
+		for (int i = 1; i <= k; i++)
+		{
+			int tempY = curY + i;
+			if (tempY >= n) break;	// 배열범위 초과
+			if (map[tempY][curX] == '#') break;	// 위쪽 방향으로는 더이상 탐색 불가능
+			if (dp[curY][curX] >= dp[tempY][curX]) break;	// 비용이 더 걸리는 방법은 pass
+			if (dp[tempY][curX] == dp[curY][curX] + 1) continue;	// 만약 이미 방문하였고, 해당 지점까지 가는 비용이 같을경우
+
+			dp[tempY][curX] = dp[curY][curX] + 1;
+			q.push({ curX, tempY });
+		}
+
+		// 오른쪽 방향 탐색
+		for (int i = 1; i <= k; i++)
+		{
+			int tempX = curX + i;
+			if (tempX >= m) break;	// 배열범위 초과
+			if (map[curY][tempX] == '#') break;	// 위쪽 방향으로는 더이상 탐색 불가능
+			if (dp[curY][curX] >= dp[curY][tempX]) break;	// 비용이 더 걸리는 방법은 pass
+			if (dp[curY][tempX] == dp[curY][curX] + 1) continue;	// 만약 이미 방문하였고, 해당 지점까지 가는 비용이 같을경우
+
+			dp[curY][tempX] = dp[curY][curX] + 1;
+			q.push({ tempX, curY });
+		}
+
+		// 왼쪽 방향 탐색
+		for (int i = 1; i <= k; i++)
+		{
+			int tempX = curX - i;
+			if (tempX < 0) break;	// 배열범위 초과
+			if (map[curY][tempX] == '#') break;	// 위쪽 방향으로는 더이상 탐색 불가능
+			if (dp[curY][curX] >= dp[curY][tempX]) break;	// 비용이 더 걸리는 방법은 pass
+			if (dp[curY][tempX] == dp[curY][curX] + 1) continue;	// 만약 이미 방문하였고, 해당 지점까지 가는 비용이 같을경우
+
+			dp[curY][tempX] = dp[curY][curX] + 1;
+			q.push({ tempX, curY });
+		}
+	}
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 초기화
+	for (int i = 0; i < CNT; i++)
+		for (int j = 0; j < CNT; j++)
+			dp[i][j] = INF;
+
+	// 사용자 입력 받음
+	cin >> n >> m >> k;
+	for (int i = 0; i < n; i++)
+		cin >> map[i];
+
+	// 시작점, 도착점 입력 받음
+	cin >> startY >> startX >> destY >> destX;
+
+	// 0, 0부터 시작하기위해 좌표값 1 감소
+	startX--;	startY--;	destX--;	destY--;
+	if (startX == destX && startY == destY)	// 시작점과 도착점이 같을경우 0 출력
+	{
+		cout << 0;
+		return 0;
+	}
+
+	// bfs 탐색
+	bfs();
+
+	if (dp[destY][destX] == INF)	// 도착점까지 도착이 불가능 할 경우
+		cout << -1;
+	else
+		cout << dp[destY][destX];
+	
+	return 0;
+}
