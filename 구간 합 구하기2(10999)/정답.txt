@@ -1,0 +1,109 @@
+#include <iostream>
+
+#define CNT 1000001	// 최대 데이터 개수
+
+using namespace std;
+
+typedef long long ll;
+
+int n, m, k;	// 수의 개수, 변경이 일어나는 횟수, 구간의 합을 구하는 횟수
+ll arr[CNT] = { 0, };	// 입력받을 데이터 저장
+ll segTree[CNT * 4] = { 0, };	// 세그먼트 트리
+ll lazy[CNT * 4] = { 0, };	// lazy propagation을 저장할 배열
+
+// 세그먼트 트리 초기화
+ll init(int start, int end, int node)
+{
+	if (start == end) return segTree[node] = arr[start];
+	int mid = (start + end) / 2;
+	return segTree[node] = init(start, mid, node * 2) + init(mid + 1, end, node * 2 + 1);
+}
+
+// 현재 노드에 lazy값 반영
+void updateLazyPropagation(int start, int end, int node)
+{
+	if (lazy[node] == 0) return;
+
+	segTree[node] += ((ll)(end - start + 1) * lazy[node]);	// 해당 범위만큼 세그먼트 트리에 반영
+	if (start != end)	// 자식노드가 있을경우 자식노드에 lazy값 상속
+	{
+		lazy[node * 2] += lazy[node];
+		lazy[node * 2 + 1] += lazy[node];
+	}
+	lazy[node] = 0;	// 현재노드 lazy 값 초기화
+}
+
+// 구간 쿼리 업데이트
+void update(int start, int end, int left, int right, int node, ll diff)
+{
+	updateLazyPropagation(start, end, node);	// 현재 노드 방문시 항상 lazy값 업데이트
+
+	// 구간에 포함되지 않을경우
+	if (end < left || right < start) return;
+
+	// 구간에 완전히 포함될 경우
+	if (left <= start && end <= right)
+	{
+		lazy[node] += diff;	// lazy값 반영
+		updateLazyPropagation(start, end, node);	// lazy값 현재 노드 반영 및 자식노드가 있을경우 반영
+		return;
+	}
+
+	int mid = (start + end) / 2;
+	update(start, mid, left, right, node * 2, diff);	// 왼쪽 구간 업데이트
+	update(mid + 1, end, left, right, node * 2 + 1, diff);	//오른쪽 구간 업데이트
+	segTree[node] = segTree[node * 2] + segTree[node * 2 + 1];	// 구간에 일부만 걸칠경우 현재노드가 갱신되지 않으니 직접 갱신함
+}
+
+// 구간쿼리 계산
+ll sum(int start, int end, int left, int right, int node)
+{
+	updateLazyPropagation(start, end, node);	// 현재 노드 방문시 항상 lazy값 업데이트
+
+	// 구간에 포함되지 않는 경우
+	if (end < left || right < start) return 0;
+
+	// 구간에 완전히 포함되는 경우
+	if (left <= start && end <= right) return segTree[node];
+
+	int mid = (start + end) / 2;
+	return sum(start, mid, left, right, node * 2) + sum(mid + 1, end, left, right, node * 2 + 1);
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m >> k;
+	for (int i = 1; i <= n; i++)
+		cin >> arr[i];
+
+	// 세그먼트 트리 초기화
+	init(1, n, 1);
+
+	// 구간 쿼리 받음 
+	// a == 1일경우 b~c 구간에 d를 더함
+	// a == 2일경우 b~c 구간 합 계산
+	ll a, b, c, d;
+	for (int i = 0; i < m + k; i++)
+	{
+		cin >> a;
+		if (a == 1)
+		{
+			// update
+			cin >> b >> c >> d;
+			update(1, n, b, c, 1, d);	// b~c구간에 d 더함
+		}
+		else
+		{
+			// sum query
+			cin >> b >> c;
+			cout << sum(1, n, b, c, 1) << "\n";	// b~c 구간 합 쿼리 계산
+		}
+	}
+	
+	return 0;
+}
