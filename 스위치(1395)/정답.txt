@@ -1,0 +1,88 @@
+#include <iostream>
+
+#define CNT 100001
+
+using namespace std;
+
+int segTree[CNT * 4] = { 0, };	// 세그먼트 트리
+int lazy[CNT * 4] = { 0, };	// 0 : 아무 상태 아님, 1 : 스위치 반전시켜야하는 상태
+
+void updateLazyPropagation(int start, int end, int node)
+{
+	if (lazy[node] == 0) return;	// 0일경우 처리하지 않음
+
+	if (lazy[node] == 1) segTree[node] = (end - start + 1) - segTree[node];	// 1일경우 구간개수 - 현재 개수로 반전
+
+	if (start != end)
+	{
+		lazy[node * 2] = (lazy[node * 2] == 0) ? 1 : 0;	// 자식 lazy배열 상태 반전
+		lazy[node * 2 + 1] = (lazy[node * 2 + 1] == 0) ? 1 : 0;	// 자식 lazy배열 상태 반전
+	}
+	lazy[node] = 0;	// 상태 초기화
+}
+
+void update(int start, int end, int left, int right, int node)
+{
+	updateLazyPropagation(start, end, node);	// lazy propagation 반영
+
+	// 구간에 포함되지 않는 경우
+	if (end < left || right < start) return;
+
+	// 구간에 완전히 포함되는 경우
+	if (left <= start && end <= right)
+	{
+		lazy[node] = 1;
+		updateLazyPropagation(start, end, node);	// lazy propagation 반영
+		return;
+	}
+
+	// 구간에 일부만 포함되는 경우
+	int mid = (start + end) / 2;
+	update(start, mid, left, right, node * 2);
+	update(mid + 1, end, left, right, node * 2 + 1);
+	segTree[node] = segTree[node * 2] + segTree[node * 2 + 1];
+}
+
+int countSwitch(int start, int end, int left, int right, int node)
+{
+	updateLazyPropagation(start, end, node);	// lazy propagation 적용
+
+	// 구간에 포함되지 않는경우
+	if (end < left || right < start) return 0;
+
+	// 구간에 완전히 포함되는 경우
+	if (left <= start && end <= right) return segTree[node];
+	
+	// 구간에 걸쳐있는 경우
+	int mid = (start + end) / 2;
+	return countSwitch(start, mid, left, right, node * 2) + countSwitch(mid + 1, end, left, right, node * 2 + 1);
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	int n, m;
+	cin >> n >> m;
+
+	// 쿼리 질의
+	int a, b, c;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> a >> b >> c;
+		if (a == 0)
+		{
+			// 스위치 반전
+			update(1, n, b, c, 1);
+		}
+		else
+		{
+			// 켜져있는 스위치 개수 카운트
+			cout << countSwitch(1, n, b, c, 1) << "\n";
+		}
+	}
+	return 0;
+}
