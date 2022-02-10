@@ -1,0 +1,70 @@
+#include <iostream>
+#include <queue>
+
+#define MAX_CNT 200000
+
+using namespace std;
+
+int n, k;
+int dp[MAX_CNT + 1] = { 0, };	// 순간이동시 최대 두배만큼 할 수 있으므로 배열도 2배 선언
+
+int main()
+{
+	cin >> n >> k;
+	if (n == k)	// 위치가 같을경우 0 출력
+	{
+		cout << 0 << endl;
+		return 0;
+	}
+
+	// 초기화
+	fill(dp, dp + MAX_CNT + 1, 100000000);
+
+	// BFS 탐색 시작
+	queue<int> q;
+	q.push(n);
+	dp[n] = 0;
+
+	while (q.empty() == false)
+	{
+		int cur = q.front();
+		q.pop();
+
+		// cur * 2의 위치로 이동하는 경우
+		if (cur * 2 >= 0 && cur * 2 < MAX_CNT)
+		{
+			int next = cur * 2;
+			if (dp[next] > dp[cur])	// 순간이동은 비용이 0
+			{
+				dp[next] = dp[cur];
+				q.push(next);
+			}
+		}
+
+		// cur + 1위치로 이동하는 경우
+		if (cur + 1 >= 0 && cur + 1 < MAX_CNT)
+		{
+			int next = cur + 1;
+			if (dp[next] > dp[cur] + 1)
+			{
+				dp[next] = dp[cur] + 1;
+				q.push(next);
+			}
+		}
+
+		// cur - 1위치로 이동하는 경우
+		if (cur - 1 >= 0 && cur - 1 < MAX_CNT)
+		{
+			int next = cur - 1;
+			if (dp[next] > dp[cur] + 1)
+			{
+				dp[next] = dp[cur] + 1;
+				q.push(next);
+			}
+
+		}
+	}
+
+	std::cout << dp[k] << "\n";
+	return 0;
+}
