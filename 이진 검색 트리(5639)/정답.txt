@@ -1,0 +1,79 @@
+#include <iostream>
+
+using namespace std;
+
+typedef struct Node
+{
+	int data;
+	Node* left;
+	Node* right;
+};
+
+// 노드 생성
+Node* createNode(int data)
+{
+	Node * n = (Node *)malloc(sizeof(Node));
+	n->data = data;
+	n->left = nullptr;
+	n->right = nullptr;
+	return n;
+}
+
+// 재귀적으로 노드를 삽입
+void insert(int data, Node *node)
+{
+	if (node->data > data)
+	{
+		// 데이터가 노드의 데이터보다 작으므로 왼쪽 자식에 삽입해야함
+		if (node->left == NULL)	// 왼쪽 자식이 없을 경우
+		{
+			node->left = createNode(data);	// 노드 추가후 종료
+			return;
+		}
+		else
+		{
+			insert(data, node->left);	// 왼쪽 자식이 이미 있으면 재귀적으로 타고들어가서 확인
+		}
+	}
+	else
+	{
+		// 데이터가 노드의 데이터보다 크므로 오른쪽 자식에 삽입해야함
+		if (node->right == NULL)	// 오른쪽 자식이 없을경우
+		{
+			node->right = createNode(data);	// 노드 추가후 종료
+			return;
+		}
+		else
+		{
+			insert(data, node->right);	// 오른쪽자식이 이미 있으면 재귀적으로 타고들어가서 확인
+		}
+	}
+}
+
+// 후위 우선 탐색
+// 출력순서 : 왼쪽자식, 오른쪽자식, 나
+void postOrder(Node *node)
+{
+	if (node == NULL) return;
+	postOrder(node->left);	// 재귀적으로 왼쪽자식 출력
+	postOrder(node->right);	// 재귀적으로 오른쪽자식 출력
+	cout << node->data << "\n";	// 자기자신 출력
+}
+
+int main()
+{
+	int num;
+	cin >> num;
+
+	// 가장 처음에 입력받은 노드를 루트노드로 설정
+	Node* root = createNode(num);
+	while (true)
+	{
+		cin >> num;
+		if (cin.eof() == true) break;
+		insert(num, root);	// 노드 추가
+	}
+	postOrder(root);	// 후위우선탐색 시작
+
+	return 0;
+}
