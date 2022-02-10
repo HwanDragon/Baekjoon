@@ -1,0 +1,165 @@
+#include <iostream>
+/*
+a * x + b
+[곱, 합]
+
+기존 : a * x + b ([a, b])
+
+[c, d] (c를 곱하고 d를 더함)
+
+-> (a * x + b) * c + d
+ = a * c * x + b * c + d
+ = [a * c, b * c + d]
+
+
+ - Ai = (Ai + v) 수행 -> [1, v]
+ - Ai = (Ai × v) 수행 -> [v, 0]
+ - Ai = v를 수행 -> [0, v]
+*/
+#define CNT 100001
+#define SEG_CNT 400004
+#define MOD 1000000007
+
+using namespace std;
+typedef long long ll;
+
+int n, m;	// 수열의크기, 쿼리 개수
+ll arr[CNT] = { 0, };	// 세그먼트트리 초기값
+ll segTree[SEG_CNT] = { 0, };	// 세그먼트 트리
+ll lazy[SEG_CNT][2] = { 0, };	// [n][0] : 곱 자리, [n][1] : 합 자리
+
+// 세그먼트 트리 초기화
+ll init(int start, int end, int node)
+{
+	if (start == end) return segTree[node] = arr[start];
+	int mid = (start + end) / 2;
+	return segTree[node] = (init(start, mid, node * 2) + init(mid + 1, end, node * 2 + 1)) % MOD;
+}
+
+// lazy propagation 갱신
+void updateLazyPropagation(int start, int end, int node)
+{
+	if (lazy[node][0] == 1 && lazy[node][1] == 0) return;	// 갱신할 값이 없음(1을 곱하고 0을 더하면 어짜피 자기자신)
+
+	ll multi = lazy[node][0];	// 곱
+	ll add = lazy[node][1];		// 합
+	segTree[node] = ((segTree[node] * multi)  + ((ll)(end - start + 1) * add)) % MOD;	// 합 반영 (구간합은 구간 * 합 으로 계산해야함)
+
+	/*
+	기존에 있던 값을 [a, b] 라고하면 세그먼트 트리에 반영되어야 하는 값은 (a * segTree + b) 이다
+	여기서 [c, d] 연산을 추가하면 (a * segTree + b) * c + d  이고 이는 아래와 같이 정리할 수 있음
+	(a * c * segTree + b * c + d)
+	즉 [a, b]에 [c, d] 연산을 하면
+	[a * c, b * c + d] 가 되는것을 알 수 있음
+	*/
+	if (start != end)	// 자식노드 반영
+	{
+		lazy[node * 2][0] = (lazy[node * 2][0] * multi) % MOD;	// [a * c]
+		lazy[node * 2][1] = ((lazy[node * 2][1] * multi) % MOD + add) % MOD;	// [b * c + d]
+		lazy[node * 2 + 1][0] = (lazy[node * 2 + 1][0] * multi) % MOD;		// [a * c]
+		lazy[node * 2 + 1][1] = ((lazy[node * 2 + 1][1] * multi) % MOD + add) % MOD;	// [b * c + d]
+	}
+
+	// 초기화
+	lazy[node][0] = 1;
+	lazy[node][1] = 0;
+}
+
+void update(int start, int end, int left, int right, pair<ll, ll> p, int node)
+{
+	updateLazyPropagation(start, end, node);	// lazy propagation 적용
+
+	// 구간에 포함되지 않을경우
+	if (end < left || right < start) return;
+
+	// 구간에 완전히 포함되는 경우
+	if (left <= start && end <= right)
+	{
+		ll queryType = p.first;
+		ll value = p.second;
+		if (queryType == 1)
+		{
+			// Ai = (Ai + v) 수행 -> [1, v]
+			lazy[node][0] = 1;
+			lazy[node][1] = value;
+		}
+		else if (queryType == 2)
+		{
+			// Ai = (Ai × v) 수행 -> [v, 0]
+			lazy[node][0] = value;
+			lazy[node][1] = 0;
+		}
+		else if (queryType == 3)
+		{
+			// Ai = v를 수행 -> [0, v]
+			lazy[node][0] = 0;
+			lazy[node][1] = value;
+		}
+		updateLazyPropagation(start, end, node);	// lazy propagation 적용
+		return;
+	}
+
+	// 구간에 걸쳐있는 경우
+	int mid = (start + end) / 2;
+	update(start, mid, left, right, p, node * 2);
+	update(mid + 1, end, left, right, p, node * 2 + 1);
+	segTree[node] = (segTree[node * 2] + segTree[node * 2 + 1]) % MOD;
+}
+
+ll sum(int start, int end, int left, int right, int node)
+{
+	updateLazyPropagation(start, end, node);	// lazy propagation 적용
+
+	// 구간에 포함되지 않는 경우
+	if (end < left || right < start) return 0;
+
+	// 구간에 완전히 포함되는 경우
+	if (left <= start && end <= right) return segTree[node];
+
+	// 구간에 걸쳐있는경우
+	int mid = (start + end) / 2;
+	return (sum(start, mid, left, right, node * 2) + sum(mid + 1, end, left, right, node * 2 + 1)) % MOD;
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 초기화
+	for (int i = 0; i < SEG_CNT; i++)
+	{
+		lazy[i][0] = 1;	// 곱의자리(1은 곱해도 자기자신이므로 1로 초기화)
+		lazy[i][1] = 0;	// 합의자리(0은 더해도 자기자신이므로 0으로 초기화)
+	}
+	
+	// 사용자 입력 받음
+	cin >> n;
+	for (int i = 1; i <= n; i++)
+		cin >> arr[i];
+
+	// 세그먼트 트리 초기화
+	init(1, n, 1);
+
+	// 쿼리 질의
+	cin >> m;
+	ll queryType, a, b, c;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> queryType;
+		if (queryType == 4)
+		{
+			// sum query
+			cin >> a >> b;
+			cout << sum(1, n, a, b, 1) << "\n";
+		}
+		else
+		{
+			// update
+			cin >> a >> b >> c;
+			update(1, n, a, b, {queryType, c}, 1);
+		}
+	}
+	return 0;
+}
