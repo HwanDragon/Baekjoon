@@ -1,0 +1,44 @@
+#include <iostream>
+
+/*
+유클리드 호제법을 이용하여 최대공약수를 계산한 뒤, 각 수를 최대공약수로 나눈 몫을
+최대공약수와 곱해주면됨
+*/
+
+using namespace std;
+
+// 유클리드 호제법으로 최대공약수 계산
+int getGcd(int a, int b)
+{
+	if (b > a)
+	{
+		int temp = b;
+		b = a;
+		a = temp;
+	}
+
+	int c;
+	while (true)
+	{
+		c = a % b;
+		if (c == 0) break;
+		a = b;
+		b = c;
+	}
+	return b;
+}
+
+int main()
+{
+	int t;
+	cin >> t;
+	while (t--)
+	{
+		int n, m, gcd;
+		cin >> n >> m;
+		gcd = getGcd(n, m);
+		cout << (n / gcd) * (m / gcd) * gcd << "\n";
+	}
+
+	return 0;
+}
