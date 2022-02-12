@@ -1,0 +1,28 @@
+#include <iostream>
+
+using namespace std;
+
+long long dp[36] = { 0, };
+
+long long func(int n)
+{
+	if (dp[n] != 0) return dp[n];
+
+	long long sum = 0;
+	for (int i = 0; i < n; i++)
+	{
+		sum += func(i) * func(n - i - 1);	// 점화식 그대로 작성
+	}
+	return dp[n] = sum;
+}
+
+int main()
+{
+	dp[0] = 1;
+
+	int n;
+	cin >> n;
+	cout << func(n);
+
+	return 0;
+}
