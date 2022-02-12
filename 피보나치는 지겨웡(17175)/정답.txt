@@ -1,0 +1,26 @@
+#include <iostream>
+
+#define MOD 1000000007
+
+using namespace std;
+
+long long dp[51] = { 0, };
+
+long long fibo(int n) { // 호출
+	if (dp[n] != 0) return dp[n];
+
+	return dp[n] = ((fibo(n - 2) + fibo(n - 1) + 1) % MOD);
+}
+
+int main()
+{
+	dp[0] = 1;	// 0 부터 시작 조심할것
+	dp[1] = 1;
+	// n == 3 일 경우는 fibo(n) 이 1번 호출되고, 재귀적으로 fibo(n - 1), fibo(n - 2)가 호출됨
+	// 즉, fibo(n) = fibo(n - 1) + fibo(n - 2) + 1
+
+	int n;
+	cin >> n;
+	cout << fibo(n);
+	return 0;
+}
