@@ -1,0 +1,101 @@
+#include <iostream>
+
+#define CNT 500012
+#define SEG_CNT 4*500012
+
+using namespace std;
+
+typedef unsigned long long ul;
+
+int n, m;	// 수열의 크기, 쿼리 개수
+ul segTree[CNT] = { 0, };	// 구간별 쿼리가 아니기때문에 최대 원소 개수 만큼만 생성해도됨
+ul lazy[SEG_CNT] = { 0, };	// Lazy propagation을 적용할 lazy배열 선언
+
+// Lazy propagaton 적용
+void updateLazyPropagation(int start, int end, int node)
+{
+	if (lazy[node] == 0) return;	// 적용할 lazy가 없음
+
+	// 시작노드와 끝노드가 같을때만 lazy 적용
+	if (start == end)	
+		segTree[start] = segTree[start] ^ lazy[node];
+
+	if (start != end)
+	{
+		lazy[node * 2] ^= lazy[node];
+		lazy[node * 2 + 1] ^= lazy[node];
+	}
+	lazy[node] = 0;
+	return;
+}
+
+void update(int start, int end, int left, int right, int node, ul value)
+{
+	updateLazyPropagation(start, end, node);	// Lazy propagation 적용
+
+	// 구간에 포함되지 않을경우
+	if (end < left || right < start) return;
+
+	// 구간에 완전히 포함되는 경우
+	if (left <= start && end <= right)
+	{
+		lazy[node] = value;
+		updateLazyPropagation(start, end, node);
+		return;
+	}
+
+	// 구간에 걸쳐있는 경우
+	int mid = (start + end) / 2;
+	update(start, mid, left, right, node * 2, value);
+	update(mid + 1, end, left, right, node * 2 + 1, value);
+	return;
+}
+
+ul getValue(int start, int end, int index, int node)
+{
+	updateLazyPropagation(start, end, node);
+
+	// 구간에 포함되지 않는경우
+	if (end < index || start > index) return 0;
+
+	// 특정 인덱스 원소값 반환
+	if (start == index && index == end)	return segTree[index];
+
+	// 구간에 걸쳐있는 경우
+	int mid = (start + end) / 2;
+	return getValue(start, mid, index, node * 2) + getValue(mid + 1, end, index, node * 2 + 1);
+}
+
+int main()
+{
+	// 입출력 속도 증가
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n;
+	for (int i = 1; i <= n; i++)
+		cin >> segTree[i];
+
+	// 쿼리 질의
+	int queryType, a, b, c;
+	cin >> m;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> queryType;
+		if (queryType == 1)
+		{
+			// [a, b] xor c
+			cin >> a >> b >> c;
+			update(1, n, a + 1, b + 1, 1, c);
+		}
+		else
+		{
+			cin >> a;
+			cout << getValue(1, n, a + 1, 1) << "\n";
+		}
+	}
+
+	return 0;
+}
