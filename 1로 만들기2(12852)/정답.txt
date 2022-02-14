@@ -1,0 +1,84 @@
+#include <iostream>
+#include <queue>
+#include <vector>
+
+#define INF 1000000000
+
+using namespace std;
+
+int prevValue[1000001] = { 0, };	// 이전 값 저장(어떤 값을 거쳐서 왔는지)
+int dp[1000001] = { 0, };	// 최소 횟수 저장
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i < 1000001; i++) dp[i] = INF;
+
+	int n;
+	cin >> n;
+
+	queue<int> q;
+	q.push(n);
+	dp[n] = 0;
+	prevValue[n] = -1;
+	
+	// BFS 탐색 시작
+	while (q.empty() == false)
+	{
+		int cur = q.front();
+		q.pop();
+
+		// 3으로 나누어 떨어지는 경우
+		if (cur > 0 && cur % 3 == 0)
+		{
+			int next = cur / 3;
+			if (dp[next] == INF)
+			{
+				dp[next] = dp[cur] + 1;
+				prevValue[next] = cur;
+				q.push(next);
+			}
+		}
+
+		// 2로 나누어 떨어지는 경우
+		if (cur > 0 && cur % 2 == 0)
+		{
+			int next = cur / 2;
+			if (dp[next] == INF)
+			{
+				dp[next] = dp[cur] + 1;
+				prevValue[next] = cur;
+				q.push(next);
+			}
+		}
+
+		// 1을 빼는 경우
+		if (cur > 1)
+		{
+			int next = cur - 1;
+			if (dp[next] == INF)
+			{
+				dp[next] = dp[cur] + 1;
+				prevValue[next] = cur;
+				q.push(next);
+			}
+		}
+	}
+
+	cout << dp[1] << "\n";
+
+	// 어느 값으로부터 왔는지 탐색 시작
+	int cur = 1;
+	vector<int> v;
+	while (cur != n)
+	{
+		v.push_back(cur);
+		cur = prevValue[cur];
+	}
+
+	v.push_back(n);
+	for (int i = v.size() - 1; i >= 0; i--)
+		cout << v[i] << " ";
+	
+	return 0;
+}

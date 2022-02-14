@@ -1,0 +1,42 @@
+#include <iostream>
+
+#define CNT 100001
+#define INF 2000000000
+
+using namespace std;
+
+int arr[CNT] = { 0, };
+
+int main()
+{
+	// 입풀력 속도 빠르게
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	int n, m;
+	cin >> n >> m;
+	for (int i = 0; i < n; i++)
+		cin >> arr[i];
+
+	int  minValue = INF;
+	int end = 0;
+	int sum = arr[0];
+	for (int start = 0; start < n; start++)
+	{
+		while (sum < m && end < n)	// sum이 m보다 작고, end가 n보다 작을경우 end를 증가시켜 다음 수를sum에 더해줌
+		{
+			end++;
+			sum += arr[end];
+		}
+
+		if (sum >= m)	// sum이 m보다 클경우에만 구간값 갱신
+			minValue = min(minValue, (end - start + 1));
+		sum -= arr[start];
+	}
+	if (minValue == INF) // m인 수를 만드는게 불가능할 경우
+		cout << 0;
+	else
+		cout << minValue;
+}
