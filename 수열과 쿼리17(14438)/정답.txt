@@ -1,0 +1,91 @@
+#include <iostream>
+
+#define CNT 100001
+#define SEG_CNT 100001*4
+#define INF 1000000000
+
+using namespace std;
+
+int n, m;	// 수열의 크기, 쿼리 개수
+int arr[CNT] = { 0, };	// 수열 저장
+int segTree[SEG_CNT] = { 0, };	// 세그먼트 트리
+
+// 세그먼트 트리 초기화
+int init(int start, int end, int node)
+{
+	if (start == end) return segTree[node] = arr[start];
+	int mid = (start + end) / 2;
+	return segTree[node] = min(init(start, mid, node * 2), init(mid + 1, end, node * 2 + 1));
+}
+
+// index배열 위치의 세그먼트 트리 갱신
+void update(int start, int end, int index, int node)
+{
+	// 구간에 포함되지 않는경우
+	if (end < index || index < start) return;
+
+	// 구간이 index 인 경우
+	if (index == start && index == end)
+	{
+		segTree[node] = arr[index];
+		return;
+	}
+
+	// 구간에 걸쳐있는 경우
+	int mid = (start + end) / 2;
+	update(start, mid, index, node * 2);
+	update(mid + 1, end, index, node * 2 + 1);
+	segTree[node] = min(segTree[node * 2], segTree[node * 2 + 1]);	// 세그먼트 트리 갱신
+}
+
+int getMinValue(int start, int end, int left, int right, int node)
+{
+	// 구간에 포함되지 않는 경우
+	if (end < left || right < start) return INF;
+
+	// 구간에 포함되는 경우
+	if (left <= start && end <= right) return segTree[node];
+	
+	// 구간에 걸쳐있는 경우
+	int mid = (start + end) / 2;
+	return min(getMinValue(start, mid, left, right, node * 2), getMinValue(mid + 1, end, left, right, node * 2 +1));
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 수열 입력 받음
+	cin >> n;
+	for (int i = 1; i <= n; i++)
+		cin >> arr[i];
+
+	// 초기화
+	init(1, n, 1);
+
+	// 쿼리 질의
+	int queryType, a, b;
+	cin >> m;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> queryType;
+		if (queryType == 1)
+		{
+			// change a index -> change value b
+			cin >> a >> b;
+			arr[a] = b;
+			update(1, n, a, 1);
+		}
+		else
+		{
+			// show [a, b] min value
+			cin >> a >> b;
+			cout << getMinValue(1, n, a, b, 1) << "\n";
+		}
+	}
+
+	return 0;
+}
