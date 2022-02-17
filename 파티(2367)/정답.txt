@@ -1,0 +1,111 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+#define INF 1000000000
+#define PEOPLE_COUNT 200
+#define COOK_TYPE_COUNT 100
+#define NODE_COUNT 302	// 0:SOURCE, 301:SINK, 1~200:people, 201~300:cook
+#define SOURCE 0
+#define SINK 301
+
+using namespace std;
+
+int k, n, d;
+vector<int> edges[NODE_COUNT];
+int capacity[NODE_COUNT][NODE_COUNT] = { 0, };
+int flow[NODE_COUNT][NODE_COUNT] = { 0, };
+int prevNode[NODE_COUNT] = { 0, };
+
+// 에드몬드 카프 알고리즘 수행
+int edmondKarp(int start, int end)
+{
+	int result = 0;
+	while (true)
+	{
+		// 초기화
+		fill(prevNode, prevNode + NODE_COUNT, -1);
+
+		// 시작점 큐에 추가
+		queue<int> q;
+		q.push(start);
+		while (q.empty() == false && prevNode[end] == -1)
+		{
+			int cur = q.front();
+			q.pop();
+			for (int i = 0; i < edges[cur].size(); i++)
+			{
+				int next = edges[cur].at(i);
+				if (prevNode[next] == -1 && capacity[cur][next] - flow[cur][next] > 0)
+				{
+					prevNode[next] = cur;
+					q.push(next);
+					if (next == end) break;
+				}
+			}
+		}
+
+		if (prevNode[end] == -1) break;	// 출발점에서 도착점까지의 경로가 없음
+
+		int minFlow = INF;
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			minFlow = min(minFlow, capacity[prev][i] - flow[prev][i]);
+		}
+
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			flow[prev][i] += minFlow;
+			flow[i][prev] -= minFlow;
+
+		}
+		result += minFlow;
+	}
+	return result;
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	cin >> n >> k >> d;
+
+	// 0:SOURCE, 301:SINK, 1~200:people, 201~300:cook
+	// Source와 요리사 연결
+	for (int i = 1; i <= PEOPLE_COUNT; i++)
+	{
+		edges[SOURCE].push_back(i);
+		edges[i].push_back(SOURCE);
+		capacity[SOURCE][i] = k;	// 한사람당 최대 k개의 접시만큼만 가져갈 수 있음
+	}
+	
+	// 0:SOURCE, 301:SINK, 1~200:people, 201~300:cook
+	// 요리 종류와 Sink 연결 (각 음식의 종유마다 가져올 수 있는 양의 제한)
+	for (int i = 1; i <= d; i++)
+	{
+		cin >> capacity[200 + i][SINK];
+		edges[200 + i].push_back(SINK);
+		edges[SINK].push_back(200 + i);
+	}
+
+	// 요리사와 요리 연결(capacity : 1 (한사람당 같은요리는 하나밖에 못가져감))
+	int cnt, cookNum;
+	for (int i = 1; i <= n; i++)
+	{
+		cin >> cnt;
+		for (int j = 1; j <= cnt; j++)
+		{
+			cin >> cookNum;
+			capacity[i][cookNum + 200] = 1;	// 한명의 요리사가 같은종류의 음식은 최대 한개까지만 가능	
+			edges[i].push_back(cookNum + 200);	// 간선 연결
+			edges[cookNum + 200].push_back(i);
+		}
+	}
+
+	cout << edmondKarp(SOURCE, SINK);
+	return 0;
+}
