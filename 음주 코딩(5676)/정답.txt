@@ -1,0 +1,117 @@
+#include <iostream>
+
+#define CNT 100001
+#define SEG_CNT 100001*4
+
+using namespace std;
+
+int n, k;	// 수열의 크기, 쿼리 수
+int arr[CNT] = { 0, };	// 수열 저장
+int segTree[SEG_CNT] = { 0, };	// 세그먼트 트리
+
+// 세그먼트 트리 초기화
+int init(int start, int end, int node)
+{
+	if (start == end) return segTree[node] = arr[start];
+	int mid = (start + end) / 2;
+	return segTree[node] = init(start, mid, node * 2) * init(mid + 1, end, node * 2 + 1);
+}
+
+// index 지점 업데이트
+void update(int start, int end, int index, int node)
+{
+	// 구간에 포함되지 않는경우
+	if (end < index || start > index) return;
+
+	// 구간에 완전히 포함되는 경우
+	if (start == index && end == index)
+	{
+		segTree[node] = arr[start];
+		return;
+	}
+
+	// 구간에 걸쳐있는 경우
+	int mid = (start + end) / 2;
+	update(start, mid, index, node * 2);
+	update(mid + 1, end, index, node * 2 + 1);
+	segTree[node] = segTree[node * 2] * segTree[node * 2 + 1];	// 세그먼트 트리 갱신
+}
+
+int getMultiplyValue(int start, int end, int left, int right, int node)
+{
+	// 구간에 포함되지 않는경우
+	if (end < left || right < start) return 1;	// 어떤수에 1을 곱하면 결국 자기자신이 나옴
+
+	// 구간에 포함
+	if (left <= start && end <= right) return segTree[node];
+	
+	// 구간에 걸쳐있는 경우
+	int mid = (start + end) / 2;
+	return getMultiplyValue(start, mid, left, right, node * 2) * getMultiplyValue(mid + 1, end, left, right, node * 2 + 1);
+}
+
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	while (true)
+	{
+		// 사용자 입력 받음
+		cin >> n >> k;
+		if (cin.eof() == true)
+			break;
+
+		int num;
+		for (int i = 1; i <= n; i++)
+		{
+			cin >> num;
+			if (num == 0)
+				arr[i] = 0;
+			else if (num > 0)
+				arr[i] = 1;
+			else
+				arr[i] = -1;
+		}
+			
+		// 초기화
+		init(1, n, 1);
+
+		// 쿼리 질의
+		char queryType;
+		int a, b;
+		for (int i = 0; i < k; i++)
+		{
+			cin >> queryType;
+			if (queryType == 'C')
+			{
+				// change b value of index a
+				cin >> a >> b;
+				if (b == 0) arr[a] = 0;
+				else if (b > 0) arr[a] = 1;
+				else arr[a] = -1;
+				
+				update(1, n, a, 1);
+			}
+			else
+			{
+				// show multiply [a, b]
+				cin >> a >> b;
+				int v = getMultiplyValue(1, n, a, b, 1);
+				if (v == 0)
+					cout << 0;
+				else if (v > 0)
+					cout << '+';
+				else
+					cout << '-';
+			}
+		}
+
+		cout << "\n";
+	}
+	
+	return 0;
+}
