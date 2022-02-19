@@ -1,0 +1,160 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+
+/*
+행과 열을 각각 넘버링 하여 하나의 노드로 봄
+위치 추적기가 있는곳은 행과 열을 아예 들리지 않거나, 행이나 열을 둘다 들려야함
+보석은 행으로 접근할 경우, 보석의 위치를 열로는 접근 할 수 없고, 
+열로 접근할 경우 행으로는 접근 할 수없음
+ 
+x -> 행으로 접근
+y -> 열로 접근
+위치추적기(행으로 위치추적기가 있는 위치를 접근할 경우 반드시 열로 한번더 접근 해야함 또는 아예 접근하지않음)
+
+(x && y) || (!x && !y)
+x y
+0 0
+1 1
+(!x || y) && (x || !y)
+
+
+보석(행이나 열 둘중 하나로만 접근해야함)
+
+(x && !y) || (!x && y)
+x y
+0 1
+1 0
+(x || y) && (!x || !y)
+*/
+
+#define MAP_SIZE 1000
+
+// 행 사용 넘버링(1~1000), 행 사용X 넘버링(1001~2000)
+// 열 사용 넘버링(2001~3000), 열 사용X 넘버링(3001~4000)
+#define NODE_COUNT 2002*2
+
+using namespace std;
+
+int n, m, discoverId = 0, sccGroupId = 1;
+vector<int> edges[NODE_COUNT];	// 간선정보
+char map[MAP_SIZE][MAP_SIZE] = { 0, };	// 맵 정보
+bool finished[NODE_COUNT] = { 0, };	// 타잔 알고리즘 수행 중인지 확인
+int discover[NODE_COUNT] = { 0, };	// 방문 순서 저장 배열
+int group[NODE_COUNT] = { 0, };	// scc 그룹 번호 저장
+vector<vector<int>> SCC;	// scc 저장
+stack<int> st;
+
+// 타잔 알고리즘 수행
+int dfs(int node)
+{
+	int minVisitedId = ++discoverId;	// 방문 순서 저장
+	discover[node] = minVisitedId;
+	st.push(node);
+
+	// 인접 노드를 탐색하면서 사이클이 발생할 경우 사이클이 발생한 노드의 방문 순서 아이디를 가져오기 위함
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (discover[next] == -1)
+		{
+			// 방문하지 않은 정점이면 방문 후 방문 순서 아이디가 더 작은 값으로 세팅
+			minVisitedId = min(minVisitedId, dfs(next));
+		}
+		else if (finished[next] == false)
+		{
+			// DFS를 수행중인 정점을 만날경우
+			// 해당 정점은 이미 dfs를 수행하여 방문 아이디가 세팅되어 있고,
+			// 해당 노드가 이미 스택에 추가되어 있으므로
+			// dfs를 수행하는것이 아니라, 방문 아이디를 비교하여 더 작은 값으로 세팅함
+			minVisitedId = min(minVisitedId, discover[next]);
+		}
+	}
+
+	// SCC의 최초 방문한 노드일 경우
+	if (minVisitedId == discover[node])
+	{
+		vector<int> scc;
+		while (true)
+		{
+			int temp = st.top();
+			st.pop();
+			finished[temp] = true;
+			scc.push_back(temp);
+			group[temp] = sccGroupId;
+			if (temp == node) break;
+		}
+		sccGroupId++;
+		SCC.push_back(scc);
+	}
+
+	return minVisitedId;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 초기화
+	fill(discover, discover + NODE_COUNT, -1);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 0; i < n; i++)
+		cin >> map[i];
+	
+	// 노드 생성
+	for (int y = 0; y < n; y++)
+	{
+		for (int x = 0; x < m; x++)
+		{
+			int row = x + 1;	// 노드가 1 부터 시작
+			int col = y + 2001;	// 노드가 2001 부터 시작
+			int not_row = row + 1000;	// 행 사용X 노드 번호 1001~2000
+			int not_col = col + 1000;	// 열 사용X 노드 번호 3001~4000
+
+			if (map[y][x] == '#')	// 위치추적기  (!x || y) && (x || !y)
+			{
+				edges[row].push_back(col);
+				edges[col].push_back(row);
+				edges[not_row].push_back(not_col);
+				edges[not_col].push_back(not_row);
+			}
+			else if (map[y][x] == '*')	// 보석	(x || y) && (!x || !y)
+			{
+				edges[not_row].push_back(col);
+				edges[not_col].push_back(row);
+				edges[row].push_back(not_col);
+				edges[col].push_back(not_row);
+			}
+		}
+	}
+
+	// 타잔 알고리즘 수행
+	for (int i = 1; i <= 4000; i++)
+	{
+		if (discover[i] == -1) dfs(i);
+	}
+
+	// 보석을 훔치는게 가능한지 출력
+	// 행 사용 넘버링(1~1000), 행 사용X 넘버링(1001~2000)
+	bool result = true;
+	for (int i = 1; i <= 1000; i++)
+	{
+		if (group[i] == group[i + 1000])
+			result = false;
+	}
+
+	// 열 사용 넘버링(2001~3000), 열 사용X 넘버링(3001~4000)
+	for (int i = 2001; i <= 3000; i++)
+	{
+		if (group[i] == group[i + 1000])
+			result = false;
+	}
+
+	cout << result;
+	return 0;
+}
