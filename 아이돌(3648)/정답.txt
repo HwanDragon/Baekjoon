@@ -1,0 +1,186 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+
+// num1, num2 중에서 적어도 하나는 투표결과가 반영되어야 하므로, 
+// num1이 반영되고, num2가 반영되지 않거나	(num1 && !num2)
+// num1이 반영되지 않고, num2가 반영되거나	(!num1 && num2)
+// num1이 반영되고, num2가 반영되는 총 세가지 경우가 있음	(num1 && num2)
+// 
+// (num1 && !num2) || (!num1 && num2) || (num1 && num2) 의 식을 도출할 수 있고, 
+// 위의 식에서 num1, num2에 0, 1을 대입한 결과를 보면 다음과 같다
+// num1		num2	result
+//  1		 0		  1
+//  0		 1		  1
+//  1		 1		  1
+//  0		 0		  0
+// 
+// 즉, f = (a || b) 로 정리 할 수 있음
+
+/*
+
+  노드정보  배열 인덱스
+	-1			0
+	1			1
+
+	-2			2
+	2			3
+
+	-3			4
+	3			5
+
+	-4			6
+	4			7
+*/
+
+#define NODE_CNT 2000
+
+using namespace std;
+
+int n, m, discoverId = 0, sccGroupId = 1;
+vector<int> edges[NODE_CNT];
+bool finished[NODE_CNT] = { 0, };
+int discover[NODE_CNT] = { 0, };
+int group[NODE_CNT] = { 0, };
+vector<vector<int>> SCC;
+stack<int> st;
+
+int dfs(int node)
+{
+	int minDiscoverId = ++discoverId;
+	discover[node] = minDiscoverId;
+	st.push(node);
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (discover[next] == -1)
+		{
+			minDiscoverId = min(minDiscoverId, dfs(next));
+		}
+		else if (finished[next] == false)
+		{
+			minDiscoverId = min(minDiscoverId, discover[next]);
+		}
+	}
+
+	if (minDiscoverId == discover[node])
+	{
+		vector<int> scc;
+		while (true)
+		{
+			int temp = st.top();
+			st.pop();
+			finished[temp] = true;
+			scc.push_back(temp);
+			group[temp] = sccGroupId;
+			if (temp == node) break;
+		}
+		sccGroupId++;
+		SCC.push_back(scc);
+	}
+
+	return minDiscoverId;
+}
+
+void init()
+{
+	discoverId = 0;
+	sccGroupId = 1;
+	fill(finished, finished + NODE_CNT, false);
+	fill(discover, discover + NODE_CNT, -1);
+	fill(group, group + NODE_CNT, 0);
+	SCC.clear();
+	while (st.empty() == false) st.pop();
+
+	for (int i = 0; i < NODE_CNT; i++)
+	{
+		edges[i].clear();
+	}
+}
+
+void input(int num1, int num2)
+{
+	/*
+  노드정보  배열 인덱스
+	-1			0
+	1			1
+
+	-2			2
+	2			3
+
+	-3			4
+	3			5
+
+	-4			6
+	4			7
+
+	*/
+	int a, b, not_a, not_b;
+	if (num1 < 0)
+	{
+		a = (num1 + 1) * -2;	// num1 선수가 불합격 했으면 하는 투표
+		not_a = a + 1;
+	}
+	else
+	{
+		a = num1 * 2 - 1;	// num1 선수가 합격 했으면 하는 투표
+		not_a = a - 1;
+	}
+
+	if (num2 < 0)
+	{
+		b = (num2 + 1) * -2;	// num2 선수가 불합격 했으면 하는 투표
+		not_b = b + 1;
+	}
+	else
+	{
+		b = num2 * 2 - 1;
+		not_b = b - 1;
+	}
+	
+	edges[not_a].push_back(b);
+	edges[not_b].push_back(a);
+}
+
+int main()
+{
+	while (true)
+	{
+		init();
+		cin >> n >> m;
+		if (cin.eof() == true) break;
+
+		int a, b;
+		for (int i = 0; i < m; i++)
+		{
+			cin >> a >> b;
+			input(a, b);
+		}
+
+		// 상근이는 무조건 합격해야 하므로, 1번이 무조건 합격할 수 있도록 조건 추가(x1 && x1)
+		//edges[0].push_back(1);
+		edges[0].push_back(1);
+
+		// 타잔 알고리즘 수행
+		for (int i = 0; i < 2*n; i++)
+		{
+			if (discover[i] == -1) dfs(i);
+		}
+
+
+		bool r = true;
+		for (int i = 0; i < 2*n; i += 2)
+		{
+			if (group[i] == group[i + 1])
+				r = false;
+		}
+
+		if (r == true)
+			cout << "yes\n";
+		else
+			cout << "no\n";
+	}
+
+	return 0;
+}

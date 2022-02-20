@@ -1,0 +1,99 @@
+#include <iostream>
+#include <vector>
+
+/*
+l 그룹 : 컴퓨터 학부
+r 그룹 : 소프트웨어 학부
+
+내용이 중복되는 강의는 하나밖에 수강 할 수 없으므로,
+l 그룹을 컴퓨터 학부, r 그룹을 소프트웨어 학부로 두고
+간선을 하나 선택하게 되면, 간선의 양 끝에 있는 컴퓨터 학부의 강의와 소프트웨어 학부의 강의중
+하나만 선택 할 수 있다.(최대 매칭 후, 매칭 되지 않은 항목들은 중복되지 않으므로, 최대 매칭 + 양측의 매칭되지 않은 노드들로도 계산 가능)
+
+문제에서 중복되는 강의는 듣지 않으므로,
+전체 - 중복되는 강의를 선택하는 최소한의 수 = 최대로 수강할 수 있는 강의 수
+이다.
+
+전체는 n 이고, 
+중복되는 강의를 선택하는 최소한의 수 = 최소 버텍스 커버(쾨닉의 정리) 이므로
+n - 최대 매칭
+
+으로 계산 할 수 있음
+*/
+
+#define NODE_CNT 2001
+
+using namespace std;
+
+int n, m;	// 강의 수, 강의 중 겹치는 내용이 존재하는 관계 수
+bool visited[NODE_CNT] = { 0, };	// 방문 여부 저장
+char departments[NODE_CNT] = { 0, };	// 학부 정보 저장
+vector<int> edges[NODE_CNT];	// 간선정보
+int prevNode[NODE_CNT];	// 이전노드 저장
+
+// 이분매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (visited[node] == true) return false;
+	visited[node] = true;
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (prevNode[next] == -1 || dfs(prevNode[next]))
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+	return false;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 매칭 정보 초기화
+	fill(prevNode, prevNode + NODE_CNT, -1);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int lectureNum;
+	char depart;
+	for (int i = 1; i <= n; i++)
+	{
+		cin >> lectureNum >> depart;
+		departments[lectureNum] = depart;
+	}
+	
+	// L그룹 : 컴퓨터 학부 , R 그룹 : 소프트웨어 학부
+	int a, b;
+	for (int i = 0; i < m; i++)
+	{
+		// 컴퓨터 학부와 소프트웨어 학부 이분그래프 생성
+		cin >> a >> b;
+		if (departments[a] == 'c')
+		{
+			edges[a].push_back(b);
+		}
+		else if (departments[b] == 'c')
+		{
+			edges[b].push_back(a);
+		}
+	}
+
+	// 이분매칭 알고리즘 수행
+	int cnt = 0;
+	for (int i = 1; i <= n; i++)
+	{
+		fill(visited, visited + NODE_CNT, false);
+		if (dfs(i) == true) cnt++;
+	}
+
+	cout << n - cnt;
+
+	return 0;
+}
