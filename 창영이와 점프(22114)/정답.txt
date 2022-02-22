@@ -1,0 +1,57 @@
+#include <iostream>
+
+using namespace std;
+
+int dists[100000];	// 거리 저장
+
+int main()
+{
+	// 사용자 입력 받음
+	int n, k;
+	cin >> n >> k;
+	for (int i = 0; i < n - 1; i++)
+		cin >> dists[i];
+
+	int maxValue = 0, end = 0;	// 최대값, end 포인터 위치
+	int jumpIndex = -1;	// 점프한 곳의 위치
+	bool usingJump = false;	// 실제로 점프를 사용해서 최대값을 찾았는지 여부 저장
+
+	// 투포인터 탐색 시작
+	for (int start = 0; start < n - 1; start++)
+	{
+		if (jumpIndex < start) jumpIndex = -1;	// 점프를 한 곳의 위치보다 시작점이 클경우 리셋
+
+		if (end < start) end = start;	// 시작점이 더 클경우 end를 start로 세팅
+
+		while (end < n - 1)
+		{
+			if (jumpIndex != -1 && dists[end] > k) break;		// 점프도 사용했고, 그다음 블럭도 갈 수 없는 곳일 경우 pass
+
+			if (dists[end] <= k)	// 점프하지 않고 갈 수 잇는 곳일 경우
+				end++;
+
+			// 그 다음 위치가 k보다 크지만, 점프를 사용하지 않은 경우
+			if (jumpIndex == -1 && dists[end] > k)
+			{
+				jumpIndex = end;	// 점프한곳의 위치 기억
+				usingJump = true;	// 점프 사용
+				end++;	// end 하나 증가시킴
+			}
+
+			// 최대값 갱신
+			if (maxValue <= end - start)
+			{
+				// 점프를 사용하지 않은채로 최대값을 갱신할 경우
+				// 점프를 사용하지 않은것으로 간주
+				if (jumpIndex == -1) usingJump = false;	
+				maxValue = end - start;	// 최대값 갱신
+			}
+		}
+
+		if (end >= n - 1) break;	// 끝까지 도달한경우 더이상 탐색할 필요가 없음
+	}
+
+	std::cout << maxValue + 1;	// 시작 보도블럭 추가
+
+	return 0;
+}
