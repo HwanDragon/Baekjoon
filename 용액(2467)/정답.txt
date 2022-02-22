@@ -1,0 +1,79 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+/*
+용액의 특성값을 음수, 양수로 나누어 투 포인터 탐색을 진행한다.
+각각의 용액을 오름차순으로 정렬한 후, 투포인터 탐색을 진행하고, 
+두 용액의 합의 절대값이 최소일때의 인덱스를 각각 저장한다.
+그리고, 산성용액 두개, 알칼리성 용액 두개를 합한값이 가장 0에 가까울 수 도 있으므로
+계산하여 비교하여 최소일때를 출력해주면 된다.
+*/
+
+#define INF 2100000000
+
+using namespace std;
+
+typedef long long ll;
+
+int n;
+vector<int> positive;	// 0이상의 특성을 띄는 용액 저장
+vector<int> negative;	// 0 미만의 특성을 띄는 용액 저장
+
+int main()
+{
+	// 사용자 입력 받음
+	cin >> n;
+	int num;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> num;
+		if (num < 0)
+			negative.push_back(num);
+		else
+			positive.push_back(num);
+	}
+
+	// 오름차순으로 각각 정렬함
+	sort(positive.begin(), positive.end());
+	sort(negative.begin(), negative.end(), greater<>());
+
+	// 투포인터 탐색 진행
+	int poIndex = 0;
+	int negaIndex = 0;
+	ll minValue = INF;	// 0에 가까운 최소값 저장
+	int minPoIndex = 0, minNegaIndex = 0;	// 0에 가까운 합 중, 산성 용액 인덱스, 알칼리성 용액 인덱스
+	while ((poIndex < positive.size()) && (negaIndex < negative.size()))	// 배열 크기만큼 순환
+	{
+		ll s = positive[poIndex] + negative[negaIndex];	// 두 용액의 합 저장
+		if (abs(s) < abs(minValue))	// 두 용액이 합이 기존 최소값보다 작을경우
+		{
+			minPoIndex = poIndex;	// 산성 용액 인덱스 저장
+			minNegaIndex = negaIndex;	// 알칼리성 용액 인덱스 저장
+			minValue = s;	// 최소값 저장
+		}
+
+		if (s > 0)	// 0보다 클경우 알칼리성 용액 인덱스를 증가시켜 확인함
+			negaIndex++;	// 알칼리성 용액 인덱스
+		else
+			poIndex++;	// 산성용액 인덱스
+	}
+
+	ll s1 = INF;	// 산성용액 두개 합 저장
+	if (positive.size() >= 2)
+		s1 = positive[0] + positive[1];
+	
+	ll s2 = INF;	// 알칼리성 용액 두개 합 저장
+	if (negative.size() >= 2)
+		s2 = negative[0] + negative[1];
+
+	// 결과 출력
+	if (abs(minValue) < abs(s1) && abs(minValue) < abs(s2))	// 용액 두개의 합이 가장 작을경우
+		cout << negative[minNegaIndex] << " " << positive[minPoIndex];
+	else if (abs(s1) < abs(minValue) && abs(s1) < abs(s2))	// 산성용액 두개합이 가장 작을경우
+		cout << positive[0] << " " << positive[1];
+	else	// 알칼리성 용액 두개의 합이 가장 작을경우
+		cout << negative[1] << " " << negative[0];
+
+	return 0;
+}
