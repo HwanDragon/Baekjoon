@@ -1,0 +1,113 @@
+#include <iostream>
+#include <vector>
+
+#define CNT 100001
+#define SEG_CNT 100001*4
+
+using namespace std;
+
+int arr[CNT] = { 0, };	// 수열 저장
+vector<int> segTree[SEG_CNT];	// 각각의 노드가 배열인 세그먼트 트리 생성
+
+void merge(int node);	// merge 함수 선언
+
+// 초기화
+void init(int start, int end, int node)
+{
+	if (start == end) // 단일 원소일 경우
+	{
+		segTree[node].push_back(arr[start]);	// 수열 값을 세그먼트 트리에 추가
+		return;
+	}
+
+	// 단일 원소가 아닐경우 분할 정복을 이용하여 절반씩 나눔
+	int mid = (start + end) / 2;
+	init(start, mid, node * 2);
+	init(mid + 1, end, node * 2 + 1);
+	merge(node);	// 절반씩 나뉜 배열을 합침
+}
+
+// node 번호를 입력 받아 병합하는 함수
+void merge(int node)
+{
+	int lIndex = 0;	// 왼쪽 배열을 탐색할 노드 인덱스
+	int rIndex = 0;	// 오른쪽 배열을 탐색할 노드 인덱스
+	
+	vector<int>& leftSegTree = segTree[node * 2];	// 왼쪽 자식 노드
+	vector<int>& rightSegTree = segTree[node * 2 + 1];	// 오른쪽 자식 노드
+
+	// 각각 정렬되어있는 왼쪽, 오른쪽 자식들 중 더 작은값을 node에 추가함(배열을 벗어나지 않는 범위에서)
+	while (lIndex < leftSegTree.size() && rIndex < rightSegTree.size())
+	{
+		if (leftSegTree.at(lIndex) > rightSegTree.at(rIndex))
+			segTree[node].push_back(rightSegTree.at(rIndex++));
+		else
+			segTree[node].push_back(leftSegTree.at(lIndex++));
+	}
+
+	// 왼쪽 배열방에 아직 추가하지 않은 항목이 남아있을 경우
+	for (int i = lIndex; i < leftSegTree.size(); i++)
+		segTree[node].push_back(leftSegTree.at(i));
+
+	// 오른쪽 배열방에 아직 추가하지 않은 항목이 남아있을 경우
+	for (int i = rIndex; i < rightSegTree.size(); i++)
+		segTree[node].push_back(rightSegTree.at(i));
+}
+
+int query(int start, int end, int left, int right, int node, int value)
+{
+	// 구간에 포함되지 않는 경우
+	if (end < left || right < start) return 0;
+
+	// 구간에 완전히 포함되는 경우
+	if (left <= start && end <= right)
+	{
+		int r = 0, s = 0, e = segTree[node].size();
+		
+		// 이분탐색을 이용하여 원소의 개수 탐색
+		while (s < e)
+		{
+			int mid = (s + e) / 2;
+			if (segTree[node].at(mid) > value)
+				e = mid;
+			else if (segTree[node].at(mid) < value)
+				s = mid + 1;
+			else
+				s = mid + 1;
+		}
+
+		return segTree[node].size() - e;
+	}
+
+	// 구간에 걸쳐있는 경우
+	int mid = (start + end) / 2;
+	return query(start, mid, left, right, node * 2, value) + query(mid + 1, end, left, right, node * 2 + 1, value);
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	int n, k;
+	cin >> n;
+	for (int i = 1; i <= n; i++)
+		cin >> arr[i];
+
+	// 초기화
+	init(1, n, 1);
+
+	// 쿼리 질의
+	cin >> k;
+	int a, b, c;
+	for (int i = 0; i < k; i++)
+	{
+		cin >> a >> b >> c;
+		cout << query(1, n , a, b, 1, c) << "\n";
+	}
+	
+	return 0;
+}
