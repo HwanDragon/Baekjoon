@@ -1,0 +1,145 @@
+#include <iostream>
+#include <vector>
+
+#define CNT 100001
+#define SEG_CNT 100001*4
+
+using namespace std;
+
+int n, m, cnt = 0;	// 직원 수, 쿼리 수, dfs탐색 순서 
+int segTree[SEG_CNT] = { 0, };	// 세그먼트 트리
+int lazy[SEG_CNT] = { 0, };	// Lazy propagation
+vector<int> edges[CNT];	// 직속 상사와 부하 정보 저장
+int parent[CNT];	// 직속 상사 번호 저장
+int S[CNT];	// dfs 탐색 시작 순서 저장(오일러 경로 테크닉)
+int E[CNT];	// dfs 탐색 종료 순서 저장(오일러 경로 테크닉)
+int underPraise[CNT];	// 부하직원으로부터 칭찬 받은 정도
+
+// Lazy propagation 적용
+void updateLazy(int start, int end, int node)
+{
+	if (lazy[node] == 0) return;	// 적용할 값이 없을 경우
+
+	segTree[node] += lazy[node];	// lazy 값 적용
+	if (start != end)	// 자식 노드가 있을 경우 자식에게 상속
+	{
+		lazy[node * 2] += lazy[node];
+		lazy[node * 2 + 1] += lazy[node];
+	}
+	lazy[node] = 0;	// lazy값 초기화	
+}
+
+void update(int start, int end, int left, int right, int node, int value)
+{
+	updateLazy(start, end, node);
+
+	// 구간이 겹치지 않는 경우
+	if (end < left || right < start) return;
+
+	// 구간이 완전히 겹치는 경우
+	if (left <= start && end <= right)
+	{
+		lazy[node] += value;
+		updateLazy(start, end, node);
+		return;
+	}
+
+	// 구간이 걸치는 경우
+	int mid = (start + end) / 2;
+	update(start, mid, left, right, node * 2, value);
+	update(mid + 1, end, left, right, node * 2 + 1, value);
+}
+
+// 구간 [start, end]에서 index와 같은 원소를 찾음
+int query(int start, int end, int index, int node)
+{
+	updateLazy(start, end, node);
+
+	// 구간이 겹치지 않는경우
+	if (index < start || end < index) return 0;
+
+	// 해당 인덱스를 찾은 경우
+	if (start == index && end == index) return segTree[node];
+
+	// 구간에 걸쳐있는 경우
+	int mid = (start + end) / 2;
+	return query(start, mid, index, node * 2) + query(mid + 1, end, index, node *2 + 1);
+}
+
+// dfs 탐색의 시작 순서와 종료 순서 기록(오일러 경로 테크닉 적용)
+void dfs(int node)
+{
+	S[node] = ++cnt;	// dfs 탐색 시작 순서 기록
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		dfs(next);
+	}
+	E[node] = cnt;	// dfs 탐색 종료 순서 기록
+}
+
+// 부하 직원으로부터 칭찬 받았을 경우 underPaise 배열에 칭찬받은 정도를 저장
+// 부모노드는 재귀적으로 호출하여 칭찬받은 정도를 더해나감
+void praise(int node, int value)
+{
+	if (node == -1) return;
+	int p = parent[node];
+	underPraise[node] += value;
+	praise(p, value);
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int boss;
+	for (int i = 1; i <= n; i++)
+	{
+		cin >> boss;
+		if (boss != -1)
+			edges[boss].push_back(i);
+		parent[i] = boss;
+	}
+
+	// 오일러 경로 테크닉 적용을 위해 dfs 탐색
+	dfs(1);
+
+	// 쿼리 질의
+	int a, b, c;
+	bool bottom = true;	// 칭찬의 방향(처음에는 아래)
+	for (int i = 0; i < m; i++)
+	{
+		cin >> a;
+		if (a == 1)
+		{
+			cin >> b >> c;	// 칭찬의 방향에 따라 b번째 직원이 c만큼 칭찬을 받음
+			if (bottom == true)
+			{
+				// b번째 직원이 직속 상사로부터 c만큼 칭찬 받음
+				update(1, n, S[b], E[b], 1, c);
+			}
+			else
+			{
+				// b번째 직원이 부하직원으로부터 c만큼 칭찬받음
+				praise(b, c);
+			}
+		}
+		else if (a == 2)
+		{
+			cin >> b;	// b번째 직원이 칭찬받은 정도를 출력
+			cout << query(1, n, S[b], 1) + underPraise[b] << "\n";
+		}
+		else
+		{
+			bottom = !bottom;	// 칭찬의 방향 변경
+		}
+	}
+
+
+	return 0;
+}
