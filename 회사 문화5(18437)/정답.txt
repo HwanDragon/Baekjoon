@@ -1,0 +1,143 @@
+#include <iostream>
+#include <vector>
+
+#define CNT 100001
+#define SEG_CNT 100001*4
+
+using namespace std;
+
+int n, m, cnt = 0;	// 직원 수, 쿼리 수, dfs 탐색 순서
+int segTree[SEG_CNT];	// 세그먼트 트리
+int lazy[SEG_CNT];	// -1 이면 컴퓨터를 꺼야하고, 1이면 켜야함, 0이면 아무상태 아님
+int S[CNT], E[CNT];	// dfs 시작순서, 종료 순서 저장(오일러 경로 테크닉)
+vector<int> edges[CNT];	// 부하직원과 상사 정보 저장(간선정보)
+
+// 세그먼트 트리 초기화
+int init(int start, int end, int node)
+{
+	if (start == end) return segTree[node] = 1;
+
+	int mid = (start + end) / 2;
+	return segTree[node] = init(start, mid, node * 2) + init(mid + 1, end, node * 2 + 1);
+}
+
+// Lazy propagation 적용
+void updateLazy(int start, int end, int node)
+{
+	if (lazy[node] == 0) return;	// 적용할 값이 없음
+
+	if (lazy[node] == 1)
+		segTree[node] = (end - start + 1);	// 구간 만큼 컴퓨터를 켬
+	else if (lazy[node] == -1)
+		segTree[node] = 0;	// 컴퓨터를 끔
+
+	if (start != end)	// 자식 노드가 있을 경우 값 상속
+	{
+		lazy[node * 2] = lazy[node];
+		lazy[node * 2 + 1] = lazy[node];
+	}
+	lazy[node] = 0;	// 초기화
+}
+
+void update(int start, int end, int left, int right, int node, int switchState)
+{
+	updateLazy(start, end, node);
+
+	// 구간이 겹치지 않는경우
+	if (end < left || right < start) return;
+
+	// 구간이 완전히 겹치는 경우
+	if (left <= start && end <= right)
+	{
+		lazy[node] = switchState;
+		updateLazy(start, end, node);
+		return;
+	}
+
+	// 구간이 걸쳐있는 경우
+	int mid = (start + end) / 2;
+	update(start, mid, left, right, node * 2, switchState);
+	update(mid + 1, end, left, right, node * 2 + 1, switchState);
+	segTree[node] = segTree[node * 2] + segTree[node * 2 + 1];
+}
+
+int query(int start, int end, int left, int right, int node)
+{
+	updateLazy(start, end, node);
+
+	// 구간이 겹치지 않는경우
+	if (end < left || right < start) return 0;
+
+	// 구간이 완전히 겹치는 경우
+	if (left <= start && end <= right) return segTree[node];
+
+	// 구간이 걸쳐있는 경우
+	int mid = (start + end) / 2;
+	return query(start, mid, left, right, node * 2) + query(mid + 1, end, left, right, node * 2 + 1);
+}
+
+// dfs 시작 순서와 종료 순서 저장(오일러 경로 테크닉)
+void dfs(int node)
+{
+	S[node] = ++cnt;	// dfs 시작 순서 저장
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		dfs(next);
+	}
+	E[node] = cnt;	// dfs 종료 순서 저장
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n;
+	int boss;
+	for (int i = 1; i<= n; i++)
+	{
+		cin >> boss;
+		if (boss == 0) continue;
+		edges[boss].push_back(i);
+	}
+
+	// dfs 시작, 종료 순서 저장
+	dfs(1);
+
+	// 초기화
+	init(1, n, 1);
+
+	// 쿼리 질의
+	cin >> m;
+	int a, b;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> a >> b;
+		if (a == 1)
+		{
+			// b번 직원을 상사로 가지고 있는 모든 직원은 컴퓨터를 켬
+			if (S[b] + 1 > E[b]) continue;
+			update(1, n, S[b] + 1, E[b], 1, 1);
+		}
+		else if (a == 2)
+		{
+			// b번 직원을 상사로 가지고 있는 모든 직원은 컴퓨터를 끔
+			if (S[b] + 1 > E[b]) continue;
+			update(1, n, S[b] + 1, E[b], 1, -1);
+		}
+		else
+		{
+			// b번 직원을 상사로 가지고 있는 모든 직원중 컴퓨터가 켜져있는 직원 수 출력
+			if (edges[b].size() == 0) 	// 부하직원이 없음
+				cout << 0 << "\n";
+			else
+				cout << query(1, n, S[b] + 1, E[b], 1) << "\n";
+		}
+	}
+
+	return 0;
+}
