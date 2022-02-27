@@ -1,0 +1,119 @@
+#include <iostream>
+#include <vector>
+
+#define NODE_CNT 100001
+#define SEG_CNT 100001*4
+
+using namespace std;
+
+int n, m, cnt = 0;	// 직원 수, 쿼리 수
+vector<int> edges[NODE_CNT];	// 직속 상사와 부하직원 정보
+int segTree[SEG_CNT] = { 0, };	// 세그먼트 트리
+int lazy[SEG_CNT] = { 0, };	// Lazy propagation
+int S[NODE_CNT] = { 0, };	// dfs 시작 순서 저장(오일러 경로 테크닉)
+int E[NODE_CNT] = { 0, };	// dfs 종료 순서 저장(오일러 경로 테크닉)
+
+// Lazy propagation 업데이트
+void updateLazy(int start, int end, int node)
+{
+	if (lazy[node] == 0) return;	// 적용할 lazy값이 없을경우
+
+	segTree[node] += lazy[node];	// lazy값 적용
+	if (start != end)	// 자식 노드가 있을경우 자식 노드에 상속
+	{
+		lazy[node * 2] = lazy[node * 2] + lazy[node];
+		lazy[node * 2 + 1] = lazy[node * 2 + 1] + lazy[node];
+	}
+	lazy[node] = 0;	// 초기화
+}
+
+// 구간 업데이트
+void update(int start, int end, int left, int right, int node, int value)
+{
+	updateLazy(start, end, node);
+
+	// 구간이 겹치지 않는 경우
+	if (end < left || right < start) return;
+
+	// 구간이 완전히 겹치는 경우
+	if (left <= start && end <= right)
+	{
+		lazy[node] = lazy[node] + value;
+		updateLazy(start, end, node);
+		return;
+	}
+
+	// 구간이 걸쳐있는 경우
+	int mid = (start + end) / 2;
+	update(start, mid, left, right, node * 2, value);
+	update(mid + 1, end, left, right, node * 2 + 1, value);
+	segTree[node] = segTree[node * 2] + segTree[node * 2 + 1];
+}
+
+// 쿼리 처리
+int query(int start, int end, int index, int node)
+{
+	updateLazy(start, end, node);
+
+	// 구간이 겹치지 않는경우
+	if (end < index || index < start) return 0;
+
+	// 해당 인덱스를 찾은경우
+	if (start == index && index == end) return segTree[node];
+	
+	// 구간에 걸쳐있는 경우
+	int mid = (start + end) / 2;
+	return query(start, mid, index, node * 2) + query(mid + 1, end, index, node * 2 + 1);
+}
+
+// dfs 시작 순서와 종료순서를 각각 S, E 배열에 기록(오일러 경로 테크닉 적용)
+void dfs(int node)
+{
+	S[node] = ++cnt;	// dfs 시작점 저장
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		dfs(next);
+	}
+	E[node] = cnt;	// dfs 종료시점 저장
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int boss;
+	for (int i = 1; i <= n; i++)
+	{
+		cin >> boss;
+		if (boss == -1) continue;
+		edges[boss].push_back(i);
+	}
+	
+	// 오일러 경로 테크닉 적용
+	dfs(1);
+
+	// 쿼리 질의
+	int a, b, c;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> a;
+		if (a == 1)
+		{
+			cin >> b >> c;	// b번째 직원이 직속 상사로부터 c만큼 칭찬을 받음
+			update(1, n, S[b], E[b], 1, c);
+		}
+		else
+		{
+			cin >> b;	// b번 직원이 칭창받은정도 출력
+			cout << query(1, n, S[b], 1) << "\n";
+		}
+	}
+
+	return 0;
+}

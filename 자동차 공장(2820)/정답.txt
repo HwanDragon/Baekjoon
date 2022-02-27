@@ -1,0 +1,144 @@
+#include <iostream>
+#include <vector>
+
+#define NODE_CNT 500001
+#define SEG_CNT 500001*4
+
+using namespace std;
+
+int n, m, cnt = 0;	// 직원 수, 쿼리 수, dfs탐색 순서
+int pay[NODE_CNT] = { 0, };	// 직원의 월급
+int dfsPay[NODE_CNT] = { 0, };	// dfs 탐색 순서로 바꾼 월급
+int segTree[SEG_CNT] = { 0, };	// 세그먼트 트리(dfsPay로 초기화)
+int lazy[SEG_CNT] = { 0, }; // Lazy propagation
+int S[NODE_CNT] = { 0, };	// dfs 방문 시작 순서(오일러 경로 테크닉)
+int E[NODE_CNT] = { 0, };	// dfs 방문 종료 순서(오일러 경로 테크닉)
+vector<int> edges[NODE_CNT];	// 간선정보(직속 상사과 부하정보)
+
+// 세그먼트 트리 초기화
+void init(int start, int end, int node)
+{
+	if (start == end)
+	{
+		segTree[node] = dfsPay[start];
+		return;
+	}
+
+	int mid = (start + end) / 2;
+	init(start, mid, node * 2);
+	init(mid + 1, end, node * 2 + 1);
+}
+
+// Lazy propagation 업데이트
+void updateLazy(int start, int end, int node)
+{
+	if (lazy[node] == 0) return;	// 적용할 값이 없음
+
+	segTree[node] += lazy[node];	// lazy값 더해줌
+	if (start != end)	// 자식노드가 있을경우 lazy값 더해줌
+	{
+		lazy[node * 2] += lazy[node];
+		lazy[node * 2 + 1] += lazy[node];
+	}
+	lazy[node] = 0;
+}
+
+// 구간 쿼리 업데이트
+void update(int start ,int end, int left, int right, int node, int value)
+{
+	updateLazy(start, end, node);
+
+	// 구간이 겹치지 않는경우
+	if (end < left || right < start) return;
+
+	// 구간이 완전히 겹치는 경우
+	if (left <= start && end <= right)
+	{
+		lazy[node] += value;
+		updateLazy(start, end, node);
+		return;
+	}
+
+	// 구간이 걸쳐있는 경우
+	int mid = (start + end) / 2;
+	update(start, mid, left, right, node * 2, value);
+	update(mid + 1, end, left, right, node * 2 + 1, value);
+}
+
+int query(int start, int end, int index, int node)
+{
+	updateLazy(start, end, node);
+
+	// 구간이 겹치지 않는경우
+	if (end < index || index < start) return 0;
+
+	// 구간이 완전히 겹치는 경우
+	if (start == index && index == end) return segTree[node];
+	
+	// 구간이 걸쳐있는 경우
+	int mid = (start + end) / 2;
+	return query(start, mid, index, node * 2) + query(mid + 1, end, index, node * 2 +
+		1);
+}
+
+// 오일러 경로 테크닉 적용
+void dfs(int node)
+{
+	S[node] = ++cnt;	// dfs 탐색 시작 순서 저장
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		dfs(next);
+	}
+	E[node] = cnt;	// dfs 탐색 종료 순서 저장
+}
+
+int main()
+{
+	// 입출력 속도 증가
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	cin >> pay[1];
+	int boss;
+	for (int i = 2; i <= n; i++)
+	{
+		cin >> pay[i] >> boss;
+		edges[boss].push_back(i);
+	}
+
+	// 오일러 경로 테크닉을 적용하기위해 특정 노드를 트리 dfs탐색 시작과 종료 구간으로 바꿈
+	dfs(1);
+
+	// k번째 노드의 초기 급여를 dfs탐색 순서노드로 변경
+	for (int i = 1; i <= n; i++)
+		dfsPay[S[i]] = pay[i];
+	
+	// 세그먼트 트리 초기화
+	init(1, n, 1);
+
+	// 쿼리 질의
+	char queryType;
+	int a, b;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> queryType;
+		if (queryType == 'p')
+		{
+			cin >> a >> b;	// 직원 a의 모든 부하직원들의 월급을 b만큼 인상
+			if (S[a] == E[a]) continue;
+			update(1, n, S[a] + 1, E[a], 1, b);
+		}
+		else
+		{
+			cin >> a;	// 직원 a의 급여 출력
+			cout << query(1, n, S[a], 1) <<  "\n";
+		}
+	}
+
+	return 0;
+}
+
