@@ -1,0 +1,58 @@
+#include <iostream>
+#include <cmath>
+
+#define CNT 1000001
+
+using namespace std;
+
+
+bool isPrime[CNT];
+
+// 소수를 미리 계산
+void calcPrimeNum()
+{
+	// 모든 수를 소수라고 초기화
+	fill(isPrime, isPrime + CNT, true);
+
+	// 에라토스테네스의 체를 이용하여 소수를 미리 계산해둠
+	for (int i = 2; i <= sqrt(CNT); i++)
+	{
+		if (isPrime[i] == false) continue;	// 이미 계산된 수는 pass
+
+		int j = i * 2;	// i의 두배부터 소수가 아님을 체크
+		while (j < CNT)
+		{
+			isPrime[j] = false;	// 해당 수는 소수가 아님 (i의 배수)
+			j += i;
+		}
+	}
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 미리 소수를 계산
+	calcPrimeNum();
+
+	// 사용자 입력 받음
+	int t;
+	cin >> t;
+	while (t--)
+	{
+		int n, cnt = 0;
+		cin >> n;
+		
+		// n의 절반까지 i번째 수와 n - i번째 수가 소수인지 확인 (i 번째 + (n - i)번째 = n)
+		for (int i = 2; i <= n / 2; i++)
+		{
+			if (isPrime[i] == true && isPrime[n - i] == true)
+				cnt++;
+		}
+		cout << cnt << "\n";
+	}
+	return 0;
+}
