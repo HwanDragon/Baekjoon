@@ -1,0 +1,116 @@
+#include <iostream>
+#include <cmath>
+#include <vector>
+#include <algorithm>
+
+/*
+에라토스테네스의 체를 이용하여 소수를 미리 계산해둠
+입력 받은 수열에서 두 수의 합이 소수일 경우 i, j번째 수를 간선정보로 등록함
+이렇게 등록하여 매칭했을 경우, 모든 수가 매칭되면 총 n개의 수가 매칭됨.
+n보다 작을경우는 특정 수들의 합이 소수가 아니므로 해당 경우는 pass.
+
+이후 1번과 매칭되는 노드를 강제로 고정시켜 이분매칭을 돌려서 모든 수가 매칭되는 경우를 찾음
+*/
+
+#define CNT 1001
+#define PRIME_CNT CNT*2
+
+using namespace std;
+
+int n, arr[CNT];	// 리스트의 크기, 수열
+bool isPrime[PRIME_CNT];	// 입력되는 수가 최대 1000 이하이므로 두 수를 더한 2000 까지 소수를 미리 계싼
+bool visited[CNT];	// 이분매칭 방문처리 배열
+int prevNode[CNT];	// 이분매칭 이전 노드 저장 배열
+vector<int> edges[CNT];	// 간선 정보
+
+// 에라토스테네스의체를 이용한 소수 계산
+void calcPrimeNum()
+{
+	fill(isPrime, isPrime + PRIME_CNT, true);
+
+	for (int i = 2; i <= sqrt(PRIME_CNT); i++)
+	{
+		if (isPrime[i] == false) continue;
+
+		int j = i * 2;
+		while (j < PRIME_CNT)
+		{
+			isPrime[j] = false;
+			j += i;
+		}
+	}
+}
+
+// 이분매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (node == 1) return false;	// 1번 노드는 절대로 비킬 수 없음
+	if (visited[node] == true) return false;	// 이미 방문한 노드일경우 pass
+
+	visited[node] = true;	// 방문처리
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (prevNode[next] == -1 || dfs(prevNode[next]))	// 매칭되지 않앗거나 이미 매칭된 노드가 다른곳으로 매칭이 가능할경우
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+	return false;
+}
+
+int main()
+{
+	// 소수 미리 계산
+	calcPrimeNum();
+
+	// 사용자 입력 받음
+	cin >> n;
+	for (int i = 1; i <= n; i++)
+		cin >> arr[i];
+
+	// 간선정보 생성
+	for (int i = 1; i <= n; i++)
+	{
+		for (int j = 1; j <= n; j++)
+		{
+			if (j == i) continue;	// j == i 일경우 pass
+			int sum = arr[i] + arr[j];
+			if (isPrime[sum] == false) continue;	// 두 수의 합이 소수인지 확인
+
+			edges[i].push_back(j);	// 소수일경우 해당 인덱스 간선정보에 추가
+		}
+	}
+
+	vector<int> r;	// 결과 저장
+
+	// 1번 노드를 고정신 뒤, 이분매칭을 돌려가며 결과 확인
+	for (int f = 0; f < edges[1].size(); f++)
+	{
+		fill(prevNode, prevNode + CNT, -1);	// 이전 연결 노드 정보 초기화	
+		int num = edges[1].at(f);	// 1번 노드
+		int cnt = 1;	// 1번 노드를 강제로 매칭시켰으므로 cnt 1부터 시작
+		prevNode[num] = 1;	// 매칭된 노드 1번으로 고정
+		for (int i = 2; i <= n; i++)	// 1번은 고정되어있으므로 2번부터 탐색
+		{
+			fill(visited, visited + CNT, false);
+			if (dfs(i) == true)
+				cnt++;
+		}
+
+		if (n == cnt) // 모두 매칭되었을 경우
+			r.push_back(arr[num]);
+	}
+	
+	if (r.size() == 0)	// 매칭이 불가능 할 경우
+	{
+		cout << -1;
+		return 0;
+	}
+
+	sort(r.begin(), r.end());	// 오름차순으로 정렬	
+	for (int i = 0; i < r.size(); i++)	// 결과 출력
+		cout << r[i] << " ";
+	return 0;
+}
