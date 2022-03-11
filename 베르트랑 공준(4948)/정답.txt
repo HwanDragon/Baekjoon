@@ -1,0 +1,52 @@
+#include <iostream>
+#include <cmath>
+
+#define CNT 123457*2
+
+using namespace std;
+
+bool isPrime[CNT];
+
+// 에라토스테네스의 체를 이용하여 미리 소수를 구해둠
+void calcPrime()
+{
+	fill(isPrime, isPrime + CNT, true);	// 모두 소수로 초기화 해둠
+	isPrime[0] = false;
+	isPrime[1] = false;
+
+	for (int i = 2; i <= sqrt(CNT); i++)
+	{
+		if (isPrime[i] == false) continue;
+
+		int num = i * 2;	// i의 2배... n배의 수는 모두 소수가 아님
+		while (num < CNT)
+		{
+			isPrime[num] = false;
+			num += i;
+		}
+	}
+}
+
+int main()
+{
+	// 소수 미리 계산
+	calcPrime();
+
+	while (true)
+	{
+		int n;
+		cin >> n;
+		if (n == 0) break;
+
+		int first = n + 1, second = 2 * n;
+
+		// n보다 크고, 2 * n보다 작거나 같은 소수의 개수를 셈
+		int cnt = 0;
+		for (int i = first; i <= second; i++)
+		{
+			if (isPrime[i] == true) cnt++;
+		}
+		cout << cnt << "\n";
+	}
+	return 0;
+}
