@@ -1,0 +1,84 @@
+#include <iostream>
+
+/*
+1110
+1111
+1110
+0010
+
+위의 배열의 경우 최대 정사각형의 크기의 한변이 3이다.
+
+1110
+1221
+1230
+0010
+
+dp 배열로 나타내면 최대 정사각형의 한변의 길이는 위와 같다
+이를 점화식으로 나타내면 아래와 같다
+
+dp[n][m] = min( dp[n - 1][m - 1], dp[n - 1][m], dp[n][m - 1] ) + 1
+
+bottom-up 방식으로 접근하면
+즉, dp[n][0], dp[0][n]은 map[n][0], map[0][n] 이 1이면 크기 1로 초기화 하고, 
+위, 왼쪽, 왼쪽 위 값중 가장 작은값을 찾아서 dp값을 갱신해 나가면 된다.
+
+*/
+
+using namespace std;
+
+int n, m;	// 맵의 크기
+int dp[1000][1000];	// 최대 정사각형의 크기를 계산할 dp배열
+char map[1000][1000];	// 맵정보 저장
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 0; i < n; i++)
+		cin >> map[i];
+
+	// x = 0인 지점 초기화
+	for (int i = 0; i < n; i++)
+	{
+		if (map[i][0] == '1')
+			dp[i][0] = 1;
+	}
+
+	// y = 0인 지점 초기화
+	for (int i = 0; i < m; i++)
+	{
+		if (map[0][i] == '1')
+			dp[0][i] = 1;
+	}
+
+	// bottom-up 방식으로 갱신해나감 (위, 왼쪽, 왼쪽 위 중 가장 작은값에 + 1)
+	int minValue;
+	for (int y = 1; y < n; y++)
+	{
+		for (int x = 1; x < m; x++)
+		{
+			if (map[y][x] == '0') continue;
+
+			minValue = 10000000;
+			minValue = min(minValue, dp[y - 1][x - 1]);
+			minValue = min(minValue, dp[y][x - 1]);
+			minValue = min(minValue, dp[y - 1][x]);
+			dp[y][x] = minValue + 1;
+		}
+	}
+
+	// 배열을 순회하여 정사각형중 한변의 길이가 가장 긴 값 찾음
+	int maxArea = 0;
+	for (int y = 0; y < n; y++)
+		for (int x = 0; x < m; x++)	
+			maxArea = max(maxArea, dp[y][x]);
+		
+	// 결과 출력(면적 계산)
+	cout << maxArea * maxArea;
+	return 0;
+}
