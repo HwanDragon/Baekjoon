@@ -1,0 +1,70 @@
+#include <iostream>
+
+/*
+해당 문제는 원점에서 (x, y) 좌표의 점을 발견했을 경우,
+(x, y) 좌표의 n배를 곱한 (n*x, n*y)점들은 모두 원점에서 볼 수 없는 점이된다.
+즉 이를 이용하여 특정 점을 발견하면, 특정점에 n배한 모든 점을 원점에서 발견 할 수 없는 점으로 표시하면 됨.
+*/
+
+#define CNT 1001
+
+using namespace std;
+
+int n;
+bool discover[CNT][CNT];	// 발견 여부
+
+// 초기화
+void init()
+{
+	for (int i = 0; i < CNT; i++)
+	{
+		for (int j = 0; j < CNT; j++)
+		{
+			discover[i][j] = false;
+		}
+	}
+	discover[0][0] = true;	// 0, 0은 시작점이므로 발견했다고 체크
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 테스트 케이스 입력
+	int t;
+	cin >> t;
+	while (t--)
+	{
+		// 초기화
+		init();
+
+		cin >> n;	// 점의 수 입력
+
+		int result = 0;
+		for (int y = 0; y <= n; y++)
+		{
+			for (int x = 0; x <= n; x++)
+			{
+				if (discover[y][x] == true) continue;	// 기존에 발견했던 점일경우 pass
+
+				// 한번도 발견하지 않은 점일 경우
+				result++;
+				int index = 1;	// 해당 점의 2, 3 ... n배까지는 모두 찾을 수 없는 점이 되므로 discover = true로 체크
+				while (true)
+				{
+					int tempX = x * index;	// 찾은 x좌표의 n배
+					int tempY = y * index;	// 찾은 y좌표의 n배
+					if (tempX > n || tempY > n) break;	// 범위를 벋어날경우 pass
+					discover[tempY][tempX] = true;	// 해당 점은 원점에서 볼 수 없는 점임
+					index++;	// index를 하나 더 증가시켜 찾음
+				}
+			}
+		}
+		cout << result << "\n";	// 결과 출력
+	}
+
+	return 0;
+}
