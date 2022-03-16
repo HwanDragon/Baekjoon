@@ -1,0 +1,33 @@
+#include <iostream>
+
+using namespace std;
+
+int cnt[10001];
+
+int main()
+{
+	// 입출력 
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 계수정렬 진행
+	int n, num;
+	cin >> n;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> num;
+		cnt[num]++;
+	}
+
+	// 출력
+	for (int i = 0; i < 10001; i++)
+	{
+		for (int j = 0; j < cnt[i]; j++)
+		{
+			cout << i << "\n";
+		}
+	}
+
+	return 0;
+}

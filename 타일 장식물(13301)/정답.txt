@@ -1,0 +1,26 @@
+#include <iostream>
+
+using namespace std;
+
+long long dp[81];
+
+long long func(int n)
+{
+    if (dp[n] != 0) return dp[n];
+
+    return dp[n] = func(n - 1) + func(n - 2);
+}
+
+int main()
+{
+    dp[1] = 1;
+    dp[2] = 1;
+
+    int n;
+    cin >> n;
+    if (n == 1)
+        cout << 4;
+    else
+        cout << (func(n) * 2) + ((func(n - 1) + func(n)) * 2);  // 둘레 길이 계산
+    return 0;
+}
