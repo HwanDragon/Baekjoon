@@ -1,0 +1,118 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+/*
+해당 문제는 스패닝트리를 구성하는데, 최대와 최소를 계산하는 문제이다.
+즉, 오르막길은 비용을 1로하고, 내리막길은 0으로 하여
+오름차순으로 정렬하여 스패닝트리를 계산하여 최소값을 구하고,
+내림차순으로 정렬하여 스패닝트리를 계산해 최대값을 계산해주면 된다.
+*/
+
+#define NODE_CNT 1001
+
+using namespace std;
+
+// Union-Find 알고리즘
+int getParent(int node, int parents[])
+{
+	if (node == parents[node]) return node;
+
+	return parents[node] = getParent(parents[node], parents);
+}
+
+void unionParent(int first, int second, int parents[])
+{
+	int firstParent = getParent(first, parents);
+	int secondParent = getParent(second, parents);
+
+	if (firstParent > secondParent)
+		parents[firstParent] = secondParent;
+	else
+		parents[secondParent] = firstParent;
+}
+
+// 스패닝트리 간선정보
+class Edge {
+public :
+	int first;
+	int second;
+	int weight;
+};
+
+int n, m;
+int parent[NODE_CNT];
+vector<Edge*> edges;
+
+// 오름차순 정렬
+bool cmpAsc(Edge *f, Edge *s) {
+	return f->weight < s->weight;
+}
+
+// 내림차순 정렬
+bool cmpDesc(Edge* f, Edge* s) {
+	return f->weight > s->weight;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 초기화
+	for (int i = 0; i < NODE_CNT; i++) parent[i] = i;
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int a, b, c;
+	for (int i = 0; i <= m; i++)
+	{
+		Edge* edge = new Edge();
+		cin >> edge->first >> edge->second >> edge->weight;
+		if (edge->weight == 0)	// 0이 오르막길이므로 가중치 1로 설정
+			edge->weight = 1;
+		else
+			edge->weight = 0;	// 내리막길은 0을 설정
+
+		edges.push_back(edge);
+	}
+
+	long long minValue = 0, maxValue = 0;
+
+	sort(edges.begin(), edges.end(), cmpAsc);	// 오름차순 정렬 (최소비용 계산)
+	// 오름차순으로 정렬하여 스패닝 트리를 구성함 (최소비용 계산)
+	for (int i = 0; i < edges.size(); i++)
+	{
+		Edge* edge = edges.at(i);
+		int f = getParent(edge->first, parent);
+		int s = getParent(edge->second, parent);
+		if (f != s)
+		{
+			unionParent(f, s, parent);
+			minValue += edge->weight;
+		}
+	}
+
+	// parent 배열 초기화
+	for (int i = 0; i < NODE_CNT; i++) parent[i] = i;
+	sort(edges.begin(), edges.end(), cmpDesc);	// 내림차순 정렬 (최대비용 계산)
+	// 내림차순으로 정렬하여 스패닝 트리를 구성함 (최대비용 계산)
+	for (int i = 0; i < edges.size(); i++)
+	{
+		Edge* edge = edges.at(i);
+		int f = getParent(edge->first, parent);
+		int s = getParent(edge->second, parent);
+		if (f != s)
+		{
+			unionParent(f, s, parent);
+			maxValue += edge->weight;
+		}
+	}
+
+	// 결과 출력
+	cout << (maxValue * maxValue - minValue * minValue);
+
+	return 0;
+}
