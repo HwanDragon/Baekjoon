@@ -1,0 +1,118 @@
+#include <iostream>
+
+#define CNT 100001
+
+using namespace std;
+
+typedef long long ll;
+
+// 세그먼트 트리의 각 노드를 구조체로 표현
+class Node {
+public :
+	Node* left = NULL;
+	Node* right = NULL;
+	ll value = 0;
+};
+
+int n, m;	// 수열의 크기, 쿼리 개수
+ll arr[CNT];	// 수열 저장
+Node* root[CNT];	// 퍼시스턴트 세그먼트 트리의 루트를 저장할 루트 배열
+
+// 세그먼트 트리 초기화
+void init(int start, int end, Node *node)
+{
+	if (start == end)	// 리프노드일 경우
+	{
+		node->value = arr[start];	// 세그먼트 트리에 값 추가
+		return;
+	}
+	int mid = (start + end) / 2;
+	node->left = new Node();	// 왼쪽 자식노드 생성
+	node->right = new Node();	// 오른쪽 자식노드 생성
+	init(start, mid, node->left);	// 왼쪽 자식노드 초기화
+	init(mid + 1, end, node->right);	// 오른쪽 사직노드 초기화
+	node->value = node->left->value + node->right->value;	// 현재노드 값 초기화
+}
+
+// 새로운 세그먼트 노드 추가
+void addNode(int start, int end, int index, int value, Node *curNode, Node* newNode)
+{
+	if (start == end)	// 리프노드에 도달했을 경우
+	{
+		newNode->value = value;
+		return;
+	}
+
+	// 재귀적으로 왼쪽 노드, 오른쪽노드를 추가해나감
+	int mid = (start + end) / 2;
+	if (index <= mid)	// 왼쪽 노드에 해당할 경우
+	{
+		newNode->left = new Node();	// 왼쪽 노드는 새로 생성	
+		newNode->right = curNode->right;	// 오른쪽 노드는 기존 노드 사용
+		addNode(start, mid, index, value, curNode->left, newNode->left);	// 재귀적으로 노드를 추가해나감
+	}
+	else
+	{
+		// 오른쪽 노드에 해당할 경우
+		newNode->right = new Node();	// 오른쪽 노드 새로 생성
+		newNode->left = curNode->left;	// 왼쪽노드는 기존 노드 사용
+		addNode(mid + 1, end, index, value, curNode->right, newNode->right);	// 재귀적으로 노드 추가해나감
+	}
+	newNode->value = newNode->left->value + newNode->right->value;	// 추가된 노드 값 갱신
+}
+
+// 쿼리 질의
+ll query(int start, int end, int left, int right, Node *node)
+{
+	// 겹치는 구간이 없을 경우
+	if (end < left || right < start) return 0;
+
+	// 구간이 완전히 겹치는 경우
+	if (left <= start && end <= right) return node->value;
+
+	// 구간이 걸치는 경우
+	int mid = (start + end) / 2;
+	return query(start, mid, left, right, node->left) + query(mid + 1, end, left, right, node->right);
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n;
+	for (int i = 1; i <= n; i++)
+		cin >> arr[i];
+
+	// 퍼시스턴트 세그먼트 트리 루트 초기화
+	for (int i = 0; i < CNT; i++)
+		root[i] = new Node();
+
+	// 세그먼트 트리 생성
+	init(1, n, root[0]);
+
+	// 쿼리 질의
+	cin >> m;
+	int a, b, c, d;
+	int queryIndex = 1;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> a >> b >> c;
+		if (a == 1)
+		{
+			// b번 인덱스 항목을 c로 변경
+			addNode(1, n, b, c, root[queryIndex - 1], root[queryIndex]);
+			queryIndex++;
+		}
+		else
+		{
+			// b번째 쿼리까지 적용되었을 때 [c, d] 구간합 계산
+			cin >> d;
+			cout << query(1, n, c, d, root[b]) << "\n";
+		}
+	}
+	return 0;
+}

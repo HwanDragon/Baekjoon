@@ -1,0 +1,85 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+#define INF 10000000001
+#define NODE_CNT 100001
+
+using namespace std;
+typedef long long ll;
+
+int n, m;	// 노드 수, 간선 개수
+int isVisable[NODE_CNT] = { 0, };	// 상대의 시야에 보이는지 여부
+vector<pair<int, ll>> edges[NODE_CNT];	// 간선정보 , pair<int, ll> -> 노드, 비용
+ll dists[NODE_CNT];	// 다익스트라 최단거리 비용 저장
+
+// 우선순위큐의 기준을 pair의 두번째 파라미터가 작은 항목이 우선하도록 설정
+struct cmp{
+	bool operator()(pair<int, ll>& f, pair<int, ll>& s)
+	{
+		return f.second > s.second;
+	}
+};
+
+void dickstra(int node)
+{
+	dists[node] = 0;	// 시작노드의 최단거리 비용 0으로 세팅
+	priority_queue<pair<int, ll>, vector<pair<int, ll>>, cmp> pq;
+	pq.push({node, 0});	// 우선순위큐에 {노드, 비용} -> pair 추가
+
+	while (pq.empty() == false)
+	{
+		pair<int, ll> p = pq.top();
+		pq.pop();
+
+		int cur = p.first;	// 현재 노드
+		ll cost = p.second;	// 현재노드까지 도달하는데 드는 비용
+
+		if (cost > dists[cur]) continue;	// 최단거리가 아님
+
+		for (int i = 0; i < edges[cur].size(); i++)
+		{
+			pair<int, ll> np = edges[cur].at(i);
+			int next = np.first;	// 다음 노드
+			ll nextCost = np.second;	// cur -> next 간선 비용
+
+			if (isVisable[next] == true) continue;	// 상대의 시야에 들어오는 지역은 pass
+
+			// 최단 거리 확인
+			if (dists[next] > dists[cur] + nextCost)
+			{
+				dists[next] = dists[cur] + nextCost;	// 최단거리 갱신	
+				pq.push({next, dists[cur] + nextCost });	// 우선순위큐에 추가
+			}
+		}
+	}
+}
+
+int main()
+{
+	fill(dists, dists + NODE_CNT, INF);	// dists 배열 초기화
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 0; i < n; i++)
+		cin >> isVisable[i];
+
+	isVisable[n - 1] = 0;	// n - 1번째는 도달 할 수 있어야함(상대편 본진)
+
+	// 간선정보 입력받음(양방향 간선)
+	int a, b, c;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> a >> b >> c;
+		edges[a].push_back({ b, c });
+		edges[b].push_back({ a, c });
+	}
+
+	dickstra(0);	// 다익스트라 알고리즘 수행(시작 : 0번노드)
+
+	if (dists[n - 1] == INF)	// 상대 본진까지 들키지 않고 도달이 불가능한 경우
+		cout << -1;
+	else
+		cout << dists[n - 1];
+	return 0;
+}
