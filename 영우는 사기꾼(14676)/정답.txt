@@ -1,0 +1,123 @@
+#include <iostream>
+#include <vector>
+
+#define NODE_CNT 100001
+
+using namespace std;
+
+/*
+해당 문제는 건설할 수 없는 건물을 건설하거나, 건설한적 없는 건물이 파괴되었다면 "Lier!"를 출력해야 한다.
+따라서, n번째 건물이 건설 가능한지 여부를 저장할 bool 형 변수가 필요하고, 
+지어지지 않은 건물이 파괴되거나, 같은 건물이 여러개 지어졌을 경우 하나가 파괴되어도 상관없으므로
+n번째 건물이 지어진 개수를 저장할 배열이 필요하다.
+또한 n번째 건물을 지을 수 있는지 여부는 n번째 건물로 들어오는 진입차수가 0이면 건설 가능하다
+
+1. 건물을 건설할경우
+  가. 만약 건설 불가능한 건물을 지었을 경우 : "Lier!"
+  나. 건설 가능한 건물을 지었을 경우
+    1) 건물 수가 0 일 경우
+	  가) n번째 건물을 건설하면 그와 연결된 next 노드들의 진입차수 1 감소시킴
+	  나) next 노드들의 진입 차수가 0이라면 next 노드를 건설 가능한 노드로 변경
+	  다) 건물 수 하나 증가시킴
+	2) 건물 수가 1 이상일 경우
+	  가) 건물 수 하나 증가시킴
+
+
+2. 건물이 파괴될 경우
+  가. 건설한 건물 수가 0인데 파괴 될 경우 : "Lier!"
+  나. 건설한 건물 수가 2 이상일 경우
+    1) n번째 건물의 수를 하나 감소시킴 (1개가 파괴되어도 남은 건물이 1개 이상이기 건설에는 영향 없음)
+  다. 건설한 건물 수가 1개일 경우
+    1) n번째 건물의 수를 하나 감소시킴
+	2) n번째 노드와 연결되어있는 next 노드들의 진입차수를 1 증가시킴
+	3) next 건물을 건설 불가능한 상태로 변경시킴
+
+*/
+
+int n, m, k;
+vector<int> edges[NODE_CNT];	// 간선정보 저장
+int degree[NODE_CNT] = { 0, };	// 진입차수 계산
+bool isBuilding[NODE_CNT] = { 0, };	// n번째 건물이 건설 가능한지 여부
+int buildingCnt[NODE_CNT] = { 0, };	// n번째 건물이 지어진 개수
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m >> k;
+	int first, second;
+	for (int i = 0; i < m; i++)	// 간선 정보 생성
+	{
+		cin >> first >> second;
+		edges[first].push_back(second);
+		degree[second]++;
+	}
+
+	for (int i = 1; i <= n; i++)
+	{
+		if (degree[i] == 0)
+			isBuilding[i] = true;	// 진입차수가 0인 건물은 처음부터 건설 가능한 건물임
+	}
+
+	bool result = true;	
+	for (int i = 0; i < k; i++)
+	{
+		cin >> first >> second;
+		if (first == 1)	
+		{
+			// second 건물을 하나 건설함
+
+			// 만약 건설이 불가능한 건물을 지으려고 할 경우
+			if (isBuilding[second] == false)
+				result = false;
+			
+			// 만약 건물을 처음 짓는거라면
+			if (buildingCnt[second] == false)
+			{
+				// second 건물을 지었으므로 second에서 나가는 진입차수를 하나 감소시켜야 함
+				for (int i = 0; i < edges[second].size(); i++)
+				{
+					int next = edges[second].at(i);
+					degree[next]--;
+					if (degree[next] == 0)	// 진입차수가 0이 되면 건설 가능한 건물이 됨
+						isBuilding[next] = true;
+				}
+			}
+			buildingCnt[second]++;	// 건물을 하나 건설하였으므로 건물수 증가
+		}
+		else
+		{
+			// second 건물이 하나 파괴됨
+			if (buildingCnt[second] == 0)	// 건설되어있는 건물이 없는데 파괴되었을경우
+			{
+				result = false;
+				continue;
+			}
+			
+			buildingCnt[second]--;	// 건물수 감소
+			if (buildingCnt[second] == 0)
+			{
+				// second 노드와 연결된 next 노드들의 진입차수를 하나 증가시키고, 
+				// next 건물들을 건설 불가능한 상태로 변경(second를 지어야 degree가 0이되고, 건설 가능 상태로 바뀜)
+				for (int i = 0; i < edges[second].size(); i++)
+				{
+					int next = edges[second].at(i);
+					degree[next]++;	// next노드의 진입차수 증가
+					isBuilding[next] = false;	// next 노드 건설 불가능 상태로 변경
+				}
+			}
+		}
+	}
+
+	// 결과 출력
+	if (result == true)
+		cout << "King-God-Emperor";
+	else
+		cout << "Lier!";
+
+	return 0;
+}
