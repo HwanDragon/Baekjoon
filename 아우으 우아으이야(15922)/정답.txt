@@ -1,0 +1,67 @@
+#include <iostream>
+#include <algorithm>
+#include <vector>
+
+using namespace std;
+
+int n;
+vector<pair<int, int>> lines;
+
+// 선분 시작점을 기준으로 정렬
+bool cmp(pair<int, int> &f, pair<int, int> &s)
+{
+	return f.first < s.first;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n;
+	int s, e;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> s >> e;
+		if (s > e)
+			lines.push_back({ e, s });
+		else
+			lines.push_back({ s, e });
+	}
+
+	// 선분들을 시작점을 기준으로 정렬
+	sort(lines.begin(), lines.end(), cmp);
+
+	int result = 0;
+	int start = lines[0].first, end = lines[0].second;
+	result = (end - start);
+
+	for (int i = 1; i < lines.size(); i++)
+	{
+		pair<int, int> p = lines.at(i);
+		int lineStart = p.first;
+		int lineEnd = p.second;
+
+		// 새로 꺼낸 선분이 기존 선분 안에 완전히 포함될 경우
+		if (end >= lineEnd) continue;
+
+		// 선분이 서로 겹치지 않는경우
+		if (end < lineStart)
+		{
+			start = lineStart;
+			end = lineEnd;
+			result += (end - start);
+		}
+		else
+		{
+			result += (lineEnd - end);
+			end = lineEnd;
+		}
+	}
+
+	cout << result;
+	return 0;
+}
