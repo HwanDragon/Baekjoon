@@ -1,0 +1,69 @@
+#include <iostream>
+#include <algorithm>
+#include <vector>
+#include <queue>
+
+/*
+선분들을 시작점을 기준으로 정렬하고, 선분의 시작점을 지날때 +1, 선분을 빠져나올때 -1을 하여
+선분이 최대로 겹쳐있는 곳의 개수를 출력하면됨.
+
+선분을 시작점을 기준으로 정렬한 뒤, 끝점을 최소힙에 저장한다.
+만약 새로꺼낸 선분의 시작점이 우선순위큐(최소힙) 선분의 끝점보다 작을경우,
+우선순위큐에서 끝점이 새로꺼낸 선분의 시작점보다 클때까지 pop 해준다.
+이때 우선수뉘큐에 들어가는 끝점의 최대 개수가 선분이 겹치는 최대 개수가 된다.
+*/
+
+using namespace std;
+
+int n;
+vector<pair<int, int>> lines;	// 선분 시작과 끝점 정보 입력
+
+// 선분의 시작점을 기준으로 오름차순 정렬함
+bool cmp(pair<int, int> &f, pair<int, int> &s)
+{
+	return f.first < s.first;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n;
+	int a, b;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> a >> b;
+		if (a > b)	// 작은 수가 앞으로 오도록 설정
+			lines.push_back({ b, a });
+		else
+			lines.push_back({ a, b });
+	}
+
+	// 시작점을 기준으로 정렬
+	sort(lines.begin(), lines.end(), cmp);
+
+	int result = 0;
+	priority_queue<int, vector<int>, greater<>> pq;	// 최소힙 기반의 우선순위 큐 생성
+	for (int i = 0; i < lines.size(); i++)	// 모든 선분 스캔
+	{
+		int s = lines.at(i).first;	// 선분의 시작점
+		int e = lines.at(i).second;	// 선분의 끝점
+		// 우선순위큐가 비어있지 않고, 우선순위큐의 끝점이 새로 꺼낸 선분의 시작점보다 작거나 같을경우
+		// 겹치지 않는 선분이므로 pop 해준다
+		while ((pq.empty() == false) && (pq.top() <= s))
+		{
+			pq.pop();
+		}
+		
+		pq.push(e);	// 새로꺼낸 선분 우선순위큐에 추가
+		result = max(result, (int)pq.size());	// 이때 최대값 result에 저장
+	}
+
+	cout << result;
+
+	return 0;
+}
