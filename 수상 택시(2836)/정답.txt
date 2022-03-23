@@ -1,0 +1,76 @@
+#include <iostream>
+#include <algorithm>
+#include <vector>
+
+using namespace std;
+
+/*
+상근이는 0번에 살고, M번까지 무조건 가야하므로, 가는길에 수상택시를 타는 사람은 가는길에 태우고 내리면 되므로
+추가적인 이동거리가 발생하지 않는다.
+문제는 뒤로 돌아가야 하는 손님들인데, 뒤로 돌아가는 경우, 스위핑 기법을 통해 뒤로 돌아가야하는 손님들을 계산한 뒤,
+상근이는 다시 앞으로 나아가야 하므로 최종적으로는 아래와 같이 계산할 수 있다.
+
+결과 : M + 2 * (뒤로 돌아가야 하는 거리)
+
+뒤로 돌아가야 하는 거리는 스위핑을 통해 계산할 수 있다.
+*/
+
+int n, m;
+vector<pair<int, int>> lines;	// 선분의 시작, 종료점 저장
+
+// 시작점을 기준으로 오름차순 정렬
+bool cmp(pair<int, int> &f, pair<int, int> &s)
+{
+	return f.first < s.first;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int s, e;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> s >> e;
+		if (s > e)	// 시작점이 더 커서 뒤로 돌아가야 하는 경우만 저장
+			lines.push_back({ e, s });	// 0부터 탐색하기위해 e, s 순으로 저장
+	}
+
+	// 시작점이 더 작은 순서로 오름차순 정렬
+	sort(lines.begin(), lines.end(), cmp);
+
+	// 스위핑 기법을 통해 선분이 길이 계산(뒤로 돌아가야 하는 길이)
+	long long result = 0;
+	int start = 0, end = 0;
+	for (int i = 0; i < lines.size(); i++)
+	{
+		int lineStart = lines.at(i).first;
+		int lineEnd = lines.at(i).second;
+		if (end >= lineEnd) continue;	// 새로 꺼낸 선분이 기존 탐색하던 선분 안에 포함되는 경우
+
+		if (end > lineStart)	
+		{
+			// 선분이 겹치는 경우
+			result += (lineEnd - end);
+			end = lineEnd;
+		}
+		else
+		{
+			// 선분이 겹치지 않는경우
+			result += (lineEnd - lineStart);
+			end = lineEnd;
+			start = lineStart;
+		}
+	}
+
+	// 상근이는 0번에 있고, 무조건 m번까지 가야하고,
+	// 수상 택시를 타려하는 사람들중 뒤로 돌아가야 하는 사람들을 계산한 거리는 result이고, 상근이는 앞으로 다시가야하므로
+	// 최종적으로 아래와같은 수식이 나옴
+	cout << m + result * 2;
+	return 0;
+}
