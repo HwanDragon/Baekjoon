@@ -1,0 +1,113 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+#define CNT 100001
+
+using namespace std;
+
+/*
+해당 문제는 개구리가 수직 방향으로는 점프가 가능하므로, 스위핑 기법으로 스캔할 때 
+i번째 통나무에서 j번쨰 통나무 까지 이동 가능한 경우를 유니온 파인드 알고리즘을 이용하여 확인하면 됨
+*/
+
+int n, q;
+vector<pair<pair<int, int>, int>> lines;	// <<선분 시작점, 선분 끝점>, 선분 번호>
+int parents[CNT] = { 0, };	// 유니온 파인드 알고리즘 부모 번호
+
+/*
+Union-Find 알고리즘을 이용
+*/
+int getParent(int node, int parent[])
+{
+	if (node == parent[node]) return node;
+	return parent[node] = getParent(parent[node], parent);
+}
+
+void unionParent(int first, int second, int parent[])
+{
+	int firstParent = getParent(first, parent);
+	int secondParent = getParent(second, parent);
+	if (firstParent > secondParent)
+		parent[firstParent] = secondParent;
+	else
+		parent[secondParent] = firstParent;
+}
+
+bool sameParent(int first, int second, int parent[])
+{
+	if (getParent(first, parent) == getParent(second, parent)) return true;
+	return false;
+}
+
+// pair -> <<선분 시작점, 선분 끝점>, 선분 번호> 이고, 선분의 시작점을 기준으로 오름차순 정렬함
+bool cmp(pair<pair<int, int>, int> &f, pair<pair<int, int>, int> &s)
+{
+	return f.first.first < s.first.first;
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i < CNT; i++) parents[i] = i;
+
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> q;
+	int s, e, t;
+	for (int i = 1; i <= n; i++)
+	{
+		cin >> s >> e >> t;
+		if (s > e)
+			lines.push_back({ {e, s}, i });
+		else
+			lines.push_back({ {s, e}, i });
+	}
+
+	// 선분의 시작점을 기준으로 정렬
+	sort(lines.begin(), lines.end(), cmp);
+
+	// 초기값 설정
+	int start = lines.at(0).first.first,  end = lines.at(0).first.second,  node = lines.at(0).second;
+	for (int i = 1; i < lines.size(); i++)
+	{
+		int lineStart = lines.at(i).first.first;	// i번째 선분의 시작점
+		int lineEnd = lines.at(i).first.second;		// i번쨰 선분의 끝점
+		int num = lines.at(i).second;	// i번째 선분의 번호
+		if (end > lineEnd)	// 기존 선분 안에 포함됨
+		{
+			unionParent(num, node, parents);	// node 번째 선분과 num번째 선분 합침
+			continue;
+		}
+
+		if (end >= lineStart)	// 선분이 겹치는 경우(끝점이 같을경우도 건너가는게 가능함)
+		{
+			unionParent(num, node, parents);	// num 번째 통나무에서 node 번째 통나무까지 이동이 가능함
+			end = lineEnd;
+		}
+		else
+		{
+			// 선분이 겹치지 않는 경우 새로 꺼낸 선분으로 값들을 초기화 시킴
+			start = lineStart;
+			end = lineEnd;
+			node = num;
+		}
+	}
+
+	// 입력받은 first 통나무에서 second 통나무까지 이동이 가능한지 여부 출력
+	int first, second;
+	for (int i = 0; i < q; i++)
+	{
+		cin >> first >> second;
+		if (sameParent(first, second, parents) == true)
+			cout << 1 << "\n";
+		else
+			cout << 0 << "\n";
+	}
+
+	return 0;
+}
