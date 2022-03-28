@@ -1,0 +1,88 @@
+#include <iostream>
+#include <cmath>
+#include <vector>
+
+/*
+잡아먹히게 되는 들쥐의 최소 수를 출력하는 것이므로
+쥐가 최대한 많이 구멍에 들어가는 경우를 계산해야함
+쥐의 좌표와 구멍의 좌표르 입력받아 쥐가 매가 오기전에 구멍에 들어갈 수 있으면
+간선정보를 생성하여 연결시킴.
+그후 최대 이분매칭을 통하여 (전체 쥐의 수 - 최대이분매칭수) 를 계산해주면됨
+*/
+
+#define MOUSE_CNT 101	// 쥐의 최대 수
+#define HOLE_CNT 101	// 구멍의 최대 수
+
+using namespace std;
+
+int n, m, s, v;
+vector<int> edges[MOUSE_CNT];	// i번째 쥐가 들어갈 수 있는 구멍의 번호
+vector<pair<double, double>> mousePos;	// 쥐의 x, y 좌표
+bool visited[MOUSE_CNT];	// 이분매칭 알고리즘에서 방문여부 확인
+int prevNode[HOLE_CNT];	// 구멍에 들어갈 쥐의 번호 저장(매칭된 노드 저장)
+
+// 이분매칭 알고리즘 수행
+bool dfs(int node)
+{
+	if (visited[node] == true) return false;	// 이미 방문한 노드는 pass
+
+	visited[node] = true;
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (prevNode[next] == false || dfs(prevNode[next]))
+		{
+			prevNode[next] = node;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m >> s >> v;
+	double x, y;
+	for (int i = 1; i <= n; i++)
+	{
+		cin >> x >> y;
+		mousePos.push_back({x, y});	// 쥐의 좌표 저장
+	}
+
+	// 구멍 좌표를 입력받은 다음 모든 쥐의 좌표를 확인하여 쥐가 시간내에 들어갈 수 있으면 간선정보 생성
+	for (int i = 1; i <= m; i++)	// 구멍 번호 1부터 시작
+	{
+		cin >> x >> y;
+		for (int mouseNum = 0; mouseNum < mousePos.size(); mouseNum++)
+		{
+			double mouseX = mousePos.at(mouseNum).first;
+			double mouseY = mousePos.at(mouseNum).second;
+			double distDiff = sqrt((x - mouseX)*(x - mouseX) + (y - mouseY)* (y - mouseY));	// 쥐와 구멍 사이의 거리
+			double time = distDiff / v;	// 쥐가 해당 구멍까지 가는데 걸리는 시간(거리 / 속도)
+
+			// 매가 날라오는데 걸리는 시간 s보다 더 오래걸릴경우 해당 구멍은 들어갈 수 없음
+			if (time > s) continue;
+			
+			edges[mouseNum + 1].push_back(i);	// 간선 생성시 쥐의 번호를 1번부터 매기기 위해 +1 해줌
+		}
+	}
+
+	// 이분매칭 알고리즘 수행
+	int cnt = 0;
+	for (int i = 1; i <= n; i++)
+	{
+		fill(visited, visited + MOUSE_CNT, false);
+		if (dfs(i) == true) cnt++;
+	}
+
+	cout << n - cnt;
+
+	return 0;
+}
