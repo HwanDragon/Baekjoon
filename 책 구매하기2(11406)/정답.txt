@@ -1,0 +1,126 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+/*
+0 : Source, 201 : Sink
+1~100 : 서점 번호
+101~200 : 사람 번호
+*/
+
+#define CNT 202
+#define SOURCE 0
+#define SINK 201
+
+#define INF 1000000000
+
+using namespace std;
+
+int n, m;
+vector<int> edges[CNT];	// 간선 정보
+int capacity[CNT][CNT];	// 용량 정보
+int flow[CNT][CNT];		// 유량 정보
+int prevNode[CNT];		// 에드몬드카프 알고리즘에서 사용할 이전 경로를 저장할 배열
+
+// 에드몬트 카프 알고리즘 수행
+int edmondKarp(int start, int end)
+{
+	int result = 0;
+	while (true)
+	{
+		// 초기화
+		fill(prevNode, prevNode + CNT, -1);
+		queue<int> q;
+
+		// 시작지점 추가
+		q.push(start);
+
+		// 시작점부터 도착점까지 경로를 하나 찾음
+		while (q.empty() == false && prevNode[end] == -1)
+		{
+			int cur = q.front();
+			q.pop();
+
+			for (int i = 0; i < edges[cur].size(); i++)
+			{
+				int next = edges[cur].at(i);
+				if (prevNode[next] != -1) continue;	// 이미 방문한적이 있는 노드는 pass
+
+				// 잔여용량이 있는 경우에만 탐색
+				if (capacity[cur][next] - flow[cur][next] > 0)
+				{
+					prevNode[next] = cur;
+					q.push(next);
+				}
+			}
+		}
+
+		if (prevNode[end] == -1) break;	// 시작점에서 도착점까지 경로가 존재하지 않음
+
+		// 흐를 수 있는 최소 유량 찾음
+		int minFlow = INF;
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			minFlow = min(minFlow, capacity[prev][i] - flow[prev][i]);
+		}
+
+		// 흐를 수 있는 최소 유량 실제로 흘려보냄
+		for (int i = end; i != start; i = prevNode[i])
+		{
+			int prev = prevNode[i];
+			flow[prev][i] += minFlow;
+			flow[i][prev] -= minFlow;
+		}
+		result += minFlow;	// 흘린 유량만큼 더해줌
+	}
+
+	return result;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+	
+	cin >> n >> m;
+	int num;
+
+	// Sink와 사람 연결
+	for (int i = 1; i <= n; i++)
+	{
+		cin >> num;
+		edges[i + 100].push_back(SINK);
+		edges[SINK].push_back(i + 100);
+		capacity[i + 100][SINK] = num;
+	}
+
+	// Source와 서점 연결
+	for (int i = 1; i <= m; i++)
+	{
+		cin >> num;
+		edges[i].push_back(SOURCE);
+		edges[SOURCE].push_back(i);
+		capacity[SOURCE][i] = num;
+	}
+
+	// 서점과 사람 연결
+	for (int i = 1; i <= m; i++)
+	{
+		for (int j = 101; j <= n + 100; j++)
+		{
+			// i번째 서점이 j번째 사람에게 팔 수 있는 책
+			cin >> num;
+			edges[i].push_back(j);
+			edges[j].push_back(i);
+			capacity[i][j] = num;
+		}
+	}
+
+	// 에드몬드 카프 알고리즘 수행
+	cout << edmondKarp(SOURCE, SINK);
+
+	return 0;
+}
