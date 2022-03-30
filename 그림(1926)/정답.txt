@@ -1,0 +1,68 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+#define CNT 501
+
+using namespace std;
+
+int n, m;
+bool map[CNT][CNT] = { 0, };	// 그림 정보
+bool visited[CNT][CNT] = { 0, };	// 해당 지점 방문 여부
+int dx[4] = { 0, 0, 1, -1};
+int dy[4] = { 1, -1, 0, 0};
+
+// x, y, 영역 수
+int dfs(int x, int y, int cnt)
+{
+	visited[y][x] = true;
+	for (int i = 0; i < 4; i++)
+	{
+		int tempX = x + dx[i];
+		int tempY = y + dy[i];
+
+		if (tempX < 0 || tempY < 0 || tempX >= m || tempY >= n) continue;	// 배열 범위 초과 pass
+		if (visited[tempY][tempX] == true) continue;	// 이미 방문한 지점일 경우 pass
+		if (map[tempY][tempX] == 0) continue;	// 그림이 아닐경우 pass
+
+		cnt = dfs(tempX, tempY, cnt + 1);
+	}
+
+	return cnt;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int y = 0; y < n; y++)
+		for (int x = 0; x < m; x++)
+			cin >> map[y][x];
+		
+	int cnt = 0;
+	int maxArea = 0;
+
+	// DFS를 수행하여 그림의 개수와 그림 영역의 크기 계산
+	for (int y = 0; y < n; y++)
+	{
+		for (int x = 0; x < m; x++)
+		{
+			if (map[y][x] == 1 && visited[y][x] == false)
+			{
+				cnt++;	// 그림 개수 계산
+				maxArea = max(maxArea, dfs(x, y, 1));	// 그림 최대 영역 계산
+			}
+		}
+	}
+		
+	// 결과 출력
+	cout << cnt << "\n";
+	cout << maxArea;
+
+	return 0;
+}
