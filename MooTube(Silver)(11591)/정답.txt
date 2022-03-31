@@ -1,0 +1,62 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+#define CNT 5001
+
+using namespace std;
+
+int n, m;	// 노드 수, 쿼리 수
+vector<pair<int, int>> edges[CNT];	// vector<pair<노드, 비용>> edges[]
+bool visited[CNT];	// DFS 방문처리 배열
+
+/*
+DFS를 수행해나가며 탐색함
+i번째 노드와 j번째 노드의 USADO는 연결된 간선들 중 min값으로 계산되므로
+DFS 수행시 특정 간선이 기준치 미만일 경우 해당 간선에 연결되어있는 노드들은 모두
+기준치 미만이 되므로 더이상 탐색 할 필요가 없음
+*/
+int dfs(int node, int threshold, int cnt)
+{
+	visited[node] = true;	// 방문처리
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		pair<int, int> p = edges[node].at(i);
+		int next = p.first;
+		int cost = p.second;
+		if (threshold > cost) continue;	// USADO가 기준치보다 작을경우 해당 노드와 연결된 모든 노드는 탐색 할 필요 없음
+		if (visited[next] == true) continue;	// 이미 방문한 노드 pass
+
+		cnt = dfs(next, threshold, cnt + 1);
+	}
+	return cnt;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int a, b, c;
+	for (int i = 1; i < n; i++)	// n - 개 간선 정보 생성
+	{
+		cin >> a >> b >> c;
+		edges[a].push_back({b, c});
+		edges[b].push_back({a, c});
+	}
+	
+	// 쿼리 질의
+	int k, v;
+	for (int i = 1; i <= m; i++)
+	{
+		fill(visited, visited + CNT, false);
+		cin >> k >> v;
+		cout << dfs(v, k, 0) << "\n";
+	}
+
+	return 0;
+}
