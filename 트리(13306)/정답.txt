@@ -1,0 +1,103 @@
+#include <iostream>
+#include <stack>
+#include <vector>
+
+#define CNT 200001
+
+using namespace std;
+
+/*
+해당 문제는 어떤 두 노드가 연결되어있는지를 판별해야 하는데 총 n - 1개 간선을 끊어가는 형식이므로
+Union-Find 알고리즘을 사용할 수 없다. 하지만 거꾸로 생각하면
+아무것도 연결되어있지 않은 n개의 노드에서 n - 1개의 간선을 연결해 나가는 방식이라면 Union-Find 알고리즘을
+적용할 수 있고, 간선을 연결해 나가는 방식으로 처리하려면
+스택을 이용하여 입력받은 쿼리를 모두 역순으로 뒤집어서 하나씩 처리하면 
+간선을 하나씩 연결해나가는 방식으로 처리 할 수 있다.
+*/
+
+int n, q;
+int parents[CNT] = { 0, };	// Union-Find 알고리즘 실행을 위한 parents 배열
+stack<pair<int, pair<int, int>>> queryStack;	// 쿼리를 역순으로 처리하기위해 쿼리 스택 선언
+stack<bool> resultStack;	// 쿼리를 역순으로 처리하였으므로 결과값을 다시 역순으로 저장하였다가 출력함
+int parentEdge[CNT];	// i번째 노드의 부모노드를 기록
+
+// Union-Find 알고리즘 이용
+int getParent(int node, int parent[])
+{
+	if (node == parent[node]) return node;
+
+	return parent[node] = getParent(parent[node], parent);
+}
+
+void unionParent(int first, int second, int parent[])
+{
+	int firstParent = getParent(first, parent);
+	int secondParent = getParent(second, parent);
+	if (firstParent > secondParent)
+		parent[firstParent] = secondParent;
+	else
+		parent[secondParent] = firstParent;
+}
+
+bool sameParent(int first, int second, int parent[])
+{
+	if (getParent(first, parent) == getParent(second, parent)) return true;
+	return false;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 초기화
+	for (int i = 0; i < CNT; i++) parents[i] = i;
+
+	// 사용자 입력 받음
+	cin >> n >> q;
+	int p;
+	for (int i = 2; i <= n; i++)
+	{
+		cin >> p;
+		parentEdge[i] = p;	// i번째 자식의 부모 p를 추가
+	}
+
+	// 쿼리를 거꾸로 처리하기 위해 쿼리정보를 스택에 추가함
+	int a, b, c;
+	for (int i = 1; i <= q + (n - 1); i++) // 총 q + (n - 1) 개의 쿼리
+	{
+		cin >> a >> b;
+		if (a == 1)
+			cin >> c;
+		else
+			c = 0;
+
+		queryStack.push({ a, { b, c} });
+	}
+
+	// 입력받은 쿼리를 역순으로 처리
+	while (queryStack.empty() == false)
+	{
+		pair<int, pair<int, int>> p = queryStack.top();
+		queryStack.pop();
+		int queryNum = p.first;	// 쿼리 번호
+		int second = p.second.first;
+		int third = p.second.second;
+
+		if (queryNum == 1)
+			resultStack.push(sameParent(second, third, parents));	// 두 노드가 연결되어있는지 결과값 저장
+		else
+			unionParent(second, parentEdge[second], parents);	// second 노드를 부모 노드와 union 시킴
+	}
+
+	// 저장한 결과값 출력
+	while (resultStack.empty() == false)
+	{
+		cout << (resultStack.top() ? "YES\n" : "NO\n");
+		resultStack.pop();
+	}
+
+	return 0;
+}
