@@ -1,0 +1,116 @@
+#include <iostream>
+#include <cmath>
+
+#define NODE_CNT 1000001
+#define SQRT_CNT 1001
+
+/*
+5 2 2
+1
+2
+3
+4
+5
+1 3 6
+2 2 5
+1 5 2
+2 3 5
+
+답
+17
+12
+*/
+
+using namespace std;
+
+typedef long long ll;
+
+int n, m, k;
+ll arr[NODE_CNT] = { 0, };	// 수열
+ll block[SQRT_CNT] = { 0, };	// sqrt 구간만큼 미리 구간합 계산
+
+// 블럭 구간합 초기화
+void init()
+{
+	ll bSize = sqrt(n);	// 블럭 구간 길이
+	ll blockIndex = -1;	// 블럭 인덱스
+	for (int i = 0; i < n; i++)
+	{
+		if (i % bSize == 0)
+		{
+			blockIndex++;
+		}
+		block[blockIndex] += arr[i];
+	}
+}
+
+// index번째 수열을 value로 변경
+void update(int index, ll value)
+{
+	ll bSize = sqrt(n);	// 구간 길이 계산
+	block[index / bSize] += (value - arr[index]);	// 블럭 구간합 갱신
+	arr[index] = value;	// 수열 갱신
+}
+
+// 쿼리 질의
+ll query(int left, int right)
+{
+	ll sum = 0;	// 구간합 계산
+	ll bSize = sqrt(n);	// 블럭구간 길이 계산
+	while (left % bSize != 0 && left <= right)	// 블럭 구간에 포함되지 않는 왼쪽 구간 계산
+	{
+		sum += arr[left];
+		left++;
+	}
+
+	// 구간이 블럭에 포함되는 경우 미리 구해둔 구간합 더해줌
+	while (left + bSize <= right)
+	{
+		sum += block[left / bSize];
+		left += bSize;
+	}
+
+	// 블럭구간에 포함되지 않는 오른쪽 구간 계산
+	while (left <= right)
+	{
+		sum += arr[left];
+		left++;
+	}
+
+	return sum;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m >> k;
+	for (int i = 0; i < n; i++)
+		cin >> arr[i];
+
+	// 초기화
+	init();
+
+	// 쿼리 질의
+	ll a, b, c;
+	for (int i = 0; i < m + k; i++)
+	{
+		cin >> a >> b >> c;
+		if (a == 1)
+		{
+			// b번째 수를 c로 변경
+			update(b - 1, c);
+		}
+		else
+		{
+			// [b, c] 구간합 계산
+			cout << query(b - 1, c - 1) << "\n";
+		}
+	}
+
+	return 0;
+}
