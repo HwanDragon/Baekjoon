@@ -1,0 +1,96 @@
+#include <iostream>
+#include <vector>
+#include <unordered_set>
+
+using namespace std;
+
+#define CNT 1001	// map 가로, 세로 최대 크기
+#define NODE_CNT 1000001	// 가로 * 세로의 격자를 각각 노드로 두었을 때 최대 개수(가로 * 세로)
+
+/*
+해당 문제는 어느곳에서 출발하더라도 SAFE_ZONE으로 갈 수 있어야 하므로
+맵 격자를 각각 하나의 노드로 취급할 때,
+서로 연결되어있는 컴포넌트의 개수를 세면 됨.
+즉, 맵 정보에 담겨있는대로 노드들을 연결했을 때 최종적으로 생기는 컴포넌트의 개수가
+우리가 SAFE_ZONE을 설치해야하는 개수와 동일함
+*/
+
+int n, m;	// 세로, 가로
+int parents[NODE_CNT] = { 0, };	// Union-Find 알고리즘에서 사용할 부모 노드
+char map[CNT][CNT] = { 0, };	// 맵 정보
+
+// Union-Find 알고리즘 수행
+int getParent(int node, int parent[])
+{
+	if (parent[node] == node) return node;
+
+	return parent[node] = getParent(parent[node], parent);
+}
+
+void unionParent(int first, int second, int parent[])
+{
+	int firstParent = getParent(first, parent);
+	int secondParent = getParent(second, parent);
+
+	if (firstParent > secondParent)
+		parent[firstParent] = secondParent;
+	else
+		parent[secondParent] = firstParent;
+}
+
+bool sameParent(int first, int second, int parent[])
+{
+	if (getParent(first, parent) == getParent(second, parent)) return true;
+	return false;
+}
+
+int main()
+{
+	// 초기화
+	for (int i = 0; i < NODE_CNT; i++) parents[i] = i;
+
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 0; i < n; i++)
+		cin >> map[i];
+	
+	// Union-Find 알고리즘으로 지도에서 연결되어있는 노드들 서로 연결함
+	// 모든 노드를 순회하며 해당 노드의 맵 정보에 쓰여있는 노드와 연결함
+	int cur, next;
+	for (int y = 0; y < n; y++)
+	{
+		for (int x = 0; x < m; x++)
+		{
+			cur = y * m + x;	// 현재 노드
+
+			if (map[y][x] == 'D')
+				next = cur + m;
+			else if (map[y][x] == 'L')
+				next = cur - 1;
+			else if (map[y][x] == 'R')
+				next = cur + 1;
+			else
+				next = cur - m;
+
+			if (sameParent(cur, next, parents) == false)
+				unionParent(cur, next, parents);
+		}
+	}
+
+	// 연결되어있는 노드들 중 서로 다른 부모를 가지는 집합의 개수를 셈
+	unordered_set<int> s;
+	for (int i = 0; i < (n * m) - 1; i++)
+	{
+		int p = getParent(i, parents);	// i번째 노드의 부모 노드를 가져옴
+		s.insert(p);
+	}
+
+	cout << s.size();
+
+	return 0;
+}
