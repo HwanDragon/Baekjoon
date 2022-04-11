@@ -1,0 +1,79 @@
+#include <iostream>
+#include <cmath>
+
+#define NODE_CNT 1000001	// 수열의 개수
+#define BLOCK_CNT 1001	// 블럭의 수
+
+using namespace std;
+
+int n, m, blockSize;
+int arr[NODE_CNT] = { 0, };	// 수열
+int block[BLOCK_CNT] = { 0, };	// 구간 블럭 데이터
+
+// 구간 블럭 데이터 초기화
+void init()
+{
+	blockSize = sqrt(n);	// 블럭 사이즈 세팅
+	int blockIndex = -1;	// 처음에는 i가 0부터 시작하므로 블럭 인덱스를 0으로 하기위해 -1부터 시작
+	for (int i = 0; i < n; i++)
+	{
+		if (i % blockSize == 0)	// i가 blockSize로 나누어 떨어지면 다음 블럭으로 인덱스를 하나 증가시킴
+			blockIndex++;
+		
+		block[blockIndex] += arr[i];	// 블럭 구간합 세팅
+	}
+}
+
+// 구간 쿼리 질의
+int query(int left, int right)
+{
+	int sum = 0;
+	// 블럭에 포함되지 않는 왼쪽 구간합 계산
+	while (left <= right && (left % blockSize != 0))
+	{
+		sum += arr[left];
+		left++;
+	}
+
+	// 블럭 구간합 계산
+	while ((left + blockSize) <= right)
+	{
+		sum += block[left / blockSize];
+		left += blockSize;
+	}
+
+	// 블럭에 포함되지 않는 오른쪽 구간합 계산
+	while (left <= right)
+	{
+		sum += arr[left];
+		left++;
+	}
+
+	return sum;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 0; i < n; i++)
+		cin >> arr[i];
+	
+	// 초기화
+	init();
+
+	// 쿼리 질의
+	int a, b;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> a >> b;
+		cout << query(a - 1, b - 1) << "\n";
+	}
+	
+	return 0;
+}
