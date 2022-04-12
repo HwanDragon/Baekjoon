@@ -1,0 +1,91 @@
+#include <iostream>
+
+#define CNT 100001	// 돈을 사용해야 할 날짜
+#define MAX_MONEY 100000*10000	// 돈을 사용해야할 날짜 * 하루에 이용할 수 있는 최대 돈의 크기
+
+/*
+만약 m이 1이고, 100000일 동안 매일 10000원씩 사용한다면 MAX_MONEY 만큼의 돈을 사용한다
+*/
+
+using namespace std;
+
+typedef long long ll;
+
+int n, m;
+int maxMoney;	// 하루에 사용해야 할 돈 중 가장 큰 액수 저장
+int arr[CNT] = { 0, };	// i번째 날에 이용할 금액 저장
+
+// 돈을 입력받으면 해당 돈으로 몇번이나 출금하는지 계산하여 반환
+int getWithdrawCount(ll money)
+{
+	int cnt = 1;	// 출금횟수
+	int curMoney = money;	// 현재 돈
+	for (int i = 0; i < n; i++)
+	{
+		if (arr[i] > curMoney)	// 사용해야 하는 돈이 더 큰 경우
+		{
+			curMoney = money;	// 돈을 출금함
+			cnt++;
+		}
+		
+		curMoney -= arr[i];	// 돈을 사용
+	}
+
+	return cnt;	// 출금횟수 반환
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> arr[i];
+		maxMoney = max(maxMoney, arr[i]);	// 하루 사용하는 돈 중 가장 큰 금액 저장
+	}
+		
+	/*
+	파라매트릭 서치로 접근
+	돈을 0~MAX_MONEY 까지 출금 했을 때(k) 출금해야 하는 횟수를 계산
+	출금 하는 횟수가 m보다 작으면 출금 할 돈(k)을 줄이고
+	출금 횟수가 m보다 크면 출금 할 돈(k)을 늘림
+	*/
+	ll start = 1, end = MAX_MONEY, mid;	// 이분 탐색 초기화
+	int cnt = 0;
+	while (start <= end)
+	{
+		mid = (start + end) / 2;
+		if (mid < maxMoney)
+		{
+			start = mid + 1;
+			continue;
+		}
+
+		cnt = getWithdrawCount(mid);	// mid만큼의 돈을 이용하여 출금시 출금해야 하는 횟수
+		if (start == end)	// 출금 횟수가 m과 같을 경우
+		{
+			cout << mid;	// 해당 금액이 인출해야 할 최소 금액임
+			break;
+		}
+		else if (cnt < m)	// 출금 횟수가 m보다 작을 경우(돈을 너무 많이 뽑음)
+		{
+			end = mid;
+		}
+		else if (cnt > m)
+		{
+			start = mid + 1;	// 출금 횟수가 m보다 클경우(돈을 너무 적게 뽑음)
+		}
+		else if (cnt == m)
+		{
+			// 출금을 조금 적게 해봄
+			end = mid;
+		}
+	}
+
+	return 0;
+}
