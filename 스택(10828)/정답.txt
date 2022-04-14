@@ -1,0 +1,53 @@
+#include <iostream>
+#include <stack>
+#include <cstring>
+
+using namespace std;
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	int n;
+	cin >> n;
+	stack<int> st;
+	string temp;
+	int num;
+	while (n--)
+	{
+		cin >> temp;
+		if (temp == "push")
+		{
+			cin >> num;
+			st.push(num);
+		}
+		else if (temp == "top")
+		{
+			if (st.empty() == true)
+				cout << -1 << "\n";
+			else
+				cout << st.top() << "\n";
+		}
+		else if (temp == "pop")
+		{
+			if (st.empty() == true)
+				cout << -1 << "\n";
+			else
+			{
+				cout << st.top() << "\n";
+				st.pop();
+			}
+		}
+		else if (temp == "size")
+		{
+			cout << st.size() << "\n";
+		}
+		else if (temp == "empty")
+		{
+			cout << st.empty() << "\n";
+		}
+	}
+	return 0;
+}
