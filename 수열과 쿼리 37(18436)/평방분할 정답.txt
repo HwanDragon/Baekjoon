@@ -1,0 +1,124 @@
+#include <iostream>
+#include <cmath>
+
+using namespace std;
+
+#define CNT 100001
+#define BLOCK_CNT 1001
+
+int n, m, blockSize;
+bool arr[CNT] = { 0, };	// 짝수인지 여부 저장(홀수는 (구간 - 짝수의 개수)로 계산)
+int evenBlock[BLOCK_CNT] = { 0, };	// 짝수의 개수를 저장할 블럭 구간
+
+// 블럭 초기화(블럭 구간에 짝수의 개수를 저장)
+void init()
+{
+	blockSize = sqrt(n);	// 블럭 크기 초기화
+	int blockIndex = -1;
+	for (int i = 0; i < n; i++)
+	{
+		if (i % blockSize == 0)	// 다음 블럭 구간으로 넘어갔을 경우
+			blockIndex++;
+		if (arr[i] == true)	// 짝수일 경우
+			evenBlock[blockIndex]++;	// 짝수 개수 증가
+	}
+}
+
+// index에 값을 value로 변경
+// 기존값이 짝수로 value가 짝수일경우 아무것도 하지않고 pass(홀수도 마찬가지)
+// 홀수에서 짝술 바뀌거나 짝수에서 홀수로 바뀌는경우 값을 바꾸고,
+// 블럭 값 변경
+void update(int index, int value)
+{
+	bool even = (value % 2 == 0) ? true : false;	// value가 짝수인지 여부 저장
+
+	if (arr[index] == true && even == true)	// 짝수 -> 짝수 
+		return;
+	if (arr[index] == false && even == false)	// 홀수 -> 홀수
+		return;
+	if (arr[index] == false && even == true)	// 홀수 -> 짝수
+	{
+		arr[index] = true;	// 짝수로 변경
+		evenBlock[index / blockSize]++;	// 블럭 구간값 하나 증가
+	}
+	else if (arr[index] == true && even == false)	// 짝수 -> 홀수
+	{
+		arr[index] = false;	// 홀수로 변경
+		evenBlock[index / blockSize]--;	// 블럭 구간값 하나 감소
+	}
+}
+
+// 쿼리 질의(짝수개수 반환)
+int getEvenCount(int left, int right)
+{
+	int cnt = 0;	// 짝수 개수 카운트
+	// 블럭 구간에 해당하지 않는 왼쪽 구간
+	while (left <= right && left % blockSize != 0)
+	{
+		if (arr[left] == true)	// 짝수일경우 
+			cnt++;	//짝수 개수 증가
+		left++;
+	}
+
+	// 블럭 구간에 해당하는 경우
+	while (left + blockSize <= right)
+	{
+		cnt += evenBlock[left / blockSize];
+		left += blockSize;
+	}
+
+	// 블럭 구간에 해당하지 않는 오른쪽 구간
+	while (left <= right)
+	{
+		if (arr[left] == true)
+			cnt++;
+		left++;
+	}
+	return cnt;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n;
+	int temp;
+	for (int i = 0; i < n; i++)
+	{
+		cin >> temp;
+		if (temp % 2 == 0)
+			arr[i] = true;	// 해당 수열이 짝수인지 여부만 저장
+	}
+		
+	// 블럭 초기화
+	init();
+
+	// 쿼리 질의
+	cin >> m;
+	int a, b, c;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> a >> b >> c;
+		if (a == 1)
+		{
+			// b번째 원소를 c로 변경
+			update(b - 1, c);
+		}
+		else if (a == 2)
+		{
+			// 짝수 개수 출력
+			cout << getEvenCount(b - 1, c - 1) << "\n";
+		}
+		else
+		{
+			// 홀수 개수 추력
+			int range = (c - b + 1);
+			cout << range - getEvenCount(b - 1, c - 1) << "\n";
+		}
+	}
+	return 0;
+}
