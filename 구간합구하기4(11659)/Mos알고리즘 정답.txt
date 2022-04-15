@@ -1,0 +1,78 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <cmath>
+
+#define CNT 100001	// 노드 수
+
+/*
+Mos 알고리즘을 이용한 풀이
+*/
+
+using namespace std;
+
+int n, m, blockSize;	// 수의 개수, 쿼리 수,블럭 사이즈
+int arr[CNT];	// 수의 개수
+int answer[CNT];	// 정답 저장
+vector<pair<pair<int, int>, int>> v;	// pair<pair<쿼리 시작 구간, 쿼리 종료 구간>, 쿼리 인덱스>
+
+// 쿼리의 시작 블럭 구간으로 정렬하고, 시작 블럭 구간이 다를 경우 쿼리 종료 구간을 오름차순으로 정렬
+bool cmp(pair<pair<int, int>, int> &f, pair<pair<int, int>, int>&s)
+{
+	if ((f.first.first / blockSize) != (s.first.first / blockSize))
+		return (f.first.first / blockSize) < (s.first.first / blockSize);
+	else
+		return f.first.second < s.first.second;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 수열 입력 받음
+	cin >> n >> m;
+	for (int i = 1; i <= n; i++)
+		cin >> arr[i];
+
+	// 블럭 사이즈 계산
+	blockSize = sqrt(n);
+
+	// 쿼리 입력 받음
+	int a, b;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> a >> b;
+		v.push_back({{ a, b }, i});
+	}
+
+	// 시작 블럭 구간을 기준으로 정렬하고, 시작블럭값이 같을 경우 쿼리 종료값을 기준으로 정렬
+	sort(v.begin(), v.end(), cmp);
+
+	// 쿼리 계산
+	int lp = 0, rp = 0, sum = 0;
+	int index, l, r;
+	for (int i = 0; i < m; i++)
+	{
+		pair<pair<int, int>, int> p = v[i];
+		index = p.second;	// 입력받은 쿼리 순서
+		l = p.first.first;	// 쿼리 시작 구간
+		r = p.first.second;	// 쿼리 종료 구간
+
+		while (lp < l) sum -= arr[lp++];
+		while (lp > l) sum += arr[--lp];
+		while (rp > r) sum -= arr[rp--];
+		while (rp < r) sum += arr[++rp];
+
+		answer[index] = sum;	// 결과값 저장
+	}
+
+	// 결과값 출력
+	for (int i = 0; i < m; i++)
+		cout << answer[i] << "\n";
+
+	return 0;
+}
+
