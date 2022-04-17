@@ -1,0 +1,58 @@
+#include <iostream>
+#include <vector>
+
+#define NODE_CNT 1001
+#define INF 1000000000
+
+using namespace std;
+
+int n, m;
+vector<pair<int, int>> edges[NODE_CNT];	// pair<노드, 가중치>
+int dp[NODE_CNT];	// i번쨰 노드 방문여부 저장
+
+// cur노드까지 가는데 걸리는 가중치 w를 입력으로 받음
+void dfs(int cur, int w)
+{
+	dp[cur] = w;	// cur까지 가는데 비용이 w만큼 듬
+
+	// cur 노드와 연결된 다른 노드들 탐색
+	for (int i = 0; i < edges[cur].size(); i++)
+	{
+		pair<int, int> p = edges[cur].at(i);
+		int next = p.first;	// 연결된 다음 노드
+		int nextWeight = p.second;	// cur -> next 까지 가는데 드는 비용
+
+		if (dp[next] != INF) continue;	// 이미 방문했던 노드일 경우 pass
+		dfs(next, w + nextWeight);	// next 노드 dfs 탐색
+	}
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 노드 정보 입력
+	cin >> n >> m;
+	int a, b, c;
+	for (int i = 0; i < n - 1; i++)
+	{
+		cin >> a >> b >> c;
+		edges[a].push_back({ b, c });
+		edges[b].push_back({ a, c });
+	}
+
+	// 쿼리 질의
+	int start, end;
+	for (int i = 0; i < m; i++)
+	{
+		fill(dp, dp + NODE_CNT, INF);	// 방문여부 저장 배열 초기화
+		cin >> start  >> end;	// 시작구간, 종료구간 입력
+		dfs(start, 0);	// start 노드에서 가중치 0으로 탐색
+		cout << dp[end] << "\n";	// 가중치 탐색
+	}
+
+	return 0;
+}
