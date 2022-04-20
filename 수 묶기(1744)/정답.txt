@@ -1,0 +1,124 @@
+#include <iostream>
+#include <algorithm>
+#include <vector>
+
+#define CNT 51
+
+/*
+반례1
+5
+3
+9
+4
+3
+3
+답: 48
+
+반례2
+5
+-3
+-2
+-1
+1
+2
+답: 8
+
+반례3
+10
+-5
+-4
+-3
+0
+1
+2
+3
+4
+5
+6
+답 : 65
+*/
+
+/*
+// 양수가 왼쪽에 오도록 정렬하고, 음수가 오른쪽에 오도록 정렬, 
+// 양수는 내림차순 정렬, 음수는 오름차순 정렬
+// 0은 가장 오른쪽에 오도록 정렬(음수도 큰수 두개를 곱하면 양수가 되기 때문에 0은 가장 오른쪽으로 가야함)
+// 두 수를 곱한것과 더한경우를 비교하여 곱한게 크면 sum에 곱한수를 더하고, 그게 아니면 수를 하나만 더함
+*/
+
+using namespace std;
+
+int arr[CNT];	// 수열 저장
+
+// 양수가 왼쪽에 오도록 정렬하고, 음수가 오른쪽에 오도록 정렬, 
+// 양수는 내림차순 정렬, 음수는 오름차순 정렬
+bool cmp(int &f, int &s)
+{
+	if (f > 0 && s > 0)	// 양수일경우
+		return f > s;	// 내림차순 정렬
+	else if (f < 0 && s < 0)	// 음수일 경우
+		return f < s;	// 오름차순 정렬
+	else
+		return f > s;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	int n, zeroCnt = 0;	// 수의 개수, 0 개수 카운트
+	cin >> n;
+
+	int t = 0;
+	int cnt = n;
+	while (cnt--)
+	{
+		cin >> arr[t];
+		if (arr[t] == 0)
+		{
+			t--;
+			zeroCnt++;	// 0개수 카운트
+		}
+			
+		t++;
+	}
+		
+	// 0을 제외한 나머지 수 정렬
+	sort(arr, arr + (n - zeroCnt), cmp);
+
+	int sum = 0;
+	int index = 0;
+	while (index < n)
+	{
+		int first = arr[index];
+		if (index == n - 1)	
+		{
+			sum += first;	// 끝까지 도달했을경우 그냥 더해줌
+			break;
+		}
+
+		int second = arr[index + 1];
+
+		// 두 수를 곱한것과 더한경우를 비교
+		// 내림차순으로 정렬하였으므로 곱한게 더 클경우 sum에 곱한값을 더해주고,
+		// 그 외의 경우는 first만 더해서 second가 다음 수와 묶었을경우르 판단할 수 있도록 계산
+		if ((first + second) < (first * second))	// 곱한게 더 클경우 
+		{
+			sum += (first * second);	// 곱한수를 sum에 추가
+			index++;	// secnd까지 계산하였으므로 index를 하나 더 증가시킴
+		}
+		else
+		{
+			sum += first;	// 더한게 크거나 같을경우는 first만 더해줌
+		}
+
+		index++;
+	}
+
+	cout << sum;	// 결과 출력
+
+	return 0;
+}
