@@ -1,0 +1,117 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <cmath>
+
+#define CNT 100001
+#define QUERY_CNT 100001
+#define NUM_RANGE 1000001
+
+using namespace std;
+
+typedef long long ll;
+
+// 쿼리
+typedef struct Query {
+	int index;	// 쿼리 순서
+	int left;	// 쿼리 시작구간
+	int right;	// 쿼리 종료구간
+};
+
+int n, m, blockSize;	
+int arr[CNT];	// 수열 저장
+int numCount[NUM_RANGE];	// 구간에 i번째 수가 몇개나 있는지 저장
+ll answer[QUERY_CNT];	// 결과값 저장
+vector<Query*> queries;	// 쿼리 저장
+
+// 쿼리 시작블럭을 기준으로 정렬, 값이 같을경우 끝값을 기준으로 오름차순 정렬
+bool cmp(Query *f, Query *s)
+{
+	if (f->left / blockSize != s->left / blockSize)
+		return f->left / blockSize < s->left / blockSize;
+	else
+		return f->right < s->right;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	for (int i = 1; i <= n; i++)
+		cin >> arr[i];
+
+	blockSize = sqrt(n);	// 블럭 사이즈 초기화
+	
+	for (int i = 0; i < m; i++)
+	{
+		Query* q = (Query*)malloc(sizeof(Query));
+		cin >> q->left >> q->right;
+		q->index = i;
+		queries.push_back(q);
+	}
+
+	// Mo's 알고리즘을 사용하기위한 쿼리 정렬
+	sort(queries.begin(), queries.end(), cmp);
+
+	// Mo's 알고리즘을 이용하여 서로다른수가 몇개있는지 계산
+	ll result = 0, lp = 0, rp = 0, len = queries.size();
+	for (int i = 0; i < len; i++)
+	{
+		Query* q = queries.at(i);
+		int l = q->left;	// 쿼리 질의 시작구간
+		int r = q->right;	// 쿼리 질의 종료구간
+
+		// 새로 꺼낸 시작쿼리가 기존에 처리한 시작쿼리보다 더 클경우
+		// lp는 증가시키고, 원소는 하나씩 빠지므로 numCount를 감소시킴
+		while (lp < l)
+		{
+			int t = arr[lp++];	// 제거할 원소
+			result -= ((ll)(numCount[t]) * (numCount[t]) * t);	// 원소가 바뀌었으므로 기존값 빼줌
+			numCount[t]--;	// 해당 원소의 개수 제거
+			result += ((ll)(numCount[t]) * (numCount[t]) * t);	// 바뀐 값으로 다시 처리함
+		}
+
+		// 새로 꺼낸 시작쿼리가 기존의 시작쿼리보다 작을경우
+		// lp값은 감소시키고, 원소가 추가되므로, numCount를 증가시킴
+		while (lp > l)
+		{
+			int t = arr[--lp];	// 추가할 원소
+			result -= ((ll)(numCount[t]) * (numCount[t]) * t);	// 원소가 바뀌었으므로 기존값 빼줌
+			numCount[t]++;	// t원소의 개수를 하나 증가시킴
+			result += ((ll)(numCount[t]) * (numCount[t]) * t);	// 바뀐 값으로 다시 처리함
+		}
+
+		// 새로꺼낸 종료 쿼리가 기존에 처리한 종료 쿼리보다 클경우
+		// rp값을 증사시켜 원소를 하나씩 추가해나감(numCount를 증가시킴)
+		while (rp < r)
+		{
+			int t = arr[++rp];	// 원소를 추가해나감
+			result -= ((ll)(numCount[t]) * (numCount[t]) * t);	// 원소가 바뀌었으므로 기존값 빼줌
+			numCount[t]++;	// 원소 개수 증가
+			result += ((ll)(numCount[t]) * (numCount[t]) * t);	// 바뀐 값으로 다시 처리함
+		}
+
+		// 새로꺼낸 종료 쿼리가 기존에 처리한 종료 쿼리보다 작을경우
+		// 기존에 처리한값에서 원소를 하나씩 제거해나감
+		while (rp > r)
+		{
+			int t = arr[rp--];	//	기존에 원소를 제거해나감
+			result -= ((ll)(numCount[t]) * (numCount[t]) * t);	// 원소가 바뀌었으므로 기존값 빼줌
+			numCount[t]--;	// 원소 개수 감소
+			result += ((ll)(numCount[t]) * (numCount[t]) * t);	// 바뀐 값으로 다시 처리함
+		}
+
+		answer[q->index] = result;	// 결과값 저장
+	}
+
+	// 결과 출력
+	for (int i = 0; i < m; i++)
+		cout << answer[i] << "\n";
+
+	return 0;
+}

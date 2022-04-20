@@ -1,0 +1,60 @@
+#include <iostream>
+#include <algorithm>
+
+using namespace std;
+
+int n, s;	// 자연수, 교환 횟수
+int arr[51];	// 수열 저장
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n;
+	for (int i = 0; i < n; i++)
+		cin >> arr[i];
+
+	cin >> s;	// 교환 횟수
+
+	/*
+	* 선택정렬 수행
+	* i = 0 부터 n까지 순회하고,
+	* j = i 부터 n보다 작을때까지, 그리고 사전순으로 가장 뒷서는 배열을 출력해야 하므로
+	* j 는 i + s 보다 작거나 같아야함 (j는 i부터 시작하고, 최대 옮길 수 있는 횟수는 s번 이내여야 하므로)
+	*/
+	int maxIndex = 0;
+	for (int i = 0; i < n; i++)
+	{
+		if (s == 0) break;
+
+		maxIndex = i;	// i번째는 최대값으로 둠
+
+		// 최대값이 있는 위치를 찾음
+		// j는 n보다 작아야 하고, 최대 옮길 수 있는 횟수가 s번 남아있으므로 
+		// s번의 이동안에서 가장 큰 수를 찾아야함 (i번주터 시작하므로 j <= i + s 조건을 만족해야함)
+		for (int j = i; j < n && j <= i + s; j++)
+		{
+			if (arr[maxIndex] < arr[j])
+				maxIndex = j;	// 최대값이 있는 곳의 인덱스 저장
+		}
+
+		// 두 원소 스왑
+		for (int j = maxIndex; j > i; j--)
+		{
+			int temp = arr[j];
+			arr[j] = arr[j - 1];
+			arr[j - 1] = temp;
+			s--;	// 스왑할때마다 s를 하나씩 감소시킴
+		}
+	}
+
+	// 결과 출력
+	for (int i = 0; i < n; i++)
+		cout << arr[i] << " ";
+
+	return 0;
+}
