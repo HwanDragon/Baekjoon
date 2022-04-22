@@ -1,0 +1,55 @@
+#include <iostream>
+#include <cmath>
+
+#define CNT 100001
+#define INF 1000000000
+
+using namespace std;
+
+int n;
+int arr[CNT];
+int dp[CNT];	
+int expo[1001];	// expo[i] 에 i * i 값 저장
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 무한대로 초기화
+	fill(dp, dp + CNT, INF);
+
+	// 제곱수는 dp 1로 초기화
+	int s = sqrt(CNT);
+	for (int i = 1; i <= s; i++)
+	{
+		expo[i] = i * i;
+		dp[i * i] = 1;
+	}
+	
+	cin >> n;
+	dp[1] = 1;
+	dp[2] = 2;	// 1^2 + 1^2
+
+	/*
+	i 번째수가 제곱수일경우 1로 초기화되어 있으므로 pass
+	제곱수가 아닐경우에는 dp[x] = min( dp[x - k^2], dp[x] ), (k 는 1, 2, 3.... sqrt(i) 까지) 를 이용하여 최소값 계산
+	즉, dp[i]가 제곱수가 아닐경우에는 i번째에서 i - k^2 (k 는 1, 2....sqrt(i)) 를 빼면서 최소값을 찾는 과정임
+	*/
+	for (int i = 3; i < CNT; i++)
+	{
+		int sq = sqrt(i);	// 제곱수 검토
+		if (sq * sq == i) continue;	// 제곱수는 1로 초기화 했으므로 계산하지 않음
+
+		for (int j = 1; j <= sq ; j++)
+		{
+			dp[i] = min(dp[i - expo[j]] + 1, dp[i]);
+		}
+	}
+
+	// 결과 출력
+	cout << dp[n];
+	return 0;
+}
