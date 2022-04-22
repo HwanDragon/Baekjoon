@@ -1,0 +1,77 @@
+#include <iostream>
+#include <queue>
+#include <vector>
+
+#define NODE_CNT 300001
+
+using namespace std;
+
+/*
+시작점부터 BFS를 탐색해가며 거리를 계산
+만약 거리가 k보다 더 커질경우는 계산할 필요 없음(그 이상 노드들은 거리가 k를 초과하기 때문)
+*/
+
+int n, m, dist, startNode;
+int dp[NODE_CNT];	// 최단거리 계산
+vector<int> edges[NODE_CNT];	// 간선정보 저장
+
+void bfs()
+{
+	queue<int> q;
+	q.push(startNode);	// 시작점 큐에 추가
+	dp[startNode] = 0;	// 시작점 거리 0으로 초기화
+
+	while (q.empty() == false)
+	{
+		int cur = q.front(); 
+		q.pop();
+
+		for (int i = 0; i < edges[cur].size(); i++)
+		{
+			int next = edges[cur].at(i);
+			if (dp[next] >= dist) continue;	// dist보다 크거나 같은 노드들은 탐색할 필요 없음
+			if (dp[next] != -1) continue;	// 이미 방문한적이 있는 노드일경우 pass
+
+			dp[next] = dp[cur] + 1;	// 이전 값에서 + 1더해줌
+			q.push(next);
+		}
+	}
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 초기화
+	fill(dp, dp + NODE_CNT, -1);
+
+	// 사용자 입력 받음
+	cin >> n >> m >> dist >> startNode;
+	int a, b;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> a >> b;
+		edges[a].push_back(b);
+	}
+
+	// BFS 탐색
+	bfs();
+
+	// 결과 출력
+	int cnt = 0;
+	for (int i = 1; i <= n; i++)
+	{
+		if (dp[i] == dist) 
+		{
+			cout << i << "\n";
+			cnt++;
+		}
+	}
+
+	if (cnt == 0) cout << -1;	// 거리가 dist인 노드가 하나도 없을경우
+
+	return 0;
+}
