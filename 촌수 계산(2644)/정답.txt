@@ -1,0 +1,70 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+#define NODE_CNT 101
+#define INF 100000000
+
+using namespace std;
+
+int n, startNode, endNode, m;
+vector<int> edges[NODE_CNT];	// 간선 정보
+int dp[NODE_CNT] = { 0 , };	// BFS 수행시 거리 저장
+
+void bfs(int startNode)
+{
+	dp[startNode] = 0;	// 시작노드 비용 0으로 초기화
+	queue<int> q;
+	q.push(startNode);
+
+	while (q.empty() == false)
+	{
+		int cur = q.front();	// 현재 노드
+		q.pop();
+
+		for (int i = 0; i < edges[cur].size(); i++)
+		{
+			int next = edges[cur].at(i);	// 다음 노드
+			if (dp[next] != INF) continue;	// 이미 방문한 노드 pass
+
+			q.push(next);	// 큐에 추가
+			dp[next] = dp[cur] + 1;	// dp 배열 갱신
+		}
+	}
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// dp배열 초기화
+	fill(dp, dp + NODE_CNT, INF);
+
+	// 사용자 입력 받음
+	cin >> n;
+	cin >> startNode >> endNode;
+	cin >> m;
+
+	// 간선정보 입력
+	int a, b;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> a >> b;
+		edges[a].push_back(b);
+		edges[b].push_back(a);
+	}
+
+	// 시작노드에서부터 bfs탐색
+	bfs(startNode);
+
+	// 결과 출력
+	if (dp[endNode] == INF)
+		cout << -1;
+	else
+		cout << dp[endNode];
+
+	return 0;
+}
