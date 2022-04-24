@@ -1,0 +1,62 @@
+#include <iostream>
+#include <queue>
+
+#define CNT 200000
+#define INF 1000000000
+
+using namespace std;
+
+int startPos, endPos;
+int dp[CNT] = { 0, };
+
+int main()
+{
+	// 입출력 속도 증가
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// dp 배열 초기화
+	fill(dp, dp + CNT, INF);
+
+	// 시작, 도착지점 입력 받음
+	cin >> startPos >> endPos;
+
+	// BFS 탐색
+	queue<int> q;
+	q.push(startPos);
+	dp[startPos] = 0;
+
+	int temp;
+	while (q.empty() == false)
+	{
+		int cur = q.front();
+		q.pop();
+
+		temp = cur - 1;
+		if (temp >= 0 && dp[temp] == INF)	// 왼쪽으로 1칸 이동할 경우
+		{
+			q.push(temp);
+			dp[temp] = dp[cur] + 1;
+		}
+
+		temp = cur + 1;
+		if ((temp < CNT) && dp[temp] == INF)	// 오른쪽으로 1칸 이동할 경우
+		{
+			q.push(temp);
+			dp[temp] = dp[cur] + 1;
+		}
+
+		temp = cur * 2;
+		if (temp < CNT && dp[temp] == INF)	// 2배 위치로 순간이동 할 경우	
+		{
+			q.push(temp);
+			dp[temp] = dp[cur] + 1;
+		}
+	}
+
+	// 결과 출력
+	cout << dp[endPos];
+
+	return 0;
+}
