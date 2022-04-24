@@ -1,0 +1,94 @@
+#include <iostream>
+#include <queue>
+
+#define CNT 50
+
+using namespace std;
+
+int w, h;
+int map[CNT][CNT] = { 0, };	// 맵 정보
+bool visited[CNT][CNT] = { 0, };	// BFS 방문 처리 배열
+int dx[8] = { -1, 0, 1, -1, 1, -1, 0, 1 };	// 현재 지점으로부터 상하좌우, 대각선을 포함한 8곳의 위치 좌표
+int dy[8] = { -1, -1, -1, 0, 0, 1, 1, 1 };
+
+// 초기화
+void init()
+{
+	for (int i = 0; i < CNT; i++)
+	{
+		for (int j = 0; j < CNT; j++)
+		{
+			map[i][j] = 0;
+			visited[i][j] = false;
+		}
+	}
+}
+
+void bfs(int x, int y)
+{
+	visited[y][x] = true;	//방문처리
+	queue<pair<int, int>> q;
+	q.push({x, y});
+
+	while (q.empty() == false)
+	{
+		pair<int, int> p = q.front();
+		q.pop();
+		int x = p.first;
+		int y = p.second;
+
+		for (int i = 0; i < 8; i++)
+		{
+			int tempX = x + dx[i];
+			int tempY = y + dy[i];
+
+			if (tempX < 0 || tempY < 0 || tempX >= w || tempY >= h) continue;	// 배열 범위 초과
+			if (visited[tempY][tempX] == true) continue;	// 이미 방문한 지역
+			if (map[tempY][tempX] == 0) continue;	// 바다 지역
+			
+			q.push({tempX, tempY});	// 다음지역 큐에 추가
+			visited[tempY][tempX] = true;	// 방문처리
+		}
+	}
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	while (true)
+	{
+		cin >> w >> h;
+		if (w == 0 && h == 0) break;
+
+		// 초기화
+		init();
+
+		// 맵 정보 받음
+		for (int i = 0; i < h; i++)
+			for (int j = 0; j < w; j++)
+				cin >> map[i][j];
+
+		// BFS 탐색
+		int cnt = 0;
+		for (int y = 0; y < h; y++)
+		{
+			for (int x = 0; x < w; x++)
+			{
+				if (map[y][x] == 0) continue;	// 바다
+				if (visited[y][x] == true) continue;	// 이미 방문한 지역
+
+				bfs(x, y);
+				cnt++;	// 섬 개수 카운트
+			}
+		}
+
+		// 결과 출력
+		cout << cnt << "\n";
+	}
+
+	return 0;
+}
