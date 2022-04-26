@@ -1,0 +1,56 @@
+#include <iostream>
+
+#define CNT 1001
+
+using namespace std;
+
+/*
+반례 : 
+6
+2 3 4 5 6 1
+정답 : 5
+*/
+
+int n;
+int arr[CNT] = { 0, };	// 수열 저장
+int dp[CNT] = { 0, };	// 부분수열의 길이 계산
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n;
+	for (int i = 0; i < n; i++)
+		cin >> arr[i];
+
+	fill(dp, dp + CNT, 1);
+	
+	// 가장 긴 증가하는 부분수열의 길이 계산
+	/*
+	이중 for문을 이용해 i -> 0...n-1까지 탐색하고,
+	j -> 0...i-1 까지 탐색함
+	탐색하면서 arr[j], arr[i]를 비교하여 arr[i]의 값이 더 크고(증가하는 부분수열의 후보가 될 수 있음)
+	기존에 계산해둔 dp[j] 와 dp[i]값을 비교함.
+	dp[j] + 1 > dp[i] 일 경우 더 큰 부분수열을 발견한 것이므로 dp[i]값을 갱신해줌
+	*/
+	int maxValue = 1;
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < i; j++)
+		{
+			if (arr[i] > arr[j] && dp[i] < dp[j] + 1)
+			{
+				dp[i] = dp[j] + 1;
+				maxValue = max(maxValue, dp[i]);
+			}
+		}
+	}
+
+	cout << maxValue;
+
+	return 0;
+}

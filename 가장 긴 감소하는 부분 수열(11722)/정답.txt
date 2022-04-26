@@ -1,0 +1,50 @@
+#include <iostream>
+
+#define CNT 1001
+
+using namespace std;
+
+int n;
+int arr[CNT] = { 0, };
+int dp[CNT] = { 0, };
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n;
+	for (int i = 0; i < n; i++)
+		cin >> arr[i];
+
+	// 감소하는 부분수열의 길이를 1로 초기화
+	fill(dp, dp + CNT, 1);
+
+	/*
+	 - 가장 긴 감소하는 부분수열 계산
+	 이중 반복문을 이용(i -> 0...n-1 까지 탐색, j -> 0...i-1 까지 탐색)
+	 감소하는 부분수열 이므로 arr[i] < arr[j] (앞의 값이 더 커야함) 조건을 만족해야하고,
+	 감소하는 부분수열의 길이를 찾기 위해 dp 배열을 갱신시켜나감
+	 초기에 dp 값은 모두 1로 초기화 시킨 뒤(하나의 수열이 감소하는 부분수열의 최소 길이이므로)
+	 dp[i]번째 값과 dp[j] + 1을 비교하여 기존에 더 큰 감소하는 부분수열의 길이가 있을경우 dp값 갱신
+	*/
+	int maxValue = 1;
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < i; j++)
+		{
+			if (arr[i] < arr[j] && dp[i] < dp[j] + 1)	// 기존 dp[i]값보다 더 큰 감소하는 부분수열 찾음
+			{
+				dp[i] = dp[j] + 1;
+				maxValue = max(maxValue, dp[i]);	// 최대 길이 갱신
+			}
+		}
+	}
+
+	cout << maxValue;
+
+	return 0;
+}
