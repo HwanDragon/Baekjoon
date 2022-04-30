@@ -1,0 +1,66 @@
+#include <iostream>
+
+#define CNT 10001
+
+using namespace std;
+
+int n;
+int arr[CNT] = { 0 };	// 수열 저장
+int dp[CNT] = { 0 };	// DP 배열 저장
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n;
+	for (int i = 1; i <= n; i++)
+		cin >> arr[i];
+
+	if (n == 1)
+	{
+		cout << arr[1];		// 1을 한잔 마시는 경우
+		return 0;
+	}
+	else if (n == 2)
+	{
+		cout << arr[1] + arr[2];		// 1, 2를 마시는 경우
+		return 0;
+	}
+	else if (n == 3)
+	{
+		int t = max(arr[1] + arr[2], arr[3] + arr[1]);		// 1, 3을 마시거나, 1, 2를 마시는 경우
+		t = max(t, arr[2] + arr[3]);	// 2,3을 마시는 경우
+		cout << max(arr[1] + arr[2], arr[3] + arr[1]);
+		return 0;
+	}
+		
+
+	dp[1] = arr[1];	// 1을 한잔 마시는 경우
+	dp[2] = arr[1] + arr[2];	// 1, 2를 마시는 경우
+
+	dp[3] = max(arr[1] + arr[2], arr[3] + arr[1]);	// 1, 3을 마시거나, 1, 2를 마시는 경우
+	dp[3] = max(dp[3], arr[2] + arr[3]);	// 2,3을 마시는 경우
+
+	/*
+	- i번째 와인까지 마실경우 최대로 마실 수 있는 양
+	
+	1. i 마심, (i - 1) 마심, (i - 2) 안마심, dp[i - 3]까지 최대값	 ->	arr[i] + arr[i-1] + dp[i-3]
+	2. i 마심, (i - 1) 안마심, dp[i - 2] 까지 최대값 	-> arr[i] + dp[i-2]
+	3. i 안마심, dp[i - 1] 까지 최대값 -> dp[i - 1]
+
+	세가지 경우가 있을 수 있고, 위 세가지 경우중 가장 큰 경우를 찾으면 됨
+	*/
+	for (int i = 4; i <= n; i++)
+	{
+		dp[i] = max(arr[i] + arr[i - 1] + dp[i- 3], arr[i] + dp[i-2]);
+		dp[i] = max(dp[i], dp[i-1]);
+	}
+
+	// 결과 출력
+	cout << dp[n];
+	return 0;
+}
