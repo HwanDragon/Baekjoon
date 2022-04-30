@@ -1,0 +1,93 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+
+#define NODE_CNT 100001
+#define NO_TEAM 1000000000
+
+using namespace std;
+
+int n;
+int edges[NODE_CNT];	// 간선 정보 저장
+bool isTeam[NODE_CNT] = { 0, };	// 팀으로 선택되었는지 여부 저장
+bool visited[NODE_CNT] = { 0, };	// 방문 처리 여부
+stack<int> st;
+
+// 초기화 수행
+void init()
+{
+	while (st.empty() == false) st.pop();
+	fill(isTeam, isTeam + NODE_CNT, false);
+	fill(visited, visited + NODE_CNT, false);
+	fill(edges, edges + NODE_CNT, 0);
+}
+
+int dfs(int node)
+{
+	st.push(node);	// 노드를 스택에 하나씩 추가함
+	visited[node] = true;	// 방문 처리
+
+	int nextNode = edges[node];
+	if (node == nextNode)	// 사이클을 형성하는 노드일 경우	
+	{
+		isTeam[node] = true;	// 팀 형성 해줌
+		return nextNode;
+	}
+
+	if (visited[nextNode] == true)	// 이미 방문한 노드일 경우 사이클을 형성하므로 팀을 이룰 수 잇음(해당 노드 번호 반환)
+		return nextNode;
+	
+	int parentNode = dfs(nextNode);	// 방문하지 않는 노드일 경우 dfs 수행
+	if (node == parentNode)	// 사이클을 이루는 부모 노드가 자기 자신일 경우
+	{
+		// 스택에서 사이클을 이루는 부모노드가 나올 때 까지 하나씩 빼며 팀을 만들어줌
+		while (true)
+		{
+			int temp = st.top();
+			st.pop();
+			isTeam[temp] = true;
+			if (temp == node) break;
+		}
+	}
+
+	return parentNode;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	int t;
+	cin >> t;
+	while (t--)
+	{
+		// 초기화
+		init();
+
+		// 사용자 정보 입력 받음
+		cin >> n;
+		for (int i = 1; i <= n; i++)
+			cin >> edges[i];	// 간선 정보 생성(i번째 친구가 num 친구를 선택함)
+
+		// 깊이 우선 탐색을 수행했을 때 자기자신을 만나게 된다면 팀을 구성할 수 있음
+		// (사이클이 있을경우 혼자 팀을 구성하게됨)
+		for (int i = 1; i <= n; i++)
+		{
+			while (st.empty() == false) st.pop();
+
+			if (visited[i] == false) dfs(i);
+		}
+
+		// 팀에 속하지 못한 학생수 계산
+		int cnt = 0;
+		for (int i = 1; i <= n; i++)
+			if (isTeam[i] == false) cnt++;
+
+		// 결과 출력
+		cout << cnt << "\n";
+	}
+	
+}
