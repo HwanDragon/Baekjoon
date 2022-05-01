@@ -1,0 +1,106 @@
+#include <iostream>
+#include <stack>
+#include <vector>
+
+#define NODE_CNT 2001
+
+using namespace std;
+
+int n, m, discoverId = 0, sccGroupId = 0;	// 노드수, 간선수, 방문순서 아이디, scc 그룹 번호 저장
+stack<int> st;	// 타잔 알고리즘 수행시 사용할 스택
+vector<int> edges[NODE_CNT];	// 간선 정보
+vector<vector<int>> SCC;	// SCC 그룹 정보 저장
+bool finished[NODE_CNT];	// dfs수행중인지 여부 저장
+int discover[NODE_CNT];	// 노드 방문 순서 저장
+
+// 타잔 알고리즘 수행
+int dfs(int node)
+{
+	st.push(node);	// 스택에 노드 추가
+	int discId = ++discoverId;	// 방문순서 기록
+	discover[node] = discId;	// 방문순서 저장
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (discover[next] == -1)	// 한번도 방문하지 않은 노드일 경우
+		{
+			discId = min(discId, dfs(next));	// 방문 후 더 작은 아이디값 저장
+		}
+		else if (finished[next] == false)	// 이미 방문했던 노드일 경우(dfs 수행중)
+		{
+			discId = min(discId, discover[next]);
+		}
+	}
+
+	// scc 사이클의 시작 노드일 경우
+	if (discover[node] == discId)
+	{
+		vector<int> scc;
+		while (true)
+		{
+			int temp = st.top();	// 스택에서 노드들을 차례로 꺼냄
+			st.pop();
+			finished[temp] = true;	// dfs 수행 종료 테크
+			scc.push_back(temp);	// scc 그룹에 노드 저장
+			if (temp == node) break;
+		}
+		SCC.push_back(scc);
+	}
+	return discId;
+}
+
+// 초기화
+void init()
+{
+	discoverId = 0, sccGroupId = 0;
+	while (st.empty() == false) st.pop();
+	fill(discover, discover + NODE_CNT, -1);
+	fill(finished, finished + NODE_CNT, false);
+	SCC.clear();
+	for (int i = 0; i < NODE_CNT; i++)
+	{ 
+		edges[i].clear();
+	}
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	while (true)
+	{
+		// 초기화
+		init();
+
+		// 사용자 입력 받음
+		cin >> n >> m;
+		if (n == 0 && m == 0) break;
+
+		int first, second, third;
+		for (int i = 0; i < m; i++)
+		{
+			cin >> first >> second >> third;
+
+			edges[first].push_back(second);
+			if (third == 2)	// third 가 2일경우 양방향으로 연결함
+				edges[second].push_back(first);
+		}
+
+		// 타잔 알고리즘 수행
+		for (int i = 1; i <= n; i++)
+		{
+			if (discover[i] == -1) dfs(i);
+		}
+
+		// 결과 출력
+		if (SCC.size() == 1)
+			cout << 1 << "\n";
+		else
+			cout << 0 << "\n";
+	}
+	return 0;
+}
