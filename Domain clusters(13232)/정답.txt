@@ -1,0 +1,87 @@
+#include <iostream>
+#include <stack>
+#include <vector>
+
+#define NODE_CNT 5001
+
+using namespace std;
+
+int n, m, visitedId = 0, sccGroupId = 0;	// 노드 수, 간선 수, 방문순서 아이디, scc 그룹 아이디
+vector<int> edges[NODE_CNT];	// 간선 정보 저장	
+bool finished[NODE_CNT];	// dfs수행중인지 여부 저장
+int discover[NODE_CNT];	// 방문여부 처리
+stack<int> st;	// 타잔알고리즘 수행시 사용할 스택
+vector<vector<int>> SCC;	// SCC 그룹 정보 저장
+
+// 타잔 알고리즘 수행
+int dfs(int node)
+{
+	st.push(node);
+	discover[node] = ++visitedId;	// 방문 처리
+	int parentId = visitedId;
+
+	for (int i = 0; i < edges[node].size(); i++)
+	{
+		int next = edges[node].at(i);
+		if (discover[next] == -1)	// 방문하지 않은 노드일 경우
+		{
+			parentId = min(parentId, dfs(next));	// dfs 수행
+		}
+		else if (finished[next] == false)	// dfs를 수행중인 노드일 경우
+		{
+			parentId = min(parentId, discover[next]);
+		}
+	}
+
+	// 사이클을 이루는 시작 노드일 경우
+	if (parentId == discover[node])
+	{
+		vector<int> scc;
+		while (true)
+		{
+			int temp = st.top();
+			st.pop();
+			finished[temp] = true;	// dfs 수행 종료 처리
+			scc.push_back(temp);	// 같은 scc 그룹으로 묶음
+			if (temp == node) break;
+		}
+		SCC.push_back(scc);	// scc 그룹 저장
+	}
+	return parentId;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 초기화
+	fill(discover, discover + NODE_CNT, -1);
+
+	// 사용자 입력 받음
+	cin >> n >> m;
+	int first, second;
+	for (int i = 0; i < m; i++)
+	{
+		cin >> first >> second;
+		edges[first].push_back(second);
+	}
+
+	// 타잔 알고리즘 수행
+	for (int i = 1; i <= n; i++)
+	{
+		if (discover[i] == -1) dfs(i);
+	}
+
+	// SCC 그룹 중 최대 크기를 가지는 부분집합 찾음
+	int maxValue = 0;
+	for (int i = 0; i < SCC.size(); i++)
+		maxValue = max(maxValue, (int)SCC[i].size());
+	
+	// 결과 출력
+	cout << maxValue;
+
+	return 0;
+}
