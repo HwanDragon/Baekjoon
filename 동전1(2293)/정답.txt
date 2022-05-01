@@ -1,0 +1,46 @@
+#include <iostream>
+
+#define COIN_CNT 101
+#define COIN_VALUE 10001
+
+using namespace std;
+
+int n, k;
+int coins[COIN_CNT] = { 0, };	// 코인 종류 저장
+int dp[COIN_VALUE] = { 0, };	// dp 계산
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> k;
+	for (int i = 1; i <= n; i++)
+		cin >> coins[i];
+		
+	/*
+		1, 2원으로 3원을 만든다고 하면
+		1원으로 3원을 만들경우 1가지 경우만 있음
+		1,2 원으로 3원을 만들경우
+		3원을 2 + 1 원으로 나눌 수 있고, 
+		3원 - 2원 = 1원 -> 기존에 다른 동전들로 1원을 만들 수 잇는 경우의 수(1원 + 2원) + 기존에 k원을 만들 수 있는 경우의 수(1 + 1 + 1)
+		dp[i] = dp[i] + dp[i - coin] 점화식을 세울 수 있음
+	*/
+	// dp 계산
+	dp[0] = 1;
+	for (int j = 1; j <= n; j++)
+	{
+		int coin = coins[j];
+		for (int i = coin; i <= k; i++)
+		{
+			dp[i] = dp[i] + dp[i - coin];
+		}
+	}
+
+	cout << dp[k];
+
+	return 0;
+}
