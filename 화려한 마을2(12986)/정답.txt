@@ -1,0 +1,125 @@
+#include <iostream>
+#include <cmath>
+#include <algorithm>
+#include <vector>
+
+#define CNT 100002
+#define OFFSET 100000
+#define NUM_RANGE 200002
+
+using namespace std;
+
+int n, q;
+int arr[CNT] = { 0, };	// 수열 저장
+int answer[CNT] = { 0, };	// 쿼리 순서에 따른 정답
+int blockSize;	// 블럭 구간 사이즈
+int counting[NUM_RANGE] = { 0, };	// 가장 많이 등장하는 수의 개수 카운팅
+int maxCnt[CNT] = { 0, };	// 가장 많이 수의 개수가 몇개있는지 카운팅
+vector<pair<pair<int, int>, int>> query;	// {{left, right}, index}쿼리 저장
+
+// 쿼리 순서 정렬
+bool cmp(pair<pair<int, int>, int> &f, pair<pair<int, int>, int>&s)
+{
+	if (f.first.first / blockSize != s.first.first / blockSize)
+		return f.first.first / blockSize < s.first.first / blockSize;
+	else
+		return f.first.second < s.first.second;
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n >> q;
+	for (int i = 1; i <= n; i++)	// 배열 1부터 시작
+	{
+		cin >> arr[i];
+		arr[i] += OFFSET;	// 배열값에 offset을 추가하여 배열 개수를 카운팅함
+	}
+		
+	// 쿼리 입력 받음
+	int l, r;
+	for (int i = 1; i <= q; i++)	// 쿼리 인덱스 1부터 시작
+	{
+		cin >> l >> r;
+		query.push_back({ {l, r}, i });	// 쿼리 구간과 인덱스 저장
+	}
+
+	// 블럭 사이즈 계산
+	blockSize = sqrt(n);
+
+	// mos 알고리즘을 위해 쿼리 정렬
+	sort(query.begin(), query.end(), cmp);
+
+	// mos 알고리즘 수행
+	int lp = 0, rp = 0, len = query.size(), result = 0;
+	for (int i = 0; i < len; i++)
+	{
+		int l = query[i].first.first;	// 쿼리 왼쪽 구간
+		int r = query[i].first.second;	// 쿼리 오른쪽 구간
+		int queryIndex = query[i].second;	// 쿼리 인덱스
+
+		// 새로 꺼낸 쿼리 오른쪽 구간이 더 클경우
+		// 기존 계산값인 rp값을 증가시켜 수열값을 포함시킴
+		while (rp < r)
+		{
+			int num = arr[++rp];	// 새로운 수 꺼내옴
+			if (maxCnt[counting[num]] > 0) maxCnt[counting[num]]--;	// 만약 기존에 존재하던 수일경우 카운팅 개수를 증가시키기 위해 기존 최대 카운팅 감소시킴
+			counting[num]++;	// 수 개수 증가
+			maxCnt[counting[num]]++;	// 최대 카운팅 개수도 증가시킴
+			result = max(result, counting[num]);	// 수의 최대 개수 갱신
+		}
+
+		// 새로 꺼낸 쿼리 오른쪽 구간이 더 작을 경우
+		// 기존 계산값인 rp값을 감소시켜 수열을 빼나감
+		while (rp > r)
+		{
+			int num = arr[rp--];	// 기존에 있던 수 중 가장 오른쪽 수 꺼내옴
+			if (maxCnt[counting[num]] == 1 && counting[num] == result)	// 만약 꺼낸 수가 최대값이고, 1개밖에 없을 경우
+				result--;	// 최대 개수 감소
+
+			maxCnt[counting[num]]--;	// 최대개수 감소
+			counting[num]--;	// 카운팅 감소
+			if (counting[num] != 0) maxCnt[counting[num]]++;
+		}
+
+		// 새로 꺼낸 쿼리 왼쪽 구간이 더 작을 경우
+		// 기존 계산값인 lp값을 증가시켜 수열을 빼나감
+		while (lp < l)
+		{
+			//if (lp == 0) lp = 1;
+
+			int num = arr[lp++];
+			if (maxCnt[counting[num]] == 1 && counting[num] == result)
+				result--;
+
+			maxCnt[counting[num]]--;
+			counting[num]--;
+			if (counting[num] != 0) maxCnt[counting[num]]++;
+		}
+
+		// 새로 꺼낸 쿼리 왼쪽 구간이 더 클 경우
+		// 기존 계산값인 lp값을 감소시켜 수열을 추가시켜 나감
+		while (lp > l)
+		{
+			int num = arr[--lp];
+
+			if (maxCnt[counting[num]] > 0) maxCnt[counting[num]]--;
+			counting[num]++;
+			maxCnt[counting[num]]++;
+			result = max(result, counting[num]);
+		}
+
+		answer[queryIndex] = result;
+	}
+
+	// 결과 출력
+	for (int i = 1; i <= q; i++)
+		cout << answer[i] << "\n";
+	
+	return 0;
+}
