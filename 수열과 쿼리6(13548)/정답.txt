@@ -1,0 +1,124 @@
+#include <iostream>
+#include <algorithm>
+#include <vector>
+#include <cmath>
+
+#define CNT 100001
+#define NUM_RANGE 100001
+
+using namespace std;
+
+int n, m, blockSize;
+int arr[CNT];	// 수열 저장
+int counting[NUM_RANGE];	// 해당 수가 몇번 나왔는지 카운팅
+int maxCnt[CNT];	// 최대로 나온 수의 개수 카운팅
+int answer[CNT];	// 쿼리 결과 저장
+vector <pair<pair<int, int>, int>> query; // {{left, right}, queryIndex}
+
+/*
+쿼리를 블럭 번호 순으로 정렬하고,
+블럭 번호가 같을 경우는 쿼리 종료구간을 오름차순 기준으로 정렬함
+*/
+bool cmp(pair<pair<int, int>, int> &f, pair<pair<int, int>, int> &s)
+{
+	if (f.first.first / blockSize != s.first.first / blockSize)	// 블럭 번호가 다를 경우
+		return f.first.first / blockSize < s.first.first / blockSize;
+	else
+		return f.first.second < s.first.second;	// 블럭 번호가 같을경우 종료구간으로 오름차순 정렬
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 사용자 입력 받음
+	cin >> n;
+	for (int i = 1; i <= n; i++)	// 배열 1부터 시작
+		cin >> arr[i];
+
+	cin >> m;
+	// 쿼리 결과 저장
+	int first, second;
+	for (int i = 1; i <= m; i++)
+	{
+		cin >> first >> second;
+		query.push_back({ {first, second}, i });
+	}
+	
+	// 블럭 구간 사이즈 계산
+	blockSize = sqrt(n);
+
+	// 쿼리 정렬
+	sort(query.begin(), query.end(), cmp);
+
+	// mos 알고리즘 수행
+	int result = 0, len = query.size(), lp = 0, rp = 0;
+	for (int i = 0; i < len; i++)
+	{
+		int l = query[i].first.first;
+		int r = query[i].first.second;
+		int queryIndex = query[i].second;	// 쿼리 인덱스
+
+		// 새로 꺼낸 오른쪽 구간 종료쿼리가 기존 처리한 오른쪽 구간 종료 쿼리보다 더 클경우
+		// 수를 하나씩 포함시키면서 구간값을 갱신
+		while (rp < r)
+		{
+			int num = arr[++rp];	// 새로운 수 포함
+			if (counting[num] > 0) maxCnt[counting[num]]--;
+
+			counting[num]++; // 수 개수 카운팅
+			maxCnt[counting[num]]++;	// 수 개수가 몇개인지 카운팅
+			result = max(result, counting[num]);	// 최대값 갱신
+		}
+
+		// 새로 꺼낸 오른쪽 구간 종료쿼리가 기존 처리한 오른쪽 구간 종료 쿼리보다 더 작을경우
+		// 수를 하나씩 제거하면서 구간값을 갱신
+		while (rp > r)
+		{
+			int num = arr[rp--];	// 기존 수 제거
+			if (maxCnt[counting[num]] == 1 && counting[num] == result)	// 제거한 수가 최대 개수이 ㄹ경우
+				result--;	// 최대값 감소
+
+			maxCnt[counting[num]]--;	// 해당 수의 개수 카운팅 감소
+			counting[num]--;	
+			maxCnt[counting[num]]++;
+		}
+
+		// 새로 꺼낸 왼쪽 구간 시작쿼리가 기존 처리한 왼쪽 구간 시작 쿼리보다 더 작을경우
+		// 수를 하나씩 포함시키면서 구간값 갱신
+		while (lp > l)
+		{
+			int num = arr[--lp];	// 수의 시작점을 왼쪽으로 이동시키며 새로운 수 포함
+
+			if (counting[num] > 0) maxCnt[counting[num]]--;
+			counting[num]++;
+			maxCnt[counting[num]]++;
+			result = max(result, counting[num]);
+		}
+
+		// 새로 꺼낸 왼쪽 구간 시작쿼리가 기존 처리한 왼쪽 구간 시작 쿼리보다 더 클경우
+		// 수를 하나씩 제거시키면서 구간값 갱신
+		while (lp < l)
+		{
+			int num = arr[lp++];	// 기존쿼리 시작점을 오른쪽으로 이동시키며 기존 수 제거
+
+			if (maxCnt[counting[num]] == 1 && counting[num] == result)
+				result--;
+			
+			maxCnt[counting[num]]--;
+			counting[num]--;
+			maxCnt[counting[num]]++;
+		}
+
+		answer[queryIndex] = result;
+	}
+
+	// 결과값 표출
+	for (int i = 1; i <= m; i++)
+		cout << answer[i] << "\n";
+
+	return 0;
+}
