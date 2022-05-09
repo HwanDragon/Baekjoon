@@ -1,0 +1,65 @@
+#include <iostream>
+#include <queue>
+
+#define CNT 201
+#define INF 1000000000
+
+using namespace std;
+
+int n;
+int startY, startX, endY, endX;
+int dp[CNT][CNT];	// BFS 탐색시 기록할 최단경로 저장
+int dy[6] = { -2, -2, 0, 0, 2, 2};	// 데스나이트가 움직일 수 있는 범위
+int dx[6] = { -1, 1, -2, 2, -1, 1};	// 데스나이트가 움직일 수 있는 범위
+
+void bfs(int x, int y)
+{
+	queue<pair<int, int>> q;
+	q.push({x, y});	// 시작점 큐에 추가
+	dp[y][x] = 0;	// 시작위치는 0으로 초기화
+
+	while (q.empty() == false)
+	{
+		int curX = q.front().first;
+		int curY = q.front().second;
+		q.pop();
+
+		// 현재위치에서 갈 수 있는 위치를 탐색하여 갈수있는 위치면 큐에 추가하고 dp배열 갱신
+		for (int i = 0; i < 6; i++)
+		{
+			int nextX = curX + dx[i];
+			int nextY = curY + dy[i];
+
+			if (nextX < 0 || nextY < 0 || nextX > n || nextY > n) continue;	// 배열 범위 초과
+			if (dp[nextY][nextX] != INF) continue;	// 이미 방문한 지역
+			
+			dp[nextY][nextX] = dp[curY][curX] + 1;
+			q.push({nextX, nextY});
+		}
+	}
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 초기화
+	for (int i = 0; i < CNT; i++)
+		for (int j = 0; j < CNT; j++)
+			dp[i][j] = INF;
+
+	// 사용자 입력 받음
+	cin >> n;
+	cin >> startY >> startX >> endY >> endX;
+
+	// BFS 탐색
+	bfs(startX, startY);
+
+	// 결과 출력
+	cout << (dp[endY][endX] == INF ? -1 : dp[endY][endX]);
+
+	return 0;
+}
