@@ -1,0 +1,112 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+#define CNT 200001
+
+using namespace std;
+
+/*
+간선별 비용을 입력받아 모두 더하여 total cost 를 계산
+크루스칼 알고리즘을 이용하여 최소 스패닝 트리를 계산하여 스패닝 트리를 구성하는데 비용을 cost라고 하면
+절약 할 수 있는 비용은 (total cost - cost) 로 계산할 수 있음
+*/
+
+int n, e;
+int parent[CNT];	// 부모노드 저장(크루스칼 알고리즘)
+
+// 간선 정보 저장
+class Edge {
+public :
+	int first;
+	int second;
+	int cost;
+};
+
+vector<Edge *> edges;	
+
+// Union-find 알고리즘
+int getParent(int node, int p[])
+{
+	if (node == p[node]) return node;
+
+	return getParent(p[node], p);
+}
+
+void unionParent(int f, int s, int p[])
+{
+	int fParent = getParent(f, p);
+	int sParent = getParent(s, p);
+	if (fParent > sParent)
+		p[fParent] = sParent;
+	else
+		p[sParent] = fParent;
+}
+
+bool sameParent(int f, int s, int p[])
+{
+	if (getParent(f, p) == getParent(s, p)) return true;
+	return false;
+}
+
+// 간선을 비용에 따라 정렬
+bool cmp(Edge *f, Edge *s)
+{
+	return f->cost < s->cost;
+}
+
+// 초기화
+void init()
+{
+	for (int i = 0; i < CNT; i++) parent[i] = i;
+	edges.clear();
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	while (true)
+	{
+		// 초기화
+		init();
+
+		// 사용자 입력 받음
+		cin >> n >> e;
+		if (n == 0 && e == 0) break;
+
+		// 간선정보 입력 받음
+		int totalCost = 0;
+		for (int i = 0; i < e; i++)
+		{
+			Edge* edge = new Edge();
+			cin >> edge->first >> edge->second >> edge->cost;
+			edges.push_back(edge);
+			totalCost += edge->cost;
+		}
+
+		// 크루스칼 알고리즘을 사용하기 위해 간선을 비용으로 오름차순 정렬
+		sort(edges.begin(), edges.end(), cmp);
+
+		// 크루스칼 알고리즘을 이용하여 최소 스패닝 트리 계산
+		int cnt = 0, len = edges.size(), cost = 0;
+		for (int i = 0; i < len; i++)
+		{
+			Edge* e = edges.at(i);
+			if (sameParent(e->first, e->second, parent) == false)
+			{
+				unionParent(e->first, e->second, parent);	// 두 노드 합침
+				cnt++;	// 간선 개수 증가
+				cost += e->cost;	// 비용 더함
+				if (cnt == n - 1) break;
+			}
+		}
+
+		// 결과 출력
+		cout << totalCost - cost << "\n";
+	}
+	return 0;
+}
