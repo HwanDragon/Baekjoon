@@ -1,0 +1,65 @@
+#include <iostream>
+#include <cstring>
+
+#define CNT 1001
+
+using namespace std;
+
+char s1[CNT];
+char s2[CNT];
+int dp[CNT][CNT];
+
+/*
+점화식
+f(s1, s2)을 최대 길이라고 할 경우
+
+- s1의 마지막 문자와 s2의 마지막 문자가 다를경우
+f(s1, s2) = max(f(s1 - 1, s2) , f(s1, s2 - 1));
+
+- s1과 s2의 마지막 문자가 같을경우
+f(s1, s2) = f(s1 - 1, s2 - 1) + 1
+
+- 둘중 하나라도 길이가 0이되면 종료
+*/
+
+int calc(int len1, int len2)
+{
+	// 둘중 하나라도 길이가 0이되면 종료
+	if (len1 == -1 || len2 == -1) return 0;	// 둘중 문자열 길이가 하나라도 더이상 없을 경우
+
+	if (dp[len1][len2] != -1) return dp[len1][len2];	// 이미 계산된 경우 계산된 값 반환
+
+	/*
+	s1과 s2의 마지막 문자가 같을경우
+	f(s1, s2) = f(s1 - 1, s2 - 1) + 1
+	*/
+	if (s1[len1] == s2[len2]) return dp[len1][len2] = calc(len1 - 1, len2 - 1) + 1;
+
+	/*
+	s1의 마지막 문자와 s2의 마지막 문자가 다를경우
+	f(s1, s2) = max(f(s1 - 1, s2) , f(s1, s2 - 1));
+	*/
+	return dp[len1][len2] = max(calc(len1 - 1, len2), calc(len1, len2 - 1));
+}
+
+int main()
+{
+	// 입출력 속도 향상
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 초기화
+	for (int i = 0; i < CNT; i++)
+		for (int j = 0; j < CNT; j++)
+			dp[i][j] = -1;
+
+	// 사용자 입력 받음
+	cin >> s1;
+	cin >> s2;
+
+	int len1 = strlen(s1) - 1, len2 = strlen(s2) - 1;
+	cout << calc(len1, len2);
+
+	return 0;
+}
