@@ -1,0 +1,97 @@
+#include <iostream>
+#include <algorithm>
+#include <vector>
+
+#define CNT 10001
+
+using namespace std;
+
+int v, e;	// 버텍스 수, 간선 수
+int discoverId = 0, result = 0;	// 노드 방문 순서 아이디, 단절점 개수
+vector<int> edges[CNT];	// 간선 정보
+int discover[CNT];	// 노드 발견 순서
+int articulation[CNT];	// 단절점 여부
+
+// 단절점 확인을 위한 dfs 알고리즘 수행
+int dfs(int cur, int prev)
+{
+	discover[cur] = ++discoverId;	// 방문 순서 저장
+	int minDiscoverId = discover[cur];	// 자식 노드 중 현재 cur 노드보다 더 위로 올라갈 수 있는지 여부 반환
+
+	int dfsChildCnt = 0;	// 루트노드의 dfs child 개수 카운팅을 위해 자식 개수 셈
+	for (int i = 0; i < edges[cur].size(); i++)
+	{
+		int next = edges[cur].at(i);
+
+		// 이전 노드일경우 pass
+		if (next == prev) continue;
+
+		// 방문하지 않은 노드일 경우 방문함
+		if (discover[next] == -1)
+		{
+			dfsChildCnt++;
+			int tempNode = dfs(next, cur);
+			minDiscoverId = min(minDiscoverId, tempNode);
+
+			if (articulation[cur] == true) continue;	// 이미 해당 정점은 단절점임
+
+			// 자식 노드 하나를 탐색했는데 해당 자식노드에서 현재 노드보다 더 위쪽 노드로 갈 방법이 없을경우
+			// 그리고 루트가 아니어야 함
+			if (tempNode >= discover[cur] && prev != -1)
+				articulation[cur] = true;
+		}
+		else
+		{
+			// 이미 방문한 지역일 경우
+			minDiscoverId = min(minDiscoverId, discover[next]);
+		}
+	}
+	
+	// minDiscoverId == discover[cur] 일경우 자식 노드들중 어느 노드가 루트로 연결된 경우
+	// 루트 노드는 자식 개수가 2개 이상일 경우, 위의 조건을 만족할 경우 단절점임
+	if (prev == -1 && dfsChildCnt > 1)
+		articulation[cur] = true;
+		
+	return minDiscoverId;
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+
+	// 방문 정보 초기화
+	fill(discover, discover + CNT, -1);
+
+	// 사용자 입력 받음
+	cin >> v >> e;
+	int first, second;
+	for (int i = 0; i < e; i++)
+	{
+		cin >> first >> second;
+		edges[first].push_back(second);
+		edges[second].push_back(first);
+	}
+
+	// 단절점 찾기
+	for (int i = 1; i <= v; i++)
+	{
+		if (discover[i] == -1)
+			dfs(i, -1);
+	}
+
+	// 결과 출력
+	for (int i = 1; i <= v; i++)
+		if (articulation[i] == true)
+			result++;
+
+	cout << result << "\n";
+	for (int i = 1; i <= v; i++)
+	{
+		if (articulation[i] == true)
+			cout << i << " ";
+	}
+
+	return 0;
+}
